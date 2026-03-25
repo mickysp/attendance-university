@@ -1,0 +1,215 @@
+"use client";
+
+import {
+  HomeIcon,
+  CalendarDaysIcon,
+  UserGroupIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  BookOpenIcon,
+  ArrowRightOnRectangleIcon,
+  Bars3Icon,
+} from "@heroicons/react/24/outline";
+import { ReactNode, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+
+export default function Sidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [collapsed, setCollapsed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState({
+    fullname: "",
+    role: "",
+  });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/user", {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          router.replace("/login");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
+
+    router.push("/login");
+  };
+
+  return (
+    <aside
+      className={`${
+        collapsed ? "w-20" : "w-70"
+      } h-screen overflow-y-auto bg-white border-r border-gray-200 p-4 flex flex-col justify-between transition-all duration-300 font-noto`}
+    >
+      <div>
+        <div className="mb-6 flex items-center justify-between pb-4 border-b border-gray-200">
+          {!collapsed && (
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                <CalendarDaysIcon className="h-5 w-5 text-white" />
+              </div>
+
+              <div>
+                <h1 className="text-lg font-semibold">Attendance</h1>
+                <p className="text-xs text-gray-500 font-noto">
+                  Management System
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2 rounded-md hover:bg-gray-100 cursor-pointer"
+          >
+            <Bars3Icon className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="flex flex-col gap-2 text-sm">
+          {user.role === "Admin" && (
+            <SidebarItem
+              icon={<HomeIcon />}
+              label="Dashboard"
+              collapsed={collapsed}
+              active={pathname === "/dashboard"}
+              onClick={() => router.push("/dashboard")}
+            />
+          )}
+
+          <SidebarItem
+            icon={<CalendarDaysIcon />}
+            label="Attendance"
+            collapsed={collapsed}
+            active={pathname === "/attendance"}
+            onClick={() => router.push("/attendance")}
+          />
+
+          <SidebarItem
+            icon={<BookOpenIcon />}
+            label="Classes"
+            collapsed={collapsed}
+            active={pathname.startsWith("/classes")}
+            onClick={() => router.push("/classes")}
+          />
+
+          <SidebarItem
+            icon={<UserGroupIcon />}
+            label="Students"
+            collapsed={collapsed}
+            active={pathname.startsWith("/students")}
+            onClick={() => router.push("/students")}
+          />
+
+          <SidebarItem
+            icon={<ChartBarIcon />}
+            label="Reports"
+            collapsed={collapsed}
+            active={pathname === "/reports"}
+            onClick={() => router.push("/reports")}
+          />
+
+          <SidebarItem
+            icon={<CalendarDaysIcon />}
+            label="Leave"
+            collapsed={collapsed}
+            active={pathname === "/leave"}
+            onClick={() => router.push("/leave")}
+          />
+
+          <SidebarItem
+            icon={<Cog6ToothIcon />}
+            label="Settings"
+            collapsed={collapsed}
+            active={pathname === "/settings"}
+            onClick={() => router.push("/settings")}
+          />
+        </nav>
+      </div>
+
+      <div className="pt-4 border-t border-gray-200 font-noto">
+        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold">
+              {user.fullname ? user.fullname.charAt(0) : "?"}
+            </div>
+
+            {!collapsed && (
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm font-medium">
+                  {loading ? "กำลังโหลด..." : user.fullname}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {loading ? "" : user.role}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {!collapsed && (
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-md hover:bg-blue-100 hover:text-blue-600 transition cursor-pointer"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+type SidebarItemProps = {
+  icon: ReactNode;
+  label: string;
+  collapsed?: boolean;
+  active?: boolean;
+  onClick?: () => void;
+};
+
+function SidebarItem({
+  icon,
+  label,
+  collapsed,
+  active,
+  onClick,
+}: SidebarItemProps) {
+  return (
+    <div
+      onClick={onClick}
+      title={collapsed ? label : ""}
+      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition
+        ${
+          active
+            ? "bg-blue-100 text-blue-600 font-medium"
+            : "hover:bg-gray-100 text-gray-700"
+        }`}
+    >
+      <span className="h-5 w-5">{icon}</span>
+      {!collapsed && label}
+    </div>
+  );
+}

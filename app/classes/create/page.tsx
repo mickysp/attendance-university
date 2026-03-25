@@ -1,0 +1,411 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import Sidebar from "@/components/layouts/Sidebar";
+import { TrashIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useAlert } from "@/context/AlertContext";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useConfirm } from "@/context/ConfirmContext";
+
+type ClassItem = {
+  className: string;
+  classCode: string;
+  description: string;
+  teacher: string;
+  branches: string[];
+};
+
+const BRANCH_OPTIONS = [
+  "เทคโนโลยีสารสนเทศและนวัตกรรมอัจฉริยะ",
+  "วิทยาการคอมพิวเตอร์",
+  "ภูมิสารสนเทศศาสตร์",
+  "ปัญญาประดิษฐ์",
+  "ความมั่นคงปลอดภัยไซเบอร์",
+];
+
+export default function CreateClassPage() {
+  const router = useRouter();
+  const { showAlert } = useAlert();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const branchRef = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const { showConfirm } = useConfirm();
+
+  const [openBranchIndex, setOpenBranchIndex] = useState<{
+    classIndex: number;
+    branchIndex: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpenIndex(null);
+      }
+
+      if (branchRef.current && !branchRef.current.contains(e.target as Node)) {
+        setOpenBranchIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const [classes, setClasses] = useState<ClassItem[]>([
+    {
+      className: "",
+      classCode: "",
+      teacher: "",
+      description: "",
+      branches: [""],
+    },
+  ]);
+
+  const [loading, setLoading] = useState(false);
+
+  type StringKeys = "className" | "classCode" | "description" | "teacher";
+
+  const handleChange = (index: number, key: StringKeys, value: string) => {
+    const updated = [...classes];
+    updated[index][key] = value;
+    setClasses(updated);
+  };
+
+  const handleAddClass = () => {
+    setClasses((prev) => [
+      ...prev,
+      {
+        className: "",
+        classCode: "",
+        teacher: "",
+        description: "",
+        branches: [""],
+      },
+    ]);
+  };
+
+  const handleRemoveClass = (index: number) => {
+    const updated = classes.filter((_, i) => i !== index);
+    setClasses(updated);
+  };
+
+  const handleBranchChange = (
+    classIndex: number,
+    branchIndex: number,
+    value: string,
+  ) => {
+    const updated = [...classes];
+    updated[classIndex].branches[branchIndex] = value;
+    setClasses(updated);
+  };
+
+  const handleAddBranch = (classIndex: number) => {
+    const updated = [...classes];
+    updated[classIndex].branches.push("");
+    setClasses(updated);
+  };
+
+  const handleRemoveBranch = (classIndex: number, branchIndex: number) => {
+    const updated = [...classes];
+    updated[classIndex].branches = updated[classIndex].branches.filter(
+      (_, i) => i !== branchIndex,
+    );
+    setClasses(updated);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      const payload = classes
+        .filter((item) => item.className.trim() !== "")
+        .map((item) => ({
+          ...item,
+          branches: [...new Set(item.branches.filter((b) => b.trim() !== ""))],
+        }));
+
+      if (payload.length === 0) {
+        showAlert("กรุณากรอกอย่างน้อย 1 วิชา", "error");
+        return;
+      }
+
+      if (payload.some((item) => item.branches.length === 0)) {
+        showAlert("ทุกวิชาต้องมีอย่างน้อย 1 สาขา", "error");
+        return;
+      }
+
+      const res = await fetch("/api/classes/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert(data.message || "เกิดข้อผิดพลาด", "error");
+        return;
+      }
+
+      showAlert(data.message, "success");
+      router.push("/classes");
+    } catch (error) {
+      showAlert("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      <Sidebar />
+
+      <div className="flex-1 overflow-y-auto p-6 font-noto">
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => router.push("/classes")}
+              className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100 transition cursor-pointer"
+            >
+              <ArrowLeftIcon className="w-3 h-3 text-gray-700" />
+            </button>
+
+            <h1 className="text-2xl font-semibold text-gray-800">
+              เพิ่มรายวิชา
+            </h1>
+          </div>
+
+          <div className="space-y-4">
+            {classes.map((item, index) => (
+              <div
+                key={index}
+                className="border border-gray-50 bg-[var(--card)] rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-medium text-gray-800">
+                    ข้อมูลวิชาที่ {index + 1}
+                  </h2>
+
+                  {classes.length > 1 && (
+                    <button
+                      onClick={() => handleRemoveClass(index)}
+                      className="text-red-500 hover:bg-red-50 p-2 rounded-lg cursor-pointer"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-800">ชื่อวิชา</label>
+                    <input
+                      type="text"
+                      value={item.className}
+                      onChange={(e) =>
+                        handleChange(index, "className", e.target.value)
+                      }
+                      className="form-input-card text-sm"
+                      placeholder="เช่น Web Programming"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-800">รหัสวิชา</label>
+                      <input
+                        type="text"
+                        value={item.classCode}
+                        onChange={(e) =>
+                          handleChange(index, "classCode", e.target.value)
+                        }
+                        className="form-input-card text-sm"
+                        placeholder="เช่น CS101"
+                      />
+                    </div>
+
+                    <div ref={ref} className="relative">
+                      <label className="text-sm text-gray-800">
+                        อาจารย์ผู้สอน
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenIndex(openIndex === index ? null : index)
+                        }
+                        className="form-input-card text-sm flex items-center justify-between w-full"
+                      >
+                        {item.teacher || "เลือกอาจารย์"}
+                        <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                      </button>
+
+                      {openIndex === index && (
+                        <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
+                          {[
+                            "รศ.ดร.งามนิจ อาจอินทร์",
+                            "รศ.ดร.วรารัตน์ สงฆ์แป้น",
+                            "อ.ดร.วรัญญา วรรณศรี",
+                            "ผศ.ดร.มัลลิกา วัฒนะ",
+                            "ผศ.ดร.ปวีณา วันชัย",
+                            "ผศ.ดร.สุมณฑา เกษมวิลาศ",
+                            "ศ.ดร.จักรชัย โสอินทร์",
+                            "ผศ.ดร.เพชร อิ่มทองคำ",
+                            "ผศ.ดร.สาธิต กระเวนกิจ",
+                            "อ.ดร.จักรกฤษณ์ แก้วโยธา",
+                            "ผศ.ดร.สายยัญ สายยศ",
+                            "ผศ.ดร.ไอศูรย์ กาญจนสุรัตน์",
+                            "อ.ดร.พงษ์ศธร จันทร์ยอย",
+                            "ผศ.ดร.พุธษดี ศิริแสงตระกูล",
+                            "รศ.ดร.อุรฉัตร โคแก้ว",
+                            "ผศ.ดร.สิลดา อินทรโสธรฉันท์",
+                            "ผศ.ดร.วชิราวุธ ธรรมวิเศษ",
+                          ].map((teacher) => (
+                            <button
+                              key={teacher}
+                              type="button"
+                              onClick={() => {
+                                handleChange(index, "teacher", teacher);
+                                setOpenIndex(null);
+                              }}
+                              className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
+                            >
+                              {teacher}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div ref={branchRef}>
+                    <label className="text-sm text-gray-800">สาขา</label>
+
+                    <div className="space-y-2 mt-2">
+                      {item.branches.map((branch, bIndex) => (
+                        <div key={bIndex} className="flex gap-2 relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenBranchIndex(
+                                openBranchIndex?.classIndex === index &&
+                                  openBranchIndex?.branchIndex === bIndex
+                                  ? null
+                                  : { classIndex: index, branchIndex: bIndex },
+                              )
+                            }
+                            className="form-input-card text-sm flex items-center justify-between w-full"
+                          >
+                            {branch || "เลือกสาขา"}
+                            <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                          </button>
+
+                          {openBranchIndex?.classIndex === index &&
+                            openBranchIndex?.branchIndex === bIndex && (
+                              <div className="absolute z-10 mt-10 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
+                                {BRANCH_OPTIONS.map((b) => {
+                                  const isSelected = item.branches.includes(b);
+
+                                  return (
+                                    <button
+                                      key={b}
+                                      type="button"
+                                      disabled={isSelected}
+                                      onClick={() => {
+                                        if (isSelected) return;
+
+                                        handleBranchChange(index, bIndex, b);
+                                        setOpenBranchIndex(null);
+                                      }}
+                                      className={`block w-full px-4 py-2 text-left text-sm
+                                      ${
+                                        isSelected
+                                          ? "text-gray-400 bg-gray-50 cursor-not-allowed"
+                                          : "hover:bg-gray-100 cursor-pointer"
+                                      }`}
+                                    >
+                                      {b}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                          {item.branches.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveBranch(index, bIndex)}
+                              className="text-red-500 hover:bg-red-50 p-2 rounded-md cursor-pointer"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAddBranch(index)}
+                      className="mt-2 text-sm text-blue-600 hover:underline cursor-pointer"
+                    >
+                      + เพิ่มสาขา
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-800">
+                      รายละเอียดวิชา
+                    </label>
+                    <textarea
+                      value={item.description}
+                      onChange={(e) =>
+                        handleChange(index, "description", e.target.value)
+                      }
+                      className="form-input-card text-sm"
+                      rows={4}
+                      placeholder="กรอกรายละเอียดเพิ่มเติม"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-between items-center mt-6">
+            <button
+              onClick={handleAddClass}
+              className="px-4 py-2 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+            >
+              + เพิ่มวิชา
+            </button>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push("/classes")}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+
+              <button
+                onClick={() =>
+                  showConfirm("คุณต้องการบันทึกข้อมูลใช่หรือไม่", handleSubmit)
+                }
+                disabled={loading}
+                className="px-5 py-2.5 rounded-md bg-[var(--primary)] text-white text-sm hover:bg-[var(--primary-hover)] disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? "กำลังบันทึก..." : "บันทึก"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

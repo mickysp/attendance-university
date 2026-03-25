@@ -1,0 +1,97 @@
+"use client";
+
+import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  ExclamationTriangleIcon,
+  DocumentCheckIcon,
+} from "@heroicons/react/24/outline";
+
+type ConfirmType = {
+  message: string;
+  onConfirm: () => void;
+};
+
+type ConfirmContextType = {
+  showConfirm: (message: string, onConfirm: () => void) => void;
+};
+
+const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
+
+export function ConfirmProvider({ children }: { children: ReactNode }) {
+  const [confirm, setConfirm] = useState<ConfirmType | null>(null);
+
+  const showConfirm = (message: string, onConfirm: () => void) => {
+    setConfirm({ message, onConfirm });
+  };
+
+  const handleClose = () => setConfirm(null);
+
+  const handleConfirm = () => {
+    confirm?.onConfirm();
+    handleClose();
+  };
+
+  const isDelete = confirm?.message.includes("ลบ");
+
+  return (
+    <ConfirmContext.Provider value={{ showConfirm }}>
+      {children}
+
+      {confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 font-noto">
+          <div className="bg-white rounded-xl shadow-lg w-[390px] p-8 text-center animate-[scaleIn_0.2s_ease]">
+            
+            <div
+              className={`mb-3 flex items-center justify-center w-20 h-20 rounded-full mx-auto ${
+                isDelete ? "bg-red-100" : "bg-blue-100"
+              }`}
+            >
+              {isDelete ? (
+                <ExclamationTriangleIcon className="w-7 h-7 text-red-500" />
+              ) : (
+                <DocumentCheckIcon className="w-7 h-7 text-blue-500" />
+              )}
+            </div>
+
+            <p className="text-sm text-gray-800 font-medium mb-1">
+              {confirm.message}
+            </p>
+
+            <p className="text-xs text-gray-400 mb-4">
+              {isDelete
+                ? "การลบข้อมูลนี้ไม่สามารถกู้คืนได้"
+                : "กรุณาตรวจสอบข้อมูลก่อนดำเนินการ"}
+            </p>
+
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 text-sm rounded-md border border-gray-200 hover:bg-gray-100 cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+
+              <button
+                onClick={handleConfirm}
+                className={`px-4 py-2 text-sm rounded-md text-white cursor-pointer ${
+                  isDelete
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
+              >
+                {isDelete ? "ยืนยัน" : "ยืนยัน"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </ConfirmContext.Provider>
+  );
+}
+
+export const useConfirm = () => {
+  const ctx = useContext(ConfirmContext);
+  if (!ctx)
+    throw new Error("useConfirm must be used within ConfirmProvider");
+  return ctx;
+};
