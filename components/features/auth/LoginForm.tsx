@@ -53,34 +53,43 @@ export default function LoginForm() {
 
       const data = await res.json();
 
+      console.log("LOGIN DATA:", data);
+
       if (data.success) {
         if (remember) {
           localStorage.setItem(
             "rememberUser",
-            JSON.stringify({ username: form.username }),
+            JSON.stringify({ username: form.username })
           );
         } else {
           localStorage.removeItem("rememberUser");
         }
 
-        router.push("/dashboard");
-      } else {
-        if (data.field === "username") {
-          setUsernameError(data.message);
-        } else if (data.field === "password") {
-          setPasswordError(data.message);
-        } else {
-          showAlert(data.message, "error");
+        const role = (data.role || "").toLowerCase();
+
+        if (!role) {
+          showAlert("ไม่พบ role จากระบบ", "error");
+          return;
         }
+
+        if (role === "admin") {
+          router.push("/dashboard");
+        } else if (role === "teacher") {
+          router.push("/classes");
+        } else {
+          showAlert("role ไม่ถูกต้อง", "error");
+        }
+      } else {
+        showAlert(data.message || "เข้าสู่ระบบไม่สำเร็จ", "error");
       }
     } catch (error) {
-      showAlert("เกิดข้อผิดพลาด");
+      console.error(error);
+      showAlert("เกิดข้อผิดพลาด", "error");
     }
   };
 
   return (
     <div className="w-full max-w-lg max-h-[80vh] min-h-[400px] rounded-xl bg-white p-8 shadow-xl overflow-y-auto">
-      {" "}
       <form
         onSubmit={handleLogin}
         className="mt-6 flex flex-col gap-4 font-noto"
@@ -99,7 +108,6 @@ export default function LoginForm() {
               setUsernameError("");
             }}
           />
-
           {usernameError && (
             <p className="text-xs text-red-500 mt-1">{usernameError}</p>
           )}
@@ -122,7 +130,7 @@ export default function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
           >
             {showPassword ? (
               <EyeSlashIcon className="h-5 w-5" />
