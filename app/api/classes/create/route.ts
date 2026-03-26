@@ -41,7 +41,10 @@ export async function POST(req: Request) {
 
     const client = await clientPromise;
     const db = client.db("attendance");
+
     const classes = db.collection<ClassPayload>("classes");
+    const majors = db.collection<Branch>("majors");       
+    const teachersCol = db.collection<Teacher>("teachers");
 
     const insertData: ClassPayload[] = [];
 
@@ -81,33 +84,65 @@ export async function POST(req: Request) {
         }
       }
 
-      const normalizedBranches: Branch[] = branches.map((b) =>
-        typeof b === "string"
-          ? { _id: "", name: b }
-          : { _id: b._id || "", name: b.name }
-      );
+      const normalizedBranches: Branch[] = [];
 
-      const uniqueBranches = Array.from(
-        new Map(
-          normalizedBranches.map((b) => [b._id || b.name, b])
-        ).values()
-      );
+      for (const b of branches) {
+        if (typeof b === "string") {
+          const major = await majors.findOne({ name: b });
+
+          if (!major) {
+            return NextResponse.json(
+              { success: false, message: `ไม่พบสาขา ${b}` },
+              { status: 400 }
+            );
+          }
+
+          normalizedBranches.push({
+            _id: major._id.toString(),
+            name: major.name,
+          });
+        } else {
+          normalizedBranches.push({
+            _id: b._id,
+            name: b.name,
+          });
+        }
+      }
+
+      let normalizedTeacher: Teacher | undefined;
+
+      if (teacher) {
+        if (typeof teacher === "string") {
+          const t = await teachersCol.findOne({ name: teacher });
+
+          if (!t) {
+            return NextResponse.json(
+              { success: false, message: `ไม่พบอาจารย์ ${teacher}` },
+              { status: 400 }
+            );
+          }
+
+          normalizedTeacher = {
+            _id: t._id.toString(),
+            name: t.name,
+          };
+        } else {
+          normalizedTeacher = {
+            _id: teacher._id,
+            name: teacher.name,
+          };
+        }
+      }
 
       const newClass: ClassPayload = {
         className: className.trim(),
-        branches: uniqueBranches,
+        branches: normalizedBranches,
         createdAt: new Date(),
       };
 
       if (classCode) newClass.classCode = classCode.trim();
       if (description) newClass.description = description.trim();
-
-      if (teacher) {
-        newClass.teacher =
-          typeof teacher === "string"
-            ? { _id: "", name: teacher }
-            : { _id: teacher._id, name: teacher.name };
-      }
+      if (normalizedTeacher) newClass.teacher = normalizedTeacher;
 
       insertData.push(newClass);
     }
@@ -123,21 +158,6 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error: unknown) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code: number }).code === 11000
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "รหัสวิชานี้มีอยู่แล้ว (duplicate)",
-        },
-        { status: 400 }
-      );
-    }
-
     console.error("CREATE CLASS ERROR:", error);
 
     return NextResponse.json(
