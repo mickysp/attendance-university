@@ -276,7 +276,7 @@ export default function QRPage() {
                           </button>
                         </div>
                         <p className="text-sm text-gray-500 text-center">
-                          QR Code เช็คชื่อเข้าเรียน
+                          QR Code เช็คชื่อ
                         </p>
                       </div>
                     </>

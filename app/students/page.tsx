@@ -362,28 +362,72 @@ export default function StudentsPage() {
                 </div>
               </div>
               {mode === "file" && (
-                <label className="group border border-gray-300 hover:border-blue-400 border-dashed rounded-xl p-6 text-center cursor-pointer text-gray-500 hover:text-blue-400 transition block">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) setFile(f);
-                    }}
-                  />
+                <div className="flex flex-col gap-3">
+                  <div ref={sectionRef} className="relative mb-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenSection(true);
+                      }}
+                      className="form-input-card text-sm flex items-center justify-between w-full h-[42px]"
+                    >
+                      <span>{section || "เลือก Section"}</span>
 
-                  <div className="flex items-center justify-center gap-2 text-sm">
-                    <ArrowUpTrayIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition" />
-                    <span>อัปโหลดไฟล์ (.csv / .xlsx)</span>
+                      <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                    </button>
+
+                    {openSection && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto">
+                        {sectionOptions.map((sec) => {
+                          const isSelected = section === sec;
+
+                          return (
+                            <button
+                              key={sec}
+                              onClick={() => {
+                                setSection(sec);
+                                setOpenSection(false);
+                              }}
+                              className={`block w-full px-4 py-2 text-left text-sm flex justify-between cursor-pointer
+                              ${
+                                isSelected
+                                ? "bg-blue-50 text-blue-600 font-medium"
+                                : "hover:bg-gray-100"
+                              }`}
+                            >
+                              <span>{sec}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
-                  {file && (
-                    <p className="text-sm text-gray-500 mt-2 text-center">
-                      {file.name}
-                    </p>
-                  )}
-                </label>
+                  <label className="group border border-gray-300 hover:border-blue-400 border-dashed rounded-xl p-6 text-center cursor-pointer text-gray-500 hover:text-blue-400 transition block">
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) setFile(f);
+                      }}
+                    />
+
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                      <ArrowUpTrayIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition" />
+                      <span>อัปโหลดไฟล์ (.csv / .xlsx)</span>
+                    </div>
+
+                    {file && (
+                      <p className="text-sm text-gray-500 mt-2 text-center">
+                        {file.name}
+                      </p>
+                    )}
+                  </label>
+                </div>
               )}
+
               {mode === "manual" && (
                 <div className="flex flex-col gap-3">
                   <div ref={sectionRef} className="relative mb-3">
@@ -508,6 +552,7 @@ export default function StudentsPage() {
                   </button>
                 </div>
               )}
+
               <div className="flex justify-end gap-2 mt-6 text-sm">
                 <button
                   onClick={() => {
