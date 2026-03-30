@@ -301,21 +301,30 @@ export default function CreateClassPage() {
                               ไม่พบข้อมูลอาจารย์
                             </div>
                           ) : (
-                            teachers.map((t) => (
-                              <button
-                                key={t._id}
-                                type="button"
-                                onClick={() => {
-                                  const updated = [...classes];
-                                  updated[index].teacher = t;
-                                  setClasses(updated);
-                                  setOpenIndex(null);
-                                }}
-                                className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
-                              >
-                                {t.name}
-                              </button>
-                            ))
+                            teachers.map((t) => {
+                              const isSelected =
+                                classes[index].teacher?._id === t._id;
+
+                              return (
+                                <button
+                                  key={t._id}
+                                  onClick={() => {
+                                    const updated = [...classes];
+                                    updated[index].teacher = t;
+                                    setClasses(updated);
+                                    setOpenIndex(null);
+                                  }}
+                                  className={`block w-full px-4 py-2 text-left text-sm flex items-center justify-between cursor-pointer
+                                  ${
+                                    isSelected
+                                      ? "bg-blue-50 text-blue-600 font-medium"
+                                      : "hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <span>{t.name}</span>
+                                </button>
+                              );
+                            })
                           )}
                         </div>
                       )}

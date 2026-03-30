@@ -276,18 +276,27 @@ export default function EditClassPage() {
                           ไม่พบข้อมูลอาจารย์
                         </div>
                       ) : (
-                        teachers.map((t) => (
-                          <button
-                            key={t._id}
-                            onClick={() => {
-                              handleChange("teacher", t.name);
-                              setOpenTeacher(false);
-                            }}
-                            className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
-                          >
-                            {t.name}
-                          </button>
-                        ))
+                        teachers.map((t) => {
+                          const isSelected = item.teacher === t.name;
+
+                          return (
+                            <button
+                              key={t._id}
+                              onClick={() => {
+                                handleChange("teacher", t.name);
+                                setOpenTeacher(false);
+                              }}
+                              className={`block w-full px-4 py-2 text-left text-sm flex items-center justify-between cursor-pointer
+                              ${
+                                isSelected
+                                  ? "bg-blue-50 text-blue-600 font-medium"
+                                  : "hover:bg-gray-100"
+                              }`}
+                            >
+                              <span>{t.name}</span>
+                            </button>
+                          );
+                        })
                       )}
                     </div>
                   )}
