@@ -105,7 +105,9 @@ export default function CreateStudentPage() {
   const handleRemoveStudent = (index: number) => {
     const updated = students.filter((_, i) => i !== index);
     setStudents(
-      updated.length ? updated : [{ studentId: "", fullName: "", email: "", section: "" }],
+      updated.length
+        ? updated
+        : [{ studentId: "", fullName: "", email: "", section: "" }],
     );
   };
 
@@ -118,31 +120,46 @@ export default function CreateStudentPage() {
   const isFormValid =
     selectedClass &&
     selectedMajor &&
-    students.some(
+    students.every(
       (s) =>
-        s.studentId.trim() !== "" &&
-        s.fullName.trim() !== "" &&
-        s.email.trim() !== "" &&
+        s.studentId.trim() &&
+        s.fullName.trim() &&
         s.section &&
         isValidStudentId(s.studentId) &&
-        isValidName(s.fullName) &&
-        isValidEmail(s.email),
+        isValidName(s.fullName),
     );
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
 
+      const majorName = majors.find((m) => m._id === selectedMajor)?.name || "";
+
+      const validStudents = students.filter(
+        (s) => s.studentId.trim() && s.fullName.trim() && s.section,
+      );
+
+      if (!validStudents.length) {
+        showAlert("กรุณากรอกข้อมูลนักศึกษาให้ครบ", "error");
+        return;
+      }
+
       const payload = {
         classId: selectedClass,
-        majorId: selectedMajor,
-        students: students.filter(
-          (s) => s.studentId.trim() && s.fullName.trim() && s.section,
-        ),
+        major: majorName,
+        section: validStudents[0].section,
+        students: validStudents.map((s) => ({
+          studentId: s.studentId,
+          fullName: s.fullName,
+          email: s.email,
+        })),
       };
-      const res = await fetch("/api/students/create", {
+
+      const res = await fetch("/api/students/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
@@ -155,7 +172,7 @@ export default function CreateStudentPage() {
 
       showAlert("เพิ่มนักศึกษาสำเร็จ", "success");
       router.push("/students");
-    } catch {
+    } catch (error) {
       showAlert("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", "error");
     } finally {
       setLoading(false);
@@ -404,7 +421,7 @@ export default function CreateStudentPage() {
                               <button
                                 key={s}
                                 onClick={() => {
-                                  handleChange(index, "section", s)
+                                  handleChange(index, "section", s);
                                   setOpenDropdown(null);
                                 }}
                                 className={`block w-full px-4 py-2 text-left text-sm cursor-pointer
