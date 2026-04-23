@@ -214,7 +214,9 @@ export default function CreateStudentPage() {
             </div>
 
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100">
-              <span className="text-sm text-gray-500">จำนวนนักศึกษาที่เพิ่ม</span>
+              <span className="text-sm text-gray-500">
+                จำนวนนักศึกษาที่เพิ่ม
+              </span>
               <span className="text-sm font-semibold text-blue-600">
                 {students.filter((s) => s.studentId || s.fullName).length}
               </span>

@@ -228,7 +228,7 @@ export default function StudentsPage() {
           <div className="flex flex-col h-[90vh] bg-white rounded-2xl shadow-sm">
             <div className="px-6 pt-6 flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-800">
+                <h1 className="text-[26px] font-semibold text-gray-800">
                   Student
                 </h1>
                 <p className="text-sm text-gray-400 mt-1">
@@ -330,8 +330,8 @@ export default function StudentsPage() {
 
               {!hasInitialData && (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex items-center justify-center w-24 h-24 rounded-full bg-gray-100">
-                    <DocumentTextIcon className="w-12 h-12 text-gray-400" />
+                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
+                    <img src="/not-exist.png" className="w-28 h-28" />
                   </div>
 
                   <p className="text-sm text-gray-400 mb-4">
@@ -350,8 +350,8 @@ export default function StudentsPage() {
 
               {hasInitialData && data.length === 0 && (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-gray-100">
-                    <DocumentTextIcon className="w-10 h-10 text-gray-400" />
+                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
+                    <img src="/not-exist.png" className="w-28 h-28" />
                   </div>
 
                   <p className="text-sm text-gray-400">

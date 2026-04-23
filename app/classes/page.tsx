@@ -119,7 +119,7 @@ export default function ClassesPage() {
           <div className="flex flex-col h-[90vh] bg-white rounded-2xl shadow-sm">
             <div className="px-6 pt-6 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-800">
+                <h1 className="text-[26px] font-semibold text-gray-800">
                   Classes
                 </h1>
                 <p className="text-sm text-gray-400 mt-1">
@@ -153,17 +153,17 @@ export default function ClassesPage() {
         )}
 
         {!loading && !hasData && (
-          <div className="flex flex-col h-[85vh] bg-white rounded-2xl shadow-sm">
+          <div className="flex flex-col h-[90vh] bg-white rounded-2xl shadow-sm">
             <div className="px-6 py-4">
-              <h1 className="text-2xl font-semibold text-gray-800">Classes</h1>
+              <h1 className="text-[26px] font-semibold text-gray-800">Classes</h1>
             </div>
 
             <div className="flex flex-1 flex-col items-center justify-center text-center">
-              <div className="mb-3 flex items-center justify-center w-24 h-24 rounded-full bg-gray-100">
-                <DocumentTextIcon className="w-12 h-12 text-gray-400" />
+              <div className="mb-3 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
+                <img src="/not-exist.png" className="w-28 h-28" />
               </div>
 
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 mb-4">
                 ยังไม่มีข้อมูลรายวิชาล่าสุด
               </p>
 

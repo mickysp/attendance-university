@@ -101,11 +101,13 @@ export default function Table({
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-        <div className="mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-gray-100">
-          <DocumentTextIcon className="w-10 h-10 text-gray-400" />
+        <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
+          <img src="/not_exist_search.svg" className="w-28 h-28" />
         </div>
 
-        <p className="text-sm text-gray-400">ไม่พบรายการที่ค้นหา</p>
+        <p className="text-sm text-gray-400">
+          ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
+        </p>
       </div>
     );
   }
