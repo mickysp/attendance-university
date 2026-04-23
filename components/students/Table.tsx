@@ -269,8 +269,8 @@ export default function StudentTable({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-4">
-              <div className="p-2 rounded-lg bg-[var(--card)]">
-                <PencilSquareIcon className="w-5 h-5 text-gray-700" />
+              <div className="p-2 rounded-lg bg-blue-50">
+                <PencilSquareIcon className="w-5 h-5 text-blue-600" />
               </div>
 
               <h2 className="text-lg font-semibold text-gray-800">
