@@ -179,8 +179,8 @@ export default function StudentTable({
 
   return (
     <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden mt-6">
-        <div className="max-h-[520px] overflow-y-auto">
+      <div className="rounded-xl border border-gray-200 overflow-hidden">
+        <div className="h-[510px] overflow-auto">
           <table className="w-full text-sm table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>
@@ -193,7 +193,7 @@ export default function StudentTable({
                 <th className="px-4 py-3 text-left font-semibold w-[260px]">
                   อีเมล
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[240px]">
+                <th className="px-4 py-3 text-left font-semibold w-[280px]">
                   จัดการ
                 </th>
               </tr>
@@ -534,7 +534,7 @@ export default function StudentTable({
 
               {openPageSize && (
                 <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200">
-                  {[5, 10, 15].map((size) => (
+                  {[10, 15, 20].map((size) => (
                     <button
                       key={size}
                       onClick={() => {
@@ -554,7 +554,7 @@ export default function StudentTable({
             <span>จากทั้งหมด {data.length} รายการ</span>
           </div>
 
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-2 mt-2">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
