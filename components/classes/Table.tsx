@@ -141,8 +141,8 @@ export default function Table({
 
   return (
     <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
-        <div className="h-[510px] overflow-auto">
+      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-sm table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>

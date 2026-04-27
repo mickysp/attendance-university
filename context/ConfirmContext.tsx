@@ -5,7 +5,8 @@ import {
   ExclamationTriangleIcon,
   DocumentCheckIcon,
   TrashIcon,
-  PencilSquareIcon
+  PencilSquareIcon,
+  ArrowUturnLeftIcon,
 } from "@heroicons/react/24/outline";
 
 type ConfirmType = {
@@ -24,11 +25,9 @@ type ConfirmContextType = {
   ) => void;
 };
 
-type ConfirmVariant = "delete" | "warning" | "info" | "edit";
+type ConfirmVariant = "delete" | "warning" | "info" | "edit" | "withdraw";
 
-const ConfirmContext = createContext<ConfirmContextType | undefined>(
-  undefined,
-);
+const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [confirm, setConfirm] = useState<ConfirmType | null>(null);
@@ -55,10 +54,18 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     switch (variant) {
       case "delete":
         return <TrashIcon className="w-10 h-10 text-red-500" />;
+
       case "warning":
-        return <ExclamationTriangleIcon className="w-10 h-10 text-yellow-500" />;
+        return (
+          <ExclamationTriangleIcon className="w-10 h-10 text-yellow-500" />
+        );
+
       case "edit":
         return <PencilSquareIcon className="w-10 h-10 text-indigo-500" />;
+
+      case "withdraw":
+        return <ArrowUturnLeftIcon className="w-10 h-10 text-orange-500" />;
+
       default:
         return <DocumentCheckIcon className="w-10 h-10 text-blue-500" />;
     }
@@ -72,6 +79,8 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         return "bg-yellow-100";
       case "edit":
         return "bg-indigo-100";
+      case "withdraw":
+        return "bg-orange-100";
       default:
         return "bg-blue-100";
     }
@@ -87,6 +96,8 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         return "คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่";
       default:
         return "คุณต้องการบันทึกข้อมูลใช่หรือไม่";
+      case "withdraw":
+        return "คุณต้องการถอนรายวิชานี้ใช่หรือไม่";
     }
   };
 
@@ -97,7 +108,6 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {confirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 font-noto">
           <div className="bg-white rounded-xl shadow-lg w-[390px] p-8 text-center animate-[scaleIn_0.2s_ease]">
-            
             <div
               className={`mb-3 flex items-center justify-center w-24 h-24 rounded-full mx-auto ${getBg()}`}
             >

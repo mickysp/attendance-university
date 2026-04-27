@@ -238,7 +238,7 @@ export default function CreateClassPage() {
       <Sidebar />
 
       <div className="flex-1 overflow-y-auto p-6 font-noto">
-        <div className="bg-white rounded-2xl shadow-sm pt-6 px-6 pb-6">
+        <div className="bg-white rounded-2xl pt-6 px-6 pb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button

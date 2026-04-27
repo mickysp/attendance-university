@@ -51,8 +51,6 @@ export default function StudentTable({
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
   const [editingClasses, setEditingClasses] = useState<
     { className: string; section: string }[]
   >([]);
@@ -95,7 +93,10 @@ export default function StudentTable({
     isValidName(selectedStudent.fullName.trim()) &&
     isValidSection(selectedStudent.section || "") &&
     (!selectedStudent.email || isValidEmail(selectedStudent.email.trim())) &&
-    editingClasses.every((c) => c.section.trim().length > 0);
+    editingClasses.length > 0 &&
+    editingClasses.every(
+      (c) => c.className.trim().length > 0 && c.section.trim().length > 0,
+    );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -109,20 +110,6 @@ export default function StudentTable({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, []);
 
   const getVisiblePages = () => {
@@ -147,7 +134,7 @@ export default function StudentTable({
 
   const handleDelete = (id: string) => {
     showConfirm(
-      "คุณต้องการลบข้อมูลใช่หรือไม่?",
+      "ลบข้อมูล?",
       async () => {
         try {
           const res = await fetch(`/api/students/delete?id=${id}`, {
@@ -170,6 +157,7 @@ export default function StudentTable({
         }
       },
       "delete",
+      "คุณต้องการลบข้อมูลใช่หรือไม่",
     );
   };
 
@@ -181,11 +169,13 @@ export default function StudentTable({
 
       const payload: Student = {
         ...selectedStudent,
-        classes: editingClasses.map((c, i) => ({
-          className: c.className,
-          section: c.section,
-          academicYear: selectedStudent.classes?.[i]?.academicYear || 0,
-        })),
+        classes: editingClasses
+          .filter((c) => c.className.trim() !== "")
+          .map((c, i) => ({
+            className: c.className,
+            section: c.section,
+            academicYear: selectedStudent.classes?.[i]?.academicYear || 0,
+          })),
       };
 
       const res = await fetch("/api/students/update", {
@@ -222,7 +212,7 @@ export default function StudentTable({
     const className = student.classes[0].className;
 
     showConfirm(
-      "ต้องการถอนวิชานี้ใช่หรือไม่?",
+      "ถอนวิชา?",
       async () => {
         try {
           const res = await fetch(
@@ -247,7 +237,8 @@ export default function StudentTable({
           showAlert("เกิดข้อผิดพลาด", "error");
         }
       },
-      "warning",
+      "withdraw",
+      "คุณต้องการถอนวิชานี้ใช่หรือไม่",
     );
   };
 
@@ -267,7 +258,7 @@ export default function StudentTable({
   return (
     <div>
       <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
-        <div className="overflow-auto">
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-sm table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>
@@ -280,7 +271,7 @@ export default function StudentTable({
                 <th className="px-4 py-3 text-left font-semibold w-[260px]">
                   อีเมล
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[280px]">
+                <th className="px-4 py-3 text-left font-semibold w-[350px]">
                   จัดการ
                 </th>
               </tr>
@@ -330,34 +321,25 @@ export default function StudentTable({
                         แก้ไข
                       </button>
 
-                      <div className="relative" ref={menuRef}>
-                        <button
-                          onClick={() =>
-                            setOpenMenuId(openMenuId === s._id ? null : s._id)
-                          }
-                          className="px-3 py-1.5 border border-gray-200 rounded-md hover:bg-gray-100 cursor-pointer"
-                        >
-                          ⋯
-                        </button>
+                      <button
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          handleWithdraw(s);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-yellow-50 text-yellow-500 text-sm cursor-pointer"
+                      >
+                        ถอนวิชา
+                      </button>
 
-                        {openMenuId === s._id && (
-                          <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow z-10">
-                            <button
-                              onClick={() => handleWithdraw(s)}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-yellow-50 text-yellow-600 cursor-pointer"
-                            >
-                              ถอนวิชา
-                            </button>
-
-                            <button
-                              onClick={() => handleDelete(s._id)}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-500 cursor-pointer"
-                            >
-                              ลบนักศึกษา
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          handleDelete(s._id);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
+                      >
+                        ลบ
+                      </button>
                     </div>
                   </td>
                 </tr>
