@@ -4,13 +4,16 @@ import { createContext, useContext, useState, ReactNode } from "react";
 import {
   ExclamationTriangleIcon,
   DocumentCheckIcon,
-  TrashIcon 
+  TrashIcon,
+  PencilIcon,
+  PencilSquareIcon
 } from "@heroicons/react/24/outline";
 
 type ConfirmType = {
   message: string;
   onConfirm: () => void;
   variant?: ConfirmVariant;
+  description?: string;
 };
 
 type ConfirmContextType = {
@@ -18,23 +21,28 @@ type ConfirmContextType = {
     message: string,
     onConfirm: () => void,
     variant?: ConfirmVariant,
+    description?: string,
   ) => void;
 };
 
-type ConfirmVariant = "delete" | "warning" | "info";
+type ConfirmVariant = "delete" | "warning" | "info" | "edit";
 
-const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
+const ConfirmContext = createContext<ConfirmContextType | undefined>(
+  undefined,
+);
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [confirm, setConfirm] = useState<ConfirmType | null>(null);
+
   const variant = confirm?.variant || "info";
 
   const showConfirm = (
     message: string,
     onConfirm: () => void,
     variant: ConfirmVariant = "info",
+    description?: string,
   ) => {
-    setConfirm({ message, onConfirm, variant });
+    setConfirm({ message, onConfirm, variant, description });
   };
 
   const handleClose = () => setConfirm(null);
@@ -44,6 +52,45 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     handleClose();
   };
 
+  const getIcon = () => {
+    switch (variant) {
+      case "delete":
+        return <TrashIcon className="w-10 h-10 text-red-500" />;
+      case "warning":
+        return <ExclamationTriangleIcon className="w-10 h-10 text-yellow-500" />;
+      case "edit":
+        return <PencilSquareIcon className="w-10 h-10 text-indigo-500" />;
+      default:
+        return <DocumentCheckIcon className="w-10 h-10 text-blue-500" />;
+    }
+  };
+
+  const getBg = () => {
+    switch (variant) {
+      case "delete":
+        return "bg-red-100";
+      case "warning":
+        return "bg-yellow-100";
+      case "edit":
+        return "bg-indigo-100";
+      default:
+        return "bg-blue-100";
+    }
+  };
+
+  const getDefaultDescription = () => {
+    switch (variant) {
+      case "delete":
+        return "การลบข้อมูลนี้ไม่สามารถกู้คืนได้";
+      case "warning":
+        return "การดำเนินการนี้อาจมีผลกระทบกับข้อมูล";
+      case "edit":
+        return "คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่";
+      default:
+        return "กรุณาตรวจสอบข้อมูลก่อนดำเนินการ";
+    }
+  };
+
   return (
     <ConfirmContext.Provider value={{ showConfirm }}>
       {children}
@@ -51,22 +98,11 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {confirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 font-noto">
           <div className="bg-white rounded-xl shadow-lg w-[390px] p-8 text-center animate-[scaleIn_0.2s_ease]">
+            
             <div
-              className={`mb-3 flex items-center justify-center w-24 h-24 rounded-full mx-auto ${
-                variant === "delete"
-                  ? "bg-red-100"
-                  : variant === "warning"
-                    ? "bg-yellow-100"
-                    : "bg-blue-100"
-              }`}
+              className={`mb-3 flex items-center justify-center w-24 h-24 rounded-full mx-auto ${getBg()}`}
             >
-              {variant === "delete" ? (
-                <TrashIcon className="w-7 h-7 text-red-500" />
-              ) : variant === "warning" ? (
-                <ExclamationTriangleIcon className="w-7 h-7 text-yellow-500" />
-              ) : (
-                <DocumentCheckIcon className="w-7 h-7 text-blue-500" />
-              )}
+              {getIcon()}
             </div>
 
             <p className="text-base text-gray-800 font-medium mb-1">
@@ -74,11 +110,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             </p>
 
             <p className="text-sm text-gray-400 mb-4">
-              {variant === "delete"
-                ? "การลบข้อมูลนี้ไม่สามารถกู้คืนได้"
-                : variant === "warning"
-                  ? "การดำเนินการนี้จะลบข้อมูลเฉพาะวิชา"
-                  : "กรุณาตรวจสอบข้อมูลก่อนดำเนินการ"}
+              {confirm.description || getDefaultDescription()}
             </p>
 
             <div className="flex justify-center gap-3">
@@ -96,7 +128,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                     ? "bg-red-500 hover:bg-red-600"
                     : variant === "warning"
                       ? "bg-blue-500 hover:bg-blue-600"
-                      : "bg-blue-500 hover:bg-blue-600"
+                      : variant === "edit"
+                        ? "bg-indigo-500 hover:bg-indigo-600"
+                        : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
                 ยืนยัน
