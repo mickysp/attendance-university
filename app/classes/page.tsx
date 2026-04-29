@@ -52,7 +52,7 @@ export default function ClassesPage() {
 
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassItem[]>([]);
-
+  const [fetched, setFetched] = useState(false);
   const [filter, setFilter] = useState({
     keyword: "",
     branch: "",
@@ -64,17 +64,16 @@ export default function ClassesPage() {
         setLoading(true);
 
         const res = await fetch("/api/classes");
+        const data = await res.json();
 
-        const data: { success: boolean; data: RawClass[] } = await res.json();
-
-        if (data.success) {
-          const safeData = data.data.map(normalizeClass);
-          setClasses(safeData);
+        if (data.success && Array.isArray(data.data)) {
+          setClasses(data.data.map(normalizeClass));
+        } else {
+          setClasses([]);
         }
-      } catch (error) {
-        //console.error("Fetch classes error:", error);
       } finally {
         setLoading(false);
+        setFetched(true);
       }
     };
 
@@ -114,7 +113,7 @@ export default function ClassesPage() {
             </div>
           </div>
         )}
-        
+
         {!loading && hasData && (
           <div className="flex flex-col bg-white rounded-2xl">
             <div className="px-6 pt-6 flex items-center justify-between">

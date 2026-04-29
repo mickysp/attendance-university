@@ -2,14 +2,25 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  context: { params?: { id?: string } }
+) {
   try {
     const url = new URL(req.url);
-    const id = url.pathname.split("/").pop();
+    const pathParts = url.pathname.split("/");
+    const pathId = pathParts[pathParts.length - 1];
 
-    if (!id) {
+    const queryId = url.searchParams.get("id");
+
+    const id =
+      context?.params?.id ||
+      pathId ||
+      queryId;
+
+    if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
-        { success: false, message: "กรุณาระบุ id" },
+        { success: false, message: "id ไม่ถูกต้อง", id },
         { status: 400 }
       );
     }
@@ -31,11 +42,39 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      data,
+      data: {
+        className:
+          data.className ||
+          data.name ||
+          data.title ||
+          data.subjectName ||
+          data.subject ||
+          "",
+
+        classCode:
+          data.classCode ||
+          data.code ||
+          data.class_code ||
+          data.subjectCode ||
+          data.subject_code ||
+          data.courseCode ||
+          "",
+
+        teacher:
+          data.teacher ||
+          data.instructor ||
+          data.professor ||
+          "",
+      },
     });
   } catch (error) {
+    console.error("ERROR:", error);
+
     return NextResponse.json(
-      { success: false, message: (error as Error).message },
+      {
+        success: false,
+        message: error instanceof Error ? error.message : "error",
+      },
       { status: 500 }
     );
   }

@@ -233,9 +233,7 @@ export default function AttendancePage() {
                   </p>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">
-                  <p>เลือกครบแล้ว (ยังไม่แสดงตาราง)</p>
-                </div>
+                <AttendanceTable data={students} />
               )}
             </div>
           </div>

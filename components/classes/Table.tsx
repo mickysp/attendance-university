@@ -207,7 +207,7 @@ export default function Table({
                       <button
                         onClick={() =>
                           router.push(
-                            `/classes/form?classId=${item._id}&className=${item.className}&classCode=${item.classCode}&teacher=${item.teacher?.name}`,
+                            `/classes/form?classId=${item._id}`,
                           )
                         }
                         className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm cursor-pointer"

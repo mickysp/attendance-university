@@ -13,14 +13,21 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/layouts/Sidebar";
 import { useConfirm } from "@/context/ConfirmContext";
 
+type Teacher = {
+  _id: string;
+  name: string;
+};
+
+type ClassInfo = {
+  className: string;
+  classCode?: string;
+  teacher?: Teacher;
+};
+
 export default function QRPage() {
   const searchParams = useSearchParams();
-
   const classId = searchParams.get("classId");
-  const className = searchParams.get("className");
-  const classCode = searchParams.get("classCode");
-  const teacher = searchParams.get("teacher");
-
+  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [openQR, setOpenQR] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -50,6 +57,25 @@ export default function QRPage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const fetchClass = async () => {
+      if (!classId) return;
+
+      try {
+        const res = await fetch(`/api/classes/${classId}`);
+        const data = await res.json();
+
+        if (data.success) {
+          setClassInfo(data.data);
+        }
+      } catch {
+        showAlert("โหลดข้อมูลวิชาไม่สำเร็จ", "error");
+      }
+    };
+
+    fetchClass();
+  }, [classId]);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -146,7 +172,7 @@ export default function QRPage() {
       URL.revokeObjectURL(url);
 
       const link = document.createElement("a");
-      link.download = `เช็คชื่อวิชา ${className || "ไม่ทราบชื่อวิชา"}.png`;
+      link.download = `เช็คชื่อวิชา ${classInfo?.className || "ไม่ทราบชื่อวิชา"}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     };
@@ -169,7 +195,7 @@ export default function QRPage() {
         )}
 
         {!loading && (
-          <div className="flex flex-col h-[85vh] bg-white rounded-2xl shadow-sm px-6 pt-6">
+          <div className="flex flex-col h-[85vh] bg-white rounded-2xl px-6 pt-6">
             <div className="mb-6 flex items-center gap-3">
               <button
                 onClick={() => router.back()}
@@ -194,12 +220,14 @@ export default function QRPage() {
                 <div className="bg-blue-50 border border-gray-200 rounded-xl p-4 mb-4">
                   <p className="text-sm text-gray-500 mb-1">วิชา</p>
                   <h2 className="text-base font-semibold text-gray-800">
-                    {className || "-"}
+                    {classInfo?.className || "-"}
                   </h2>
 
                   <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-                    <span>รหัสวิชา: {classCode || "-"}</span>
-                    <span>อาจารย์ประจำวิชา: {teacher || "-"}</span>
+                    <span>รหัสวิชา: {classInfo?.classCode || "-"}</span>
+                    <span>
+                      อาจารย์ประจำวิชา: {classInfo?.teacher?.name || "-"}
+                    </span>
                   </div>
                 </div>
 
@@ -226,8 +254,11 @@ export default function QRPage() {
                   </div>
 
                   <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                    <div className="qr-code relative p-5 border border-gray-300 rounded-2xl bg-white">
-                      <QRCode value={link || "loading"} size={300} />
+                    <div
+                      onClick={() => setOpenQR(true)}
+                      className="qr-code relative p-5 border border-gray-300 rounded-2xl bg-white cursor-pointer"
+                    >
+                      <QRCode value={link || "loading"} size={350} />
 
                       <button
                         onClick={() => setOpenQR(true)}
