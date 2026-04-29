@@ -26,6 +26,7 @@ type AttendanceDoc = {
   status: "มาเรียน" | "มาสาย" | "ลา";
   score?: number;
   date: string;
+  note?: string;
   logs?: CheckInLog[];
   createdBy?: "student" | "teacher";
   createdAt?: Date;
@@ -73,7 +74,8 @@ const getAcademicYear = () => new Date().getFullYear() + 543;
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { classId, name, studentId, section, email, location, photo } = body;
+    const { classId, name, studentId, section, email, location, photo, note } =
+      body;
 
     if (!classId || !studentId) {
       return NextResponse.json({ success: false, message: "missing data" });
@@ -212,6 +214,7 @@ export async function POST(req: Request) {
       status,
       score,
       date: today,
+      note,
       logs: [
         {
           time: nowTH,
@@ -305,6 +308,8 @@ export async function POST(req: Request) {
       `
         : ""
     }
+
+    <p><b>หมายเหตุ:</b> ${note || "-"}</p>
 
   </div>
 
