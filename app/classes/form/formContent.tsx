@@ -45,6 +45,33 @@ export default function QRPage() {
     location: false,
   });
 
+  const [schedule, setSchedule] = useState({
+    startTime: "",
+    lateAfter: 15,
+    allowCheckIn: true,
+    isOpen: true,
+  });
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!classId) return;
+
+      const res = await fetch(`/api/schedule?classId=${classId}`);
+      const data = await res.json();
+
+      if (data.success && data.schedule) {
+        setSchedule({
+          startTime: data.schedule.startTime || "",
+          lateAfter: data.schedule.lateAfter ?? 15,
+          allowCheckIn: data.schedule.allowCheckIn ?? true,
+          isOpen: data.schedule.isOpen ?? true,
+        });
+      }
+    };
+
+    fetchSchedule();
+  }, [classId]);
+
   const link =
     typeof window !== "undefined" && classId
       ? `${window.location.origin}/check-in?classId=${classId}`
@@ -102,31 +129,38 @@ export default function QRPage() {
     showAlert("คัดลอกลิงก์แล้ว", "success");
   };
 
-  const handleSave = async () => {
+  const handleSaveSchedule = async () => {
     if (!classId) return;
+
+    if (!schedule.startTime) {
+      showAlert("กรุณาเลือกเวลาเริ่มเรียน", "error");
+      return;
+    }
 
     try {
       setSaving(true);
 
-      const res = await fetch("/api/check-in", {
+      const res = await fetch("/api/schedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           classId,
-          config: formConfig,
+          startTime: schedule.startTime,
+          lateAfter: schedule.lateAfter,
+          allowCheckIn: schedule.allowCheckIn,
+          isOpen: schedule.isOpen,
         }),
       });
 
       const data = await res.json();
 
-      if (!data.success) {
-        showAlert(data.message || "เกิดข้อผิดพลาด", "error");
-        return;
+      if (data.success) {
+        showAlert("บันทึกเวลาเรียบร้อย", "success");
+      } else {
+        showAlert("บันทึกไม่สำเร็จ", "error");
       }
-
-      showAlert("บันทึกการตั้งค่าเรียบร้อย", "success");
     } catch {
       showAlert("เกิดข้อผิดพลาด", "error");
     } finally {
@@ -195,7 +229,7 @@ export default function QRPage() {
         )}
 
         {!loading && (
-          <div className="flex flex-col h-[85vh] bg-white rounded-2xl px-6 pt-6">
+          <div className="flex flex-col bg-white rounded-2xl px-6 pt-6 pb-8">
             <div className="mb-6 flex items-center gap-3">
               <button
                 onClick={() => router.back()}
@@ -229,6 +263,112 @@ export default function QRPage() {
                       อาจารย์ประจำวิชา: {classInfo?.teacher?.name || "-"}
                     </span>
                   </div>
+                </div>
+
+                <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-5 mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm text-gray-800">
+                      ตั้งเวลาเช็คชื่อ
+                    </h3>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">เปิดใช้งาน</span>
+                      <button
+                        onClick={() =>
+                          setSchedule((prev) => ({
+                            ...prev,
+                            allowCheckIn: !prev.allowCheckIn,
+                          }))
+                        }
+                        className={`w-11 h-6 flex items-center rounded-full px-1 transition ${
+                          schedule.allowCheckIn ? "bg-green-500" : "bg-gray-300"
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 bg-white rounded-full shadow transform transition ${
+                            schedule.allowCheckIn
+                              ? "translate-x-5"
+                              : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end gap-4 flex-wrap">
+                    <div className="flex flex-col">
+                      <label className="text-xs text-gray-500 mb-1">
+                        เวลาเริ่มเรียน
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.startTime}
+                        onChange={(e) =>
+                          setSchedule({
+                            ...schedule,
+                            startTime: e.target.value,
+                          })
+                        }
+                        className="border border-gray-200 rounded-lg px-3 py-2 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <label className="text-xs text-gray-500 mb-1">
+                        มาสายได้ภายใน
+                      </label>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={0}
+                          max={120}
+                          value={schedule.lateAfter}
+                          onChange={(e) =>
+                            setSchedule({
+                              ...schedule,
+                              lateAfter: Math.max(
+                                0,
+                                Math.min(120, Number(e.target.value)),
+                              ),
+                            })
+                          }
+                          className="border border-gray-200 rounded-lg px-3 py-2 pr-10 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                          นาที
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-end">
+                      <button
+                        disabled={saving}
+                        onClick={handleSaveSchedule}
+                        className="px-6 py-2.5 bg-blue-500 text-white rounded-lg text-sm shadow hover:bg-blue-600 transition disabled:opacity-50 cursor-pointer"
+                      >
+                        {saving ? "กำลังบันทึก..." : "บันทึก"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {schedule.startTime && (
+                    <div className="mt-4 text-xs text-gray-500">
+                      เริ่ม: <b>{schedule.startTime}</b> | มาสายถึง:{" "}
+                      <b className="text-yellow-600">
+                        {(() => {
+                          const [h, m] = schedule.startTime
+                            .split(":")
+                            .map(Number);
+                          const date = new Date();
+                          date.setHours(h);
+                          date.setMinutes(m + schedule.lateAfter);
+                          return date.toTimeString().slice(0, 5);
+                        })()}
+                      </b>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col h-full">
