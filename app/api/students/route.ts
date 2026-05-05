@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { Filter, ObjectId } from "mongodb";
+import { ObjectId, Filter } from "mongodb";
 
 type StudentDoc = {
   _id: ObjectId;
@@ -16,26 +16,22 @@ type StudentDoc = {
 type StudentClassDoc = {
   studentId: ObjectId;
   className: string;
-  section?: string;
 };
-
-type ClassItem = {
-  className: string;
-  section?: string;
-};
-
-const getCurrentAcademicYear = (): number =>
-  new Date().getFullYear() + 543;
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
-    const keyword = searchParams.get("keyword") || "";
-    const classFilter = searchParams.get("class") || "";
-    const majorFilter = searchParams.get("major") || "";
-    const sectionFilter = searchParams.get("section") || "";
-    const yearFilter = searchParams.get("year") || "";
+    const className = searchParams.get("class");
+    const major = searchParams.get("major");
+    const section = searchParams.get("section");
+    const keyword = searchParams.get("keyword");
+
+    const yearParam = searchParams.get("year");
+
+    const page = Number(searchParams.get("page") || 1);
+    const limit = Number(searchParams.get("limit") || 20);
+    const skip = (page - 1) * limit;
 
     const client = await clientPromise;
     const db = client.db("attendance");
@@ -46,42 +42,71 @@ export async function GET(req: Request) {
 
     const query: Filter<StudentDoc> = {};
 
+    query.academicYear = yearParam
+      ? Number(yearParam)
+      : new Date().getFullYear() + 543;
+
+    if (section) {
+      query.section = section;
+    }
+
+    if (major) {
+      query.major = { $regex: major, $options: "i" };
+    }
+
     if (keyword) {
       query.$or = [
-        { fullName: { $regex: keyword, $options: "i" } },
         { studentId: { $regex: keyword, $options: "i" } },
+        { fullName: { $regex: keyword, $options: "i" } },
       ];
     }
 
-    if (sectionFilter) {
-      query.section = sectionFilter;
+    if (className) {
+      const relations = await studentClassesCol
+        .find({
+          className: { $regex: className, $options: "i" },
+        })
+        .toArray();
+
+      const studentIds = relations.map((r) => r.studentId);
+
+      if (studentIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          students: [],
+          count: 0,
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+
+      query._id = {
+        $in: studentIds.map((id) =>
+          typeof id === "string" ? new ObjectId(id) : id,
+        ),
+      };
     }
 
-    if (majorFilter) {
-      query.major = { $regex: majorFilter, $options: "i" };
-    }
-
-    const academicYear = yearFilter
-      ? Number(yearFilter)
-      : getCurrentAcademicYear();
-
-    query.academicYear = academicYear;
-    
     const students = await studentsCol
       .find(query)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .toArray();
+
+    const total = await studentsCol.countDocuments(query);
 
     const studentIds = students.map((s) => s._id);
 
     const relations = await studentClassesCol
-      .find({
-        studentId: { $in: studentIds },
-        ...(classFilter && { className: classFilter }),
-      })
+      .find({ studentId: { $in: studentIds } })
       .toArray();
 
-    const classMap = new Map<string, ClassItem[]>();
+    const classMap = new Map<string, string[]>();
 
     relations.forEach((r) => {
       const key = r.studentId.toString();
@@ -90,80 +115,38 @@ export async function GET(req: Request) {
         classMap.set(key, []);
       }
 
-      classMap.get(key)!.push({
-        className: r.className,
-        section: r.section,
-      });
+      classMap.get(key)!.push(r.className);
     });
 
-    let data = students.map((s) => {
-      const classes = classMap.get(s._id.toString()) || [];
+    const data = students.map((s) => ({
+      studentId: s.studentId,
+      fullName: s.fullName,
+      email: s.email,
+      classNames: classMap.get(s._id.toString()) || [],
+      section: s.section,
+      major: s.major || "",
+      academicYear: s.academicYear || null,
+      createdAt: s.createdAt,
+    }));
 
-      return {
-        _id: s._id.toString(),
-        studentId: s.studentId,
-        fullName: s.fullName,
-        email: s.email,
-        classNames: classes.map((c) => c.className),
-        classes: classes.map((c) => ({
-          className: c.className,
-          section: c.section,
-          academicYear: s.academicYear,
-        })),
-        section: s.section,
-        major: s.major || "",
-        academicYear: s.academicYear || null,
-        createdAt: s.createdAt,
-      };
-    });
-
-    if (classFilter) {
-      data = data.filter((d) =>
-        d.classNames.some((c) =>
-          c.toLowerCase().includes(classFilter.toLowerCase())
-        )
-      );
-    }
-
-    let majorsByClass: string[] = [];
-
-    if (classFilter) {
-      const studentIdSet = new Set(
-        relations.map((r) => r.studentId.toString())
-      );
-
-      const majorSet = new Set<string>();
-
-      students.forEach((s) => {
-        if (
-          studentIdSet.has(s._id.toString()) &&
-          s.major
-        ) {
-          majorSet.add(s.major.trim());
-        }
-      });
-
-      majorsByClass = Array.from(majorSet);
-    }
-
-    const yearsRaw = await studentsCol.distinct("academicYear");
-
-    const years = (yearsRaw as number[])
-      .filter(Boolean)
-      .sort((a, b) => b - a);
-
-    return NextResponse.json(
-      {
-        success: true,
-        count: data.length,
-        students: data,
-        majorsByClass,
-        years,
-        currentYear: getCurrentAcademicYear(),
+    return NextResponse.json({
+      success: true,
+      filters: {
+        className,
+        major,
+        section,
+        keyword,
+        academicYear: query.academicYear,
       },
-      { status: 200 }
-    );
-
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+      count: data.length,
+      students: data,
+    });
   } catch (error: unknown) {
     return NextResponse.json(
       {
@@ -171,7 +154,7 @@ export async function GET(req: Request) {
         message:
           error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

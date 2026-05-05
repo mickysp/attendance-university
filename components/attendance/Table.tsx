@@ -4,12 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 type StudentAttendance = {
-  id: string;
+  studentId: string;
   name: string;
-  present: number;
-  absent: number;
-  percent: number;
+  section: string;
+  major: string;
+  status: string;
   score: number;
+  checkInTime: string | null;
+  totalScore: number;
+  days: number;
+  averageScore: number;
 };
 
 type Props = {
@@ -44,26 +48,28 @@ export default function AttendanceTable({ data }: Props) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getStatus = (percent: number, score: number) => {
-    if (percent < 60 || score < 50) return "danger";
-    if (percent < 80 || score < 70) return "warning";
-    return "good";
-  };
-
   const statusMap = {
-    good: {
+    มาเรียน: {
       text: "ปกติ",
       class: "bg-green-50 text-green-600 border-green-200",
     },
-    warning: {
-      text: "เฝ้าระวัง",
+    มาสาย: {
+      text: "มาสาย",
       class: "bg-yellow-50 text-yellow-600 border-yellow-200",
     },
-    danger: {
-      text: "เสี่ยง",
+    ลา: {
+      text: "ลา",
+      class: "bg-yellow-50 text-yellow-600 border-yellow-200",
+    },
+    ขาด: {
+      text: "ขาด",
       class: "bg-red-50 text-red-600 border-red-200",
     },
-  };
+    ยังไม่เช็คชื่อ: {
+      text: "ยังไม่เช็คชื่อ",
+      class: "bg-gray-50 text-gray-500 border-gray-200",
+    },
+  } as const;
 
   const getScoreColor = (score: number) => {
     if (score < 50) return "text-red-500";
@@ -114,34 +120,40 @@ export default function AttendanceTable({ data }: Props) {
 
             <tbody>
               {paginatedData.map((s) => {
-                const status = getStatus(s.percent, s.score);
+                const status = s.status as keyof typeof statusMap;
 
                 return (
                   <tr
-                    key={s.id}
+                    key={s.studentId}
                     className="border-t border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="px-4 py-2 text-sm truncate">{s.name}</td>
+                    <td className="px-4 py-3.5 text-sm">{s.studentId}</td>
 
-                    <td className="px-4 py-2 text-sm text-center">
-                      {s.present}
+                    <td className="px-4 py-3.5 text-sm">{s.name}</td>
+
+                    <td className="px-4 py-3.5 text-sm text-center">{s.days}</td>
+
+                    <td className="px-4 py-3.5 text-sm text-center">
+                      {s.checkInTime ?? "-"}
                     </td>
 
-                    <td className="px-4 py-2 text-sm text-center text-red-500">
-                      {s.absent}
-                    </td>
-
-                    <td className="px-4 py-2 text-sm"></td>
-
-                    <td
-                      className={`px-4 py-2 text-sm text-center font-medium ${getScoreColor(
-                        s.score,
-                      )}`}
-                    >
+                    <td className={`px-4 py-3.5 text-sm text-center font-medium`}>
                       {s.score}
                     </td>
 
-                    <td className="px-4 py-2 text-sm text-center"></td>
+                    <td className="px-4 py-3.5 text-sm text-center">
+                      <span
+                        className={`px-2 py-1.5 rounded border text-xs ${
+                          (statusMap[status] ?? statusMap["ยังไม่เช็คชื่อ"])
+                            .class
+                        }`}
+                      >
+                        {
+                          (statusMap[status] ?? statusMap["ยังไม่เช็คชื่อ"])
+                            .text
+                        }
+                      </span>
+                    </td>
                   </tr>
                 );
               })}

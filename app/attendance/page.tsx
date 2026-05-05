@@ -21,12 +21,16 @@ type Major = {
 };
 
 type StudentAttendance = {
-  id: string;
+  studentId: string;
   name: string;
-  present: number;
-  absent: number;
-  percent: number;
+  section: string;
+  major: string;
+  status: string;
   score: number;
+  checkInTime: string | null;
+  totalScore: number;
+  days: number;
+  averageScore: number;
 };
 
 export default function AttendancePage() {
@@ -44,6 +48,7 @@ export default function AttendancePage() {
   const [selectedYear, setSelectedYear] = useState<number>(currentYearBE);
 
   const [yearOptions, setYearOptions] = useState<number[]>([]);
+  const [loadingMajors, setLoadingMajors] = useState(false);
 
   const handleClearAll = () => {
     setSelectedClass(null);
@@ -55,14 +60,17 @@ export default function AttendancePage() {
   useEffect(() => {
     const loadYears = async () => {
       try {
-        const res = await fetch("/api/students");
+        const res = await fetch("/api/students/years");
+
+        if (!res.ok) throw new Error("โหลดปีไม่สำเร็จ");
+
         const json = await res.json();
 
         const years: number[] = json.years || [];
 
         setYearOptions(years);
 
-        if (years.length > 0 && !years.includes(currentYearBE)) {
+        if (years.length > 0) {
           setSelectedYear(years[0]);
         }
       } catch (err) {
@@ -78,8 +86,13 @@ export default function AttendancePage() {
       try {
         setLoading(true);
 
-        const res = await fetch("/api/classes");
-        if (!res.ok) throw new Error("Failed to fetch classes");
+        const res = await fetch(`/api/classes?year=${selectedYear}`);
+
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("classes error:", text);
+          throw new Error("Failed to fetch classes");
+        }
 
         const json = await res.json();
         setClasses(json?.data || []);
@@ -91,40 +104,41 @@ export default function AttendancePage() {
     };
 
     loadData();
-  }, []);
+  }, [selectedYear]);
 
   useEffect(() => {
-    if (!selectedClass) {
-      setMajors([]);
-      setSelectedMajor(null);
-      setStudents([]);
-      return;
-    }
+    if (!selectedClass) return;
 
-    const loadStudentsAndMajors = async () => {
+    const load = async () => {
       try {
+        setLoadingMajors(true);
+
         const res = await fetch(
-          `/api/students?class=${selectedClass}&year=${selectedYear}`,
+          `/api/attendance/summary?classId=${selectedClass}&year=${selectedYear}`,
         );
+
         const json = await res.json();
 
-        setStudents(json.students || []);
+        const list: StudentAttendance[] = json.data ?? [];
+        setStudents(list);
+
+        const majorsByClass: string[] = json.majorsByClass ?? [];
 
         setMajors(
-          (json.majorsByClass || []).map((m: string) => ({
+          majorsByClass.map((m) => ({
             id: m,
             name: m,
           })),
         );
-
-        setSelectedMajor(null);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoadingMajors(false);
       }
     };
 
-    loadStudentsAndMajors();
-  }, [selectedClass]);
+    load();
+  }, [selectedClass, selectedYear]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
@@ -170,7 +184,7 @@ export default function AttendancePage() {
                 subjects={classes
                   .filter((c) => c.hasStudents)
                   .map((c) => ({
-                    id: c.className || c.name || "",
+                    id: c._id,
                     name: `${c.className || c.name} (${c.classCode || ""})`,
                   }))}
                 value={selectedClass}
@@ -178,9 +192,13 @@ export default function AttendancePage() {
                 showClear={false}
               />
 
-              {selectedClass && majors.length > 0 && (
+              {selectedClass && (
                 <SubjectSelect
-                  subjects={majors}
+                  subjects={
+                    loadingMajors
+                      ? [{ id: "loading", name: "กำลังโหลด..." }]
+                      : majors
+                  }
                   value={selectedMajor}
                   onChange={setSelectedMajor}
                   showClear={true}
@@ -233,7 +251,12 @@ export default function AttendancePage() {
                   </p>
                 </div>
               ) : (
-                <AttendanceTable data={students} />
+                <>
+                  <div className="text-base text-gray-600 font-semibold mt-6">
+                    Student ทั้งหมด {students.length} รายการ
+                  </div>
+                  <AttendanceTable data={students} />
+                </>
               )}
             </div>
           </div>
