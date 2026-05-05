@@ -50,12 +50,10 @@ export default function Table({
   const router = useRouter();
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
-
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [openPageSize, setOpenPageSize] = useState(false);
   const [page, setPage] = useState(1);
   const pageSizeRef = useRef<HTMLDivElement>(null);
-
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
   const paginatedData = data.slice(
@@ -117,30 +115,35 @@ export default function Table({
   };
 
   const handleDelete = (id: string) => {
-    showConfirm("คุณต้องการลบข้อมูลใช่หรือไม่?", async () => {
-      try {
-        const res = await fetch(`/api/classes/delete?id=${id}`, {
-          method: "DELETE",
-        });
+    showConfirm(
+      "ลบข้อมูลรายวิชา?",
+      async () => {
+        try {
+          const res = await fetch(`/api/classes/delete?id=${id}`, {
+            method: "DELETE",
+          });
 
-        const data = await res.json();
+          const data = await res.json();
 
-        if (!res.ok) throw new Error(data.message);
+          if (!res.ok) throw new Error(data.message);
 
-        showAlert(data.message, "success");
-        onDeleteSuccess(id);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-        showAlert(message, "error");
-      }
-    });
+          showAlert(data.message, "success");
+          onDeleteSuccess(id);
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
+          showAlert(message, "error");
+        }
+      },
+      "delete",
+      "คุณต้องการลบข้อมูลใช่หรือไม่",
+    );
   };
 
   return (
     <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden mt-6">
-        <div className="max-h-[520px] overflow-y-auto">
-          <table className="w-full text-sm table-fixed">
+      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
+        <div className="overflow-x-auto overflow-y-visible">
+          <table className="w-full text-base table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold w-[100px]">
@@ -155,7 +158,7 @@ export default function Table({
                 <th className="px-4 py-3 text-left font-semibold w-[200px]">
                   อาจารย์ผู้สอน
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[240px]">
+                <th className="px-4 py-3 text-left font-semibold w-[300px]">
                   จัดการ
                 </th>
               </tr>
@@ -171,7 +174,7 @@ export default function Table({
                     {item.classCode || "-"}
                   </td>
 
-                  <td className="px-4 py-2 text-sm truncate">
+                  <td className="px-4 py-2 text-sm whitespace-normal break-words">
                     {item.className}
                   </td>
 
@@ -204,13 +207,13 @@ export default function Table({
                       <button
                         onClick={() =>
                           router.push(
-                            `/classes/form?classId=${item._id}&className=${item.className}&classCode=${item.classCode}&teacher=${item.teacher?.name}`,
+                            `/classes/form?classId=${item._id}`,
                           )
                         }
                         className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm cursor-pointer"
                       >
                         <ClipboardDocumentCheckIcon className="w-4 h-4" />
-                        เช็คชื่อ
+                        ลิงก์เช็คชื่อ
                       </button>
 
                       <button
@@ -245,7 +248,7 @@ export default function Table({
             <div ref={pageSizeRef} className="relative">
               <button
                 onClick={() => setOpenPageSize(!openPageSize)}
-                className="form-input-card flex items-center justify-between gap-2 px-3 py-1 text-xs min-w-[60px]"
+                className="form-input-card flex items-center justify-between gap-2 px-3 py-1 text-xs min-w-[60px] cursor-pointer"
               >
                 {itemsPerPage}
                 <ChevronDownIcon className="w-3 h-3 text-gray-400" />
@@ -253,7 +256,7 @@ export default function Table({
 
               {openPageSize && (
                 <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200">
-                  {[5, 10, 15].map((size) => (
+                  {[10, 15, 20].map((size) => (
                     <button
                       key={size}
                       onClick={() => {
@@ -261,7 +264,7 @@ export default function Table({
                         setPage(1);
                         setOpenPageSize(false);
                       }}
-                      className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
                     >
                       {size}
                     </button>
@@ -273,7 +276,7 @@ export default function Table({
             <span>จากทั้งหมด {data.length} รายการ</span>
           </div>
 
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-2 mt-2">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}

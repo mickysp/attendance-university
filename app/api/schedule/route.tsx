@@ -1,104 +1,171 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, Document } from "mongodb";
 
-type ScheduleDoc = {
-  classId: ObjectId;
-  className: string;
-  startTime: string;
-  lateAfter: number;
-  isOpen: boolean;
-  allowCheckIn: boolean;
-  updatedAt: Date;
+type ThaiStatus =
+  | "มาเรียน"
+  | "มาสาย"
+  | "ลา"
+  | "ขาด"
+  | "ยังไม่เช็คชื่อ";
+
+const getAcademicYear = () => new Date().getFullYear() + 543;
+
+// helper: แปลง HH:mm → Date
+const toDateTime = (dateStr: string, timeStr: string) => {
+  return new Date(`${dateStr}T${timeStr}:00`);
 };
-
-const isValidTime = (time: string) =>
-  /^([01]\d|2[0-3]):([0-5]\d)$/.test(time);
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { classId, startTime, lateAfter, isOpen, allowCheckIn } = body;
-
-    if (!classId || !startTime) {
-      return NextResponse.json({ success: false, message: "missing data" });
-    }
-
-    if (!ObjectId.isValid(classId)) {
-      return NextResponse.json({ success: false, message: "classId ไม่ถูกต้อง" });
-    }
-
-    if (!isValidTime(startTime)) {
-      return NextResponse.json({ success: false, message: "เวลาไม่ถูกต้อง" });
-    }
-
-    const client = await clientPromise;
-    const db = client.db("attendance");
-
-    const classCol = db.collection("classes");
-    const scheduleCol = db.collection<ScheduleDoc>("schedule");
-
-    const classObjectId = new ObjectId(classId);
-
-    const classData = await classCol.findOne({ _id: classObjectId });
-
-    if (!classData) {
-      return NextResponse.json({ success: false, message: "ไม่พบวิชา" });
-    }
-
-    const className =
-      classData.name ||
-      classData.className ||
-      classData.title ||
-      "ไม่พบชื่อวิชา";
-
-    const data: ScheduleDoc = {
-      classId: classObjectId,
-      className,
-      startTime,
-      lateAfter: Number(lateAfter ?? 15),
-      isOpen: isOpen ?? true,
-      allowCheckIn: allowCheckIn ?? true,
-      updatedAt: new Date(),
-    };
-
-    await scheduleCol.updateOne(
-      { classId: classObjectId },
-      { $set: data },
-      { upsert: true }
-    );
-
-    return NextResponse.json({ success: true, schedule: data });
-
-  } catch {
-    return NextResponse.json({ success: false, message: "error" });
-  }
-}
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const classId = searchParams.get("classId");
 
-    if (!classId || !ObjectId.isValid(classId)) {
-      return NextResponse.json({ success: false, message: "classId ไม่ถูกต้อง" });
+    const classId = searchParams.get("classId");
+    const yearParam = searchParams.get("year");
+
+    if (!classId) {
+      return NextResponse.json({
+        success: false,
+        message: "missing classId",
+        data: [],
+        majorsByClass: [],
+      });
     }
+
+    const academicYear = yearParam
+      ? Number(yearParam)
+      : getAcademicYear();
 
     const client = await clientPromise;
     const db = client.db("attendance");
 
-    const scheduleCol = db.collection<ScheduleDoc>("schedule");
+    const attendanceCol = db.collection<Document>("attendance");
+    const studentsCol = db.collection<Document>("students");
+    const sessionsCol = db.collection<Document>("sessions");
 
-    const schedule = await scheduleCol.findOne({
-      classId: new ObjectId(classId),
+    const classFilter = ObjectId.isValid(classId)
+      ? new ObjectId(classId)
+      : classId;
+
+    // ✅ 1. ดึง session ทั้งหมดของวิชา
+    const sessions = await sessionsCol
+      .find({
+        classId: classFilter,
+        academicYear,
+      })
+      .toArray();
+
+    // ✅ 2. ดึง attendance ของวิชานี้
+    const attendanceList = await attendanceCol
+      .find({
+        classId: classFilter,
+        academicYear,
+      })
+      .toArray();
+
+    // ✅ 3. ดึง student
+    const students = await studentsCol
+      .find({ academicYear })
+      .toArray();
+
+    // map attendance ตาม student + session
+    const attendanceMap = new Map<string, Document>();
+
+    attendanceList.forEach((a) => {
+      const key = `${a.studentId}_${a.sessionId}`;
+      attendanceMap.set(key, a);
     });
+
+    const now = new Date();
+
+    const result = students.map((s) => {
+      let totalScore = 0;
+      let days = 0;
+      let lastStatus: ThaiStatus = "ยังไม่เช็คชื่อ";
+
+      sessions.forEach((session) => {
+        if (session.status === "cancelled") return;
+
+        const key = `${s.studentId}_${session._id}`;
+        const record = attendanceMap.get(key);
+
+        const closeTime = toDateTime(
+          session.date,
+          session.checkInClose
+        );
+
+        const lateTime = toDateTime(
+          session.date,
+          session.lateAfter
+        );
+
+        let status: ThaiStatus = "ยังไม่เช็คชื่อ";
+
+        if (record) {
+          const checkInTime = new Date(record.checkInTime);
+
+          if (checkInTime <= lateTime) {
+            status = "มาเรียน";
+          } else if (checkInTime <= closeTime) {
+            status = "มาสาย";
+          } else {
+            status = "ขาด";
+          }
+
+          totalScore += record.score || 0;
+          days++;
+        } else {
+          // ❗ ยังไม่เช็คชื่อ → ต้องดูเวลา
+          if (now > closeTime) {
+            status = "ขาด"; // ✅ ปิดแล้ว = ขาด
+            days++;
+          } else {
+            status = "ยังไม่เช็คชื่อ"; // ✅ ยังไม่ถึงเวลา
+          }
+        }
+
+        lastStatus = status;
+      });
+
+      return {
+        studentId: s.studentId,
+        name: s.fullName,
+        section: s.section || "-",
+        major: s.major || "-",
+
+        status: lastStatus,
+        totalScore,
+        days,
+        averageScore: days > 0 ? totalScore / days : 0,
+      };
+    });
+
+    const majorsByClass = [
+      ...new Set(
+        result
+          .map((r) => r.major)
+          .filter((m) => m && m !== "-")
+      ),
+    ];
 
     return NextResponse.json({
       success: true,
-      schedule,
+      academicYear,
+      data: result,
+      majorsByClass,
     });
-
   } catch (error) {
-    return NextResponse.json({ success: false, message: "error" });
+    console.error("attendance summary error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        data: [],
+        majorsByClass: [],
+        message:
+          error instanceof Error ? error.message : "error",
+      },
+      { status: 500 }
+    );
   }
 }

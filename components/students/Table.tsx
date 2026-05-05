@@ -45,16 +45,40 @@ export default function StudentTable({
 
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
+  const [originalStudent, setOriginalStudent] = useState<Student | null>(null);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const [editingClasses, setEditingClasses] = useState<
+    { className: string; section: string }[]
+  >([]);
+
+  const originalClasses = (originalStudent?.classes || []).map((c) => ({
+    className: c.className,
+    section: c.section || "",
+  }));
+
   const paginatedData = data.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage,
   );
 
+  const isDirty =
+    selectedStudent?.studentId !== originalStudent?.studentId ||
+    selectedStudent?.fullName !== originalStudent?.fullName ||
+    selectedStudent?.email !== originalStudent?.email ||
+    selectedStudent?.section !== originalStudent?.section ||
+    JSON.stringify(editingClasses) !==
+      JSON.stringify(
+        (originalStudent?.classes || []).map((c) => ({
+          className: c.className,
+          section: c.section || "",
+        })),
+      );
+
   const isValidSection = (section: string) => /^[0-9]+$/.test(section);
-
-  const [openEdit, setOpenEdit] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-
   const isValidStudentId = (id: string) => /^\d{9}-\d$/.test(id);
   const isValidName = (name: string) => /^(นาย|นาง|นางสาว)/.test(name);
   const isValidEmail = (email: string) =>
@@ -62,17 +86,17 @@ export default function StudentTable({
 
   const isFormValid =
     selectedStudent &&
-    selectedStudent.studentId.trim() &&
-    selectedStudent.fullName.trim() &&
-    selectedStudent.section?.trim() &&
+    selectedStudent.studentId.trim().length > 0 &&
+    selectedStudent.fullName.trim().length > 0 &&
+    (selectedStudent.section || "").trim().length > 0 &&
     isValidStudentId(selectedStudent.studentId) &&
-    isValidName(selectedStudent.fullName) &&
+    isValidName(selectedStudent.fullName.trim()) &&
     isValidSection(selectedStudent.section || "") &&
-    (!selectedStudent.email || isValidEmail(selectedStudent.email));
-
-  const [editingClasses, setEditingClasses] = useState<
-    { className: string; section: string }[]
-  >([]);
+    (!selectedStudent.email || isValidEmail(selectedStudent.email.trim())) &&
+    editingClasses.length > 0 &&
+    editingClasses.every(
+      (c) => c.className.trim().length > 0 && c.section.trim().length > 0,
+    );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -91,15 +115,14 @@ export default function StudentTable({
   const getVisiblePages = () => {
     const pages = [];
 
+    const maxVisible = 4;
+
     let start = Math.max(1, page - 1);
-    let end = Math.min(totalPages, page + 1);
+    let end = start + maxVisible - 1;
 
-    if (page === 1) {
-      end = Math.min(3, totalPages);
-    }
-
-    if (page === totalPages) {
-      start = Math.max(1, totalPages - 2);
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - maxVisible + 1);
     }
 
     for (let i = start; i <= end; i++) {
@@ -110,27 +133,32 @@ export default function StudentTable({
   };
 
   const handleDelete = (id: string) => {
-    showConfirm("คุณต้องการลบข้อมูลใช่หรือไม่?", async () => {
-      try {
-        const res = await fetch(`/api/students/delete?id=${id}`, {
-          method: "DELETE",
-        });
+    showConfirm(
+      "ลบข้อมูล?",
+      async () => {
+        try {
+          const res = await fetch(`/api/students/delete?id=${id}`, {
+            method: "DELETE",
+          });
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text);
+          }
+
+          const data = await res.json();
+
+          showAlert(data.message || "ลบข้อมูลสำเร็จ", "success");
+
+          onDeleteSuccess(id);
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
+          showAlert(message, "error");
         }
-
-        const data = await res.json();
-
-        showAlert(data.message || "ลบข้อมูลสำเร็จ", "success");
-
-        onDeleteSuccess(id);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-        showAlert(message, "error");
-      }
-    });
+      },
+      "delete",
+      "คุณต้องการลบข้อมูลใช่หรือไม่",
+    );
   };
 
   const handleUpdateStudent = async () => {
@@ -139,12 +167,23 @@ export default function StudentTable({
     try {
       setLoading(true);
 
+      const payload: Student = {
+        ...selectedStudent,
+        classes: editingClasses
+          .filter((c) => c.className.trim() !== "")
+          .map((c, i) => ({
+            className: c.className,
+            section: c.section,
+            academicYear: selectedStudent.classes?.[i]?.academicYear || 0,
+          })),
+      };
+
       const res = await fetch("/api/students/update", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(selectedStudent),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -155,13 +194,52 @@ export default function StudentTable({
       }
 
       showAlert("อัปเดตสำเร็จ", "success");
-      onUpdateSuccess(selectedStudent);
+      onUpdateSuccess(payload);
       setOpenEdit(false);
     } catch {
       showAlert("เกิดข้อผิดพลาด", "error");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleWithdraw = (student: Student) => {
+    if (!student.classes || student.classes.length === 0) {
+      showAlert("ไม่มีวิชาให้ถอน", "error");
+      return;
+    }
+
+    const className = student.classes[0].className;
+
+    showConfirm(
+      "ถอนวิชา?",
+      async () => {
+        try {
+          const res = await fetch(
+            `/api/students/withdraw-course?studentId=${student._id}&className=${className}`,
+            { method: "DELETE" },
+          );
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            showAlert(data.message, "error");
+            return;
+          }
+
+          showAlert("ถอนวิชาสำเร็จ", "success");
+
+          onUpdateSuccess({
+            ...student,
+            classes: student.classes?.filter((c) => c.className !== className),
+          });
+        } catch {
+          showAlert("เกิดข้อผิดพลาด", "error");
+        }
+      },
+      "withdraw",
+      "คุณต้องการถอนวิชานี้ใช่หรือไม่",
+    );
   };
 
   if (data.length === 0) {
@@ -179,9 +257,9 @@ export default function StudentTable({
 
   return (
     <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden mt-6">
-        <div className="max-h-[520px] overflow-y-auto">
-          <table className="w-full text-sm table-fixed">
+      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
+        <div className="overflow-x-auto overflow-y-visible">
+          <table className="w-full text-base table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold w-[160px]">
@@ -193,7 +271,7 @@ export default function StudentTable({
                 <th className="px-4 py-3 text-left font-semibold w-[260px]">
                   อีเมล
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[240px]">
+                <th className="px-4 py-3 text-left font-semibold w-[350px]">
                   จัดการ
                 </th>
               </tr>
@@ -203,7 +281,7 @@ export default function StudentTable({
               {paginatedData.map((s, i) => (
                 <tr
                   key={i}
-                  className="border-t border-gray-200 hover:bg-gray-50"
+                  className="border-t border-gray-200 hover:bg-gray-50 text-sm"
                 >
                   <td className="px-4 py-3 truncate">{s.studentId}</td>
 
@@ -227,7 +305,7 @@ export default function StudentTable({
                       <button
                         onClick={() => {
                           setSelectedStudent(s);
-
+                          setOriginalStudent(JSON.parse(JSON.stringify(s)));
                           setEditingClasses(
                             (s.classes || []).map((c) => ({
                               className: c.className,
@@ -244,10 +322,22 @@ export default function StudentTable({
                       </button>
 
                       <button
-                        onClick={() => handleDelete(s._id)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-red-200 text-red-500 hover:bg-red-50 text-sm cursor-pointer"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          handleWithdraw(s);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-yellow-50 text-yellow-500 text-sm cursor-pointer"
                       >
-                        <TrashIcon className="w-4 h-4" />
+                        ถอนวิชา
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          handleDelete(s._id);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
+                      >
                         ลบ
                       </button>
                     </div>
@@ -265,12 +355,12 @@ export default function StudentTable({
           onClick={() => setOpenEdit(false)}
         >
           <div
-            className="w-full max-w-lg bg-white rounded-2xl shadow-sm p-6 max-h-[85vh] flex flex-col"
+            className="w-full max-w-xl bg-white rounded-2xl shadow-sm p-6 max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-4">
-              <div className="p-2 rounded-lg bg-[var(--card)]">
-                <PencilSquareIcon className="w-5 h-5 text-gray-700" />
+              <div className="p-2 rounded-lg bg-blue-50">
+                <PencilSquareIcon className="w-5 h-5 text-blue-600" />
               </div>
 
               <h2 className="text-lg font-semibold text-gray-800">
@@ -289,7 +379,7 @@ export default function StudentTable({
                   onChange={(e) =>
                     setSelectedStudent({
                       ...selectedStudent,
-                      studentId: e.target.value,
+                      studentId: e.target.value.replace(/\s/g, ""),
                     })
                   }
                   className={`form-input-card w-full text-sm ${
@@ -319,7 +409,7 @@ export default function StudentTable({
                   onChange={(e) =>
                     setSelectedStudent({
                       ...selectedStudent,
-                      fullName: e.target.value,
+                      fullName: e.target.value.replace(/^\s+/, ""),
                     })
                   }
                   className={`form-input-card w-full text-sm ${
@@ -349,7 +439,7 @@ export default function StudentTable({
                   onChange={(e) =>
                     setSelectedStudent({
                       ...selectedStudent,
-                      email: e.target.value,
+                      email: e.target.value.trim(),
                     })
                   }
                   className={`form-input-card w-full text-sm ${
@@ -394,7 +484,10 @@ export default function StudentTable({
                             value={c.section}
                             onChange={(e) => {
                               const updated = [...editingClasses];
-                              updated[i].section = e.target.value;
+                              updated[i].section = e.target.value.replace(
+                                /\s/g,
+                                "",
+                              );
                               setEditingClasses(updated);
                             }}
                             className="w-[70px] px-2 py-1 text-sm border border-gray-200 rounded-md"
@@ -417,13 +510,13 @@ export default function StudentTable({
 
               <button
                 onClick={handleUpdateStudent}
-                disabled={loading || !isFormValid}
+                disabled={loading || !isFormValid || !isDirty}
                 className={`px-5 py-2.5 rounded-md text-white text-sm transition
-                ${
-                  loading || !isFormValid
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer"
-                }`}
+              ${
+                loading || !isFormValid || !isDirty
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer"
+              }`}
               >
                 {loading ? "กำลังบันทึก..." : "บันทึก"}
               </button>
@@ -534,7 +627,7 @@ export default function StudentTable({
 
               {openPageSize && (
                 <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200">
-                  {[5, 10, 15].map((size) => (
+                  {[10, 15, 20].map((size) => (
                     <button
                       key={size}
                       onClick={() => {
@@ -554,11 +647,13 @@ export default function StudentTable({
             <span>จากทั้งหมด {data.length} รายการ</span>
           </div>
 
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-2 mt-2">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="px-3 py-2 text-[13px] rounded-md border border-gray-200 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
+              className={`px-3 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
+              ${page === 1 ? "opacity-40" : "cursor-pointer"}
+              `}
             >
               ก่อนหน้า
             </button>
@@ -570,7 +665,7 @@ export default function StudentTable({
                 className={`px-3.5 py-2 rounded-md border text-[13px] cursor-pointer ${
                   page === p
                     ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                    : "border-gray-200 hover:bg-gray-100"
+                    : "border-gray-100 hover:bg-gray-100"
                 }`}
               >
                 {p}
@@ -579,7 +674,9 @@ export default function StudentTable({
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="px-4 py-2 text-[13px] rounded-md border border-gray-200 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
+              className={`px-4 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
+              ${page === totalPages ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
+              `}
             >
               ถัดไป
             </button>

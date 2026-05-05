@@ -26,6 +26,7 @@ type AttendanceDoc = {
   status: "มาเรียน" | "มาสาย" | "ลา";
   score?: number;
   date: string;
+  note?: string;
   logs?: CheckInLog[];
   createdBy?: "student" | "teacher";
   createdAt?: Date;
@@ -73,7 +74,8 @@ const getAcademicYear = () => new Date().getFullYear() + 543;
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { classId, name, studentId, section, email, location, photo } = body;
+    const { classId, name, studentId, section, email, location, photo, note } =
+      body;
 
     if (!classId || !studentId) {
       return NextResponse.json({ success: false, message: "missing data" });
@@ -212,6 +214,7 @@ export async function POST(req: Request) {
       status,
       score,
       date: today,
+      note,
       logs: [
         {
           time: nowTH,
@@ -262,58 +265,58 @@ export async function POST(req: Request) {
         attachments,
 
         html: `
-<div style="font-family: 'Noto Sans Thai', sans-serif; max-width: 520px; margin:auto; border:1px solid #eee; border-radius:12px; overflow:hidden">
-  
-  <div style="background:#2563eb; color:white; padding:16px; text-align:center;">
-    <h2 style="margin:0;">เช็คชื่อสำเร็จ</h2>
-    <p style="margin:4px 0 0;">${schedule.className}</p>
-  </div>
+        <div style="font-family: 'Noto Sans Thai', sans-serif; max-width: 520px; margin:auto; border:1px solid #eee; border-radius:12px; overflow:hidden">
+          <div style="background:#2563eb; color:white; padding:16px; text-align:center;">
+            <h2 style="margin:0;">เช็คชื่อสำเร็จ</h2>
 
-  <div style="padding:16px; color:#333; font-size:14px;">
-    
-    <p>คุณได้ทำการเช็คชื่อเรียบร้อยแล้ว</p>
+            <p style="margin:4px 0 0;">${schedule.className}</p>
+          </div>
 
-    <div style="background:#f9fafb; padding:12px; border-radius:8px; margin-top:10px;">
+          <div style="padding:16px; color:#333; font-size:14px;">
+            <p>คุณได้ทำการเช็คชื่อเรียบร้อยแล้ว</p>
+
+          <div style="background:#f9fafb; padding:12px; border-radius:8px; margin-top:10px;">
       
-      <p>
-        <b>สถานะ:</b>
-        <span style="color:${statusColor}; font-weight:bold;">
-          ${status}
-        </span>
-      </p>
+            <p>
+              <b>สถานะ:</b>
+              <span style="color:${statusColor}; font-weight:bold;">
+                ${status}
+              </span>
+            </p>
 
-      <p><b>ชื่อ:</b> ${name || "-"}</p>
-      <p><b>รหัสนักศึกษา:</b> ${studentId}</p>
-      <p><b>Section:</b> ${section || "-"}</p>
-      <p><b>เวลา:</b> ${nowTH.toLocaleString("th-TH")}</p>
+            <p><b>ชื่อ:</b> ${name || "-"}</p>
+            <p><b>รหัสนักศึกษา:</b> ${studentId}</p>
+            <p><b>Section:</b> ${section || "-"}</p>
+            <p><b>เวลา:</b> ${nowTH.toLocaleString("th-TH")}</p>
 
-      ${
-        location
-          ? `<p><b>ตำแหน่ง:</b> ${location.lat}, ${location.lng}</p>`
-          : ""
-      }
+            ${
+              location
+              ? `<p><b>ตำแหน่ง:</b> ${location.lat}, ${location.lng}</p>`
+              : ""
+            }
+          </div>
 
-    </div>
+          ${
+            photo
+            ? `
+              <div style="margin-top:16px; text-align:center;">
+                <p style="margin-bottom:8px;"><b>รูปภาพที่บันทึก</b></p>
+                <img src="cid:userphoto" style="width:200px; border-radius:8px;" />
+              </div>
+            `
+            : ""
+          }
 
-    ${
-      photo
-        ? `
-        <div style="margin-top:16px; text-align:center;">
-          <p style="margin-bottom:8px;"><b>รูปภาพที่บันทึก</b></p>
-          <img src="cid:userphoto" style="width:200px; border-radius:8px;" />
+          <p><b>หมายเหตุ:</b> ${note || "-"}</p>
+
+         </div>
+
+        <div style="background:#f3f4f6; text-align:center; padding:10px; font-size:12px; color:#666;">
+          ระบบเช็คชื่ออัตโนมัติ
         </div>
-      `
-        : ""
-    }
 
-  </div>
-
-  <div style="background:#f3f4f6; text-align:center; padding:10px; font-size:12px; color:#666;">
-    ระบบเช็คชื่ออัตโนมัติ
-  </div>
-
-</div>
-`,
+      </div>
+      `,
       });
     }
 
