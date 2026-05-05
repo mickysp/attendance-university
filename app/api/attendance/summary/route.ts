@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, Document } from "mongodb";
 
 type ThaiStatus =
   | "มาเรียน"
@@ -9,29 +9,18 @@ type ThaiStatus =
   | "ขาด"
   | "ยังไม่เช็คชื่อ";
 
-type AttendanceDoc = {
-  classId: ObjectId;
+type AttendanceSummary = {
   studentId: string;
+  name: string;
+  section: string;
+  major: string;
   status: ThaiStatus;
-  score?: number;
-  checkInHour?: string;
-  checkInTime?: Date;
-  date: string;
-  academicYear: number;
+  score: number;
+  checkInTime: string | null;
+  totalScore: number;
+  days: number;
+  averageScore: number;
 };
-
-type StudentDoc = {
-  studentId: string;
-  fullName?: string;
-  section?: string;
-};
-
-const getNowTH = () =>
-  new Date(
-    new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Bangkok",
-    })
-  );
 
 const getAcademicYear = () => new Date().getFullYear() + 543;
 
@@ -40,130 +29,177 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
 
     const classId = searchParams.get("classId");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const yearParam = searchParams.get("year");
 
-    if (!classId || !ObjectId.isValid(classId)) {
+    if (!classId) {
       return NextResponse.json({
         success: false,
-        message: "classId ไม่ถูกต้อง",
+        message: "missing classId",
+        data: [],
+        majorsByClass: [],
       });
     }
+
+    const academicYear = yearParam
+      ? Number(yearParam)
+      : getAcademicYear();
 
     const client = await clientPromise;
     const db = client.db("attendance");
 
-    const studentsCol = db.collection<StudentDoc>("students");
-    const attendanceCol = db.collection<AttendanceDoc>("attendance");
-    const scheduleCol = db.collection("schedule");
+    const attendanceCol = db.collection<Document>("attendance");
+    const studentsCol = db.collection<Document>("students");
 
-    const classObjectId = new ObjectId(classId);
+    const classFilter = ObjectId.isValid(classId)
+      ? new ObjectId(classId)
+      : classId;
 
-    const nowTH = getNowTH();
+    const attendanceSummary = await attendanceCol
+      .aggregate<AttendanceSummary>([
+        {
+          $match: {
+            classId: classFilter,
+            academicYear,
+          },
+        },
+        {
+          $sort: { checkInTime: 1 },
+        },
+        {
+          $group: {
+            _id: "$studentId",
+            totalScore: { $sum: { $ifNull: ["$score", 0] } },
+            days: { $sum: 1 },
+            lastStatus: { $last: "$status" },
+            lastCheckInTime: { $last: "$checkInTime" },
+            lastCheckInHour: { $last: "$checkInHour" },
+          },
+        },
+        {
+          $lookup: {
+            from: "students",
+            let: { studentId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$studentId", "$$studentId"] },
+                      { $eq: ["$academicYear", academicYear] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "student",
+          },
+        },
+        {
+          $unwind: "$student",
+        },
+        {
+          $project: {
+            _id: 0,
+            studentId: "$_id",
+            name: "$student.fullName",
+            section: { $ifNull: ["$student.section", "-"] },
+            major: { $ifNull: ["$student.major", "-"] },
 
-    const today = nowTH.toLocaleDateString("en-CA");
+            status: {
+              $ifNull: ["$lastStatus", "ยังไม่เช็คชื่อ"],
+            },
 
-    const academicYear = getAcademicYear();
+            score: { $ifNull: ["$totalScore", 0] },
 
-    const dateFilter: string | { $gte: string; $lte: string } =
-      startDate && endDate
-        ? { $gte: startDate, $lte: endDate }
-        : today;
+            checkInTime: {
+              $cond: [
+                { $ifNull: ["$lastCheckInHour", false] },
+                "$lastCheckInHour",
+                {
+                  $cond: [
+                    { $ifNull: ["$lastCheckInTime", false] },
+                    {
+                      $dateToString: {
+                        format: "%H:%M",
+                        date: "$lastCheckInTime",
+                      },
+                    },
+                    null,
+                  ],
+                },
+              ],
+            },
 
-    const attendance = await attendanceCol
-      .find({
-        classId: classObjectId,
-        academicYear,
-        date: dateFilter,
-      })
+            totalScore: 1,
+            days: 1,
+
+            averageScore: {
+              $cond: [
+                { $gt: ["$days", 0] },
+                { $divide: ["$totalScore", "$days"] },
+                0,
+              ],
+            },
+          },
+        },
+      ])
       .toArray();
 
-    const schedule = await scheduleCol.findOne({
-      classId: classObjectId,
+    const summaryMap = new Map<string, AttendanceSummary>();
+    attendanceSummary.forEach((a) => {
+      summaryMap.set(a.studentId, a);
     });
 
-    const students = await studentsCol.find().toArray();
+    const students = await studentsCol
+      .find({ academicYear })
+      .toArray();
 
-    const attendanceMap = new Map<string, AttendanceDoc[]>();
+    const result: AttendanceSummary[] = students.map((s) => {
+      const summary = summaryMap.get(s.studentId);
 
-    attendance.forEach((a) => {
-      if (!attendanceMap.has(a.studentId)) {
-        attendanceMap.set(a.studentId, []);
-      }
-      attendanceMap.get(a.studentId)!.push(a);
+      return (
+        summary ?? {
+          studentId: s.studentId,
+          name: s.fullName,
+          section: s.section || "-",
+          major: s.major || "-",
+
+          status: "ยังไม่เช็คชื่อ",
+          score: 0,
+          checkInTime: null,
+          totalScore: 0,
+          days: 0,
+          averageScore: 0,
+        }
+      );
     });
 
-    const result = students.map((s) => {
-      const records = attendanceMap.get(s.studentId) || [];
-
-      if (startDate && endDate) {
-        const sortedRecords = [...records].sort((a, b) =>
-          a.date.localeCompare(b.date)
-        );
-
-        return {
-          ...s,
-          history: sortedRecords.map((r) => ({
-            date: r.date,
-            status: r.status,
-            score: r.score ?? 0,
-            checkInTime:
-              r.checkInHour ||
-              (r.checkInTime
-                ? new Date(r.checkInTime).toLocaleTimeString("th-TH", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : null),
-          })),
-        };
-      }
-
-      const record = records[0];
-
-      let status: ThaiStatus;
-      let checkInTime: string | null = null;
-      let score: number = 0;
-
-      if (record) {
-        status = record.status;
-        score = record.score ?? 0;
-
-        checkInTime =
-          record.checkInHour ||
-          (record.checkInTime
-            ? new Date(record.checkInTime).toLocaleTimeString("th-TH", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : null);
-      } else if (schedule && !schedule.allowCheckIn) {
-        status = "ขาด";
-        score = 0;
-      } else {
-        status = "ยังไม่เช็คชื่อ";
-        score = 0;
-      }
-
-      return {
-        ...s,
-        status,
-        score,
-        checkInTime,
-      };
-    });
+    const majorsByClass: string[] = [
+      ...new Set(
+        result
+          .map((r) => r.major)
+          .filter((m): m is string => Boolean(m && m !== "-")),
+      ),
+    ];
 
     return NextResponse.json({
       success: true,
-      mode: startDate && endDate ? "history" : "today",
-      count: result.length,
+      academicYear,
       data: result,
+      majorsByClass,
     });
-
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      message: error instanceof Error ? error.message : "error",
-    });
+    console.error("attendance summary error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        data: [],
+        majorsByClass: [],
+        message:
+          error instanceof Error ? error.message : "error",
+      },
+      { status: 500 }
+    );
   }
 }
