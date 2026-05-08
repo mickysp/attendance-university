@@ -609,7 +609,7 @@ export default function StudentsPage() {
                 ${
                   isFormValid && !importLoading
                     ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer"
-                    : "bg-gray-300 cursor-not-allowed"
+                    : "bg-gray-300"
                 }`}
               >
                 {importLoading ? "กำลัง import..." : "Import"}
