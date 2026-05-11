@@ -14,8 +14,16 @@ type StudentDoc = {
 };
 
 type StudentClassDoc = {
-  studentId: ObjectId;
-  className: string;
+  studentId: ObjectId | string;
+  classId?: ObjectId | string;
+  className?: string;
+  section?: string;
+  academicYear?: number;
+};
+
+type ClassDoc = {
+  _id: ObjectId;
+  className?: string;
 };
 
 export async function GET(req: Request) {
@@ -31,14 +39,19 @@ export async function GET(req: Request) {
 
     const page = Number(searchParams.get("page") || 1);
     const limit = Number(searchParams.get("limit") || 20);
+
     const skip = (page - 1) * limit;
 
     const client = await clientPromise;
+
     const db = client.db("attendance");
 
     const studentsCol = db.collection<StudentDoc>("students");
+
     const studentClassesCol =
       db.collection<StudentClassDoc>("student_classes");
+
+    const classesCol = db.collection<ClassDoc>("classes");
 
     const query: Filter<StudentDoc> = {};
 
@@ -51,86 +64,291 @@ export async function GET(req: Request) {
     }
 
     if (major) {
-      query.major = { $regex: major, $options: "i" };
+      query.major = {
+        $regex: major,
+        $options: "i",
+      };
     }
 
     if (keyword) {
       query.$or = [
-        { studentId: { $regex: keyword, $options: "i" } },
-        { fullName: { $regex: keyword, $options: "i" } },
+        {
+          studentId: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          fullName: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
       ];
     }
 
     if (className) {
-      const relations = await studentClassesCol
+      const matchedClasses = await classesCol
         .find({
-          className: { $regex: className, $options: "i" },
+          className: {
+            $regex: className,
+            $options: "i",
+          },
         })
         .toArray();
 
-      const studentIds = relations.map((r) => r.studentId);
+      const classObjectIds = matchedClasses.map((c) => c._id);
 
-      if (studentIds.length === 0) {
+      const relations = await studentClassesCol
+        .find({
+          $or: [
+            {
+              className: {
+                $regex: className,
+                $options: "i",
+              },
+            },
+            {
+              classId: {
+                $in: classObjectIds,
+              },
+            },
+            {
+              classId: {
+                $in: classObjectIds.map((id) => id.toString()),
+              },
+            },
+          ],
+        })
+        .toArray();
+
+      const studentObjectIds: ObjectId[] = [];
+      const studentCodes: string[] = [];
+
+      relations.forEach((r) => {
+        if (typeof r.studentId === "string") {
+          if (ObjectId.isValid(r.studentId)) {
+            studentObjectIds.push(
+              new ObjectId(r.studentId),
+            );
+          } else {
+  
+            studentCodes.push(r.studentId);
+          }
+        } else {
+          studentObjectIds.push(r.studentId);
+        }
+      });
+
+      if (
+        studentObjectIds.length === 0 &&
+        studentCodes.length === 0
+      ) {
         return NextResponse.json({
           success: true,
-          students: [],
-          count: 0,
+          filters: {
+            className,
+            major,
+            section,
+            keyword,
+            academicYear: query.academicYear,
+          },
           pagination: {
             page,
             limit,
             total: 0,
             totalPages: 0,
           },
+          count: 0,
+          students: [],
         });
       }
 
-      query._id = {
-        $in: studentIds.map((id) =>
-          typeof id === "string" ? new ObjectId(id) : id,
-        ),
-      };
+      query.$and = [
+        ...(query.$and || []),
+        {
+          $or: [
+            {
+              _id: {
+                $in: studentObjectIds,
+              },
+            },
+            {
+              studentId: {
+                $in: studentCodes,
+              },
+            },
+          ],
+        },
+      ];
     }
 
     const students = await studentsCol
       .find(query)
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .skip(skip)
       .limit(limit)
       .toArray();
 
     const total = await studentsCol.countDocuments(query);
 
-    const studentIds = students.map((s) => s._id);
+    const studentObjectIds = students.map((s) => s._id);
+
+    const studentObjectIdStrings = studentObjectIds.map((id) =>
+      id.toString(),
+    );
+
+    const studentCodes = students.map((s) => s.studentId);
 
     const relations = await studentClassesCol
-      .find({ studentId: { $in: studentIds } })
+      .find({
+        $or: [
+          {
+            studentId: {
+              $in: studentObjectIds,
+            },
+          },
+          {
+            studentId: {
+              $in: studentObjectIdStrings,
+            },
+          },
+          {
+            studentId: {
+              $in: studentCodes,
+            },
+          },
+        ],
+      })
       .toArray();
 
-    const classMap = new Map<string, string[]>();
+    const relationClassIds = relations
+      .map((r) => r.classId)
+      .filter(Boolean)
+      .map((id) => id!.toString());
+
+    const validClassIds = relationClassIds
+      .filter((id) => ObjectId.isValid(id))
+      .map((id) => new ObjectId(id));
+
+    const classDocs = await classesCol
+      .find({
+        _id: {
+          $in: validClassIds,
+        },
+      })
+      .toArray();
+
+    const classNameMap = new Map<string, string>();
+
+    classDocs.forEach((c) => {
+      classNameMap.set(
+        c._id.toString(),
+        c.className || "",
+      );
+    });
+
+    const classMap = new Map<
+      string,
+      {
+        className: string;
+        section: string;
+        academicYear: number;
+      }[]
+    >();
 
     relations.forEach((r) => {
-      const key = r.studentId.toString();
+      let matchedStudent: StudentDoc | undefined;
+
+      matchedStudent = students.find((s) => {
+        return (
+          s._id.toString() ===
+          r.studentId?.toString()
+        );
+      });
+
+      if (!matchedStudent) {
+        matchedStudent = students.find((s) => {
+          return (
+            s.studentId ===
+            r.studentId?.toString()
+          );
+        });
+      }
+
+      if (!matchedStudent) return;
+
+      const key = matchedStudent._id.toString();
 
       if (!classMap.has(key)) {
         classMap.set(key, []);
       }
 
-      classMap.get(key)!.push(r.className);
+      let finalClassName = "";
+
+      if (
+        r.className &&
+        r.className.trim() !== ""
+      ) {
+        finalClassName = r.className.trim();
+      }
+
+      else if (r.classId) {
+        finalClassName =
+          classNameMap.get(
+            r.classId.toString(),
+          ) || "";
+      }
+
+      if (!finalClassName) {
+        finalClassName = "ไม่ทราบชื่อวิชา";
+      }
+
+      const existingClasses =
+        classMap.get(key) || [];
+
+      const isDuplicate = existingClasses.some(
+        (c) =>
+          c.className === finalClassName &&
+          c.section === (r.section || ""),
+      );
+
+      if (!isDuplicate) {
+        classMap.get(key)!.push({
+          className: finalClassName,
+
+          section: r.section || "-",
+
+          academicYear:
+            r.academicYear ||
+            matchedStudent.academicYear ||
+            new Date().getFullYear() + 543,
+        });
+      }
     });
 
     const data = students.map((s) => ({
+      _id: s._id.toString(),
       studentId: s.studentId,
       fullName: s.fullName,
-      email: s.email,
-      classNames: classMap.get(s._id.toString()) || [],
+      email: s.email || "",
       section: s.section,
       major: s.major || "",
       academicYear: s.academicYear || null,
+
       createdAt: s.createdAt,
+      classes: classMap.get(s._id.toString()) || [],
+      classNames:
+        classMap.get(s._id.toString())?.map(
+          (c) => c.className,
+        ) || [],
     }));
 
     return NextResponse.json({
       success: true,
+
       filters: {
         className,
         major,
@@ -138,23 +356,35 @@ export async function GET(req: Request) {
         keyword,
         academicYear: query.academicYear,
       },
+
       pagination: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
       },
+
       count: data.length,
+
       students: data,
     });
   } catch (error: unknown) {
+    console.error(
+      "GET STUDENTS ERROR:",
+      error,
+    );
+
     return NextResponse.json(
       {
         success: false,
         message:
-          error instanceof Error ? error.message : "Unknown error",
+          error instanceof Error
+            ? error.message
+            : "Unknown error",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }

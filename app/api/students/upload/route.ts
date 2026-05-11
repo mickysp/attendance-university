@@ -28,8 +28,11 @@ type StudentDoc = {
 
 type StudentClassDoc = {
   studentId: ObjectId;
+  classId?: ObjectId;
   className: string;
   section: string;
+  academicYear?: number;
+  createdAt?: Date;
 };
 
 type ResultItem = {
@@ -59,62 +62,119 @@ type MajorDoc = Document & {
   name: string;
 };
 
-const isValidStudentId = (id: string) => /^\d{9}-\d$/.test(id);
-const isValidName = (name: string) => /^(นาย|นาง|นางสาว)/.test(name);
+const isValidStudentId = (id: string) =>
+  /^\d{9}-\d$/.test(id);
+
+const isValidName = (name: string) =>
+  /^(นาย|นาง|นางสาว)/.test(name);
+
 const isValidEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-const getAcademicYear = () => new Date().getFullYear() + 543;
+const getAcademicYear = () =>
+  new Date().getFullYear() + 543;
 
 export async function POST(req: Request) {
   try {
-    const body: UploadPayload = await req.json();
-    const { classId, section, major, students } = body;
+    const body: UploadPayload =
+      await req.json();
 
-    if (!classId || !ObjectId.isValid(classId)) {
+    const {
+      classId,
+      section,
+      major,
+      students,
+    } = body;
+
+    if (
+      !classId ||
+      !ObjectId.isValid(classId)
+    ) {
       return NextResponse.json(
-        { success: false, message: "classId ไม่ถูกต้อง" },
-        { status: 400 },
+        {
+          success: false,
+          message: "classId ไม่ถูกต้อง",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     if (!section) {
       return NextResponse.json(
-        { success: false, message: "กรุณาเลือก Section" },
-        { status: 400 },
+        {
+          success: false,
+          message: "กรุณาเลือก Section",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     if (!major) {
       return NextResponse.json(
-        { success: false, message: "กรุณาระบุสาขา" },
-        { status: 400 },
+        {
+          success: false,
+          message: "กรุณาระบุสาขา",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
-    if (!students || students.length === 0) {
+    if (
+      !students ||
+      students.length === 0
+    ) {
       return NextResponse.json(
-        { success: false, message: "ไม่มีข้อมูลนักศึกษา" },
-        { status: 400 },
+        {
+          success: false,
+          message: "ไม่มีข้อมูลนักศึกษา",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     const client = await clientPromise;
+
     const db = client.db("attendance");
 
-    const studentsCol = db.collection<StudentDoc>("students");
-    const studentClassesCol = db.collection<StudentClassDoc>("student_classes");
-    const classesCol = db.collection<ClassDoc>("classes");
-    const majorsCol = db.collection<MajorDoc>("majors");
+    const studentsCol =
+      db.collection<StudentDoc>("students");
 
-    const classObjectId = new ObjectId(classId);
+    const studentClassesCol =
+      db.collection<StudentClassDoc>(
+        "student_classes",
+      );
 
-    const classData = await classesCol.findOne({ _id: classObjectId });
+    const classesCol =
+      db.collection<ClassDoc>("classes");
+
+    const majorsCol =
+      db.collection<MajorDoc>("majors");
+
+    const classObjectId =
+      new ObjectId(classId);
+
+    const classData =
+      await classesCol.findOne({
+        _id: classObjectId,
+      });
 
     if (!classData) {
       return NextResponse.json(
-        { success: false, message: "ไม่พบวิชา" },
-        { status: 404 },
+        {
+          success: false,
+          message: "ไม่พบวิชา",
+        },
+        {
+          status: 404,
+        },
       );
     }
 
@@ -125,42 +185,78 @@ export async function POST(req: Request) {
       classData.courseName ||
       "";
 
-    const majorExists = await majorsCol.findOne({ name: major });
+    const majorExists =
+      await majorsCol.findOne({
+        name: major,
+      });
 
     if (!majorExists) {
       return NextResponse.json(
-        { success: false, message: "ไม่พบสาขา" },
-        { status: 404 },
+        {
+          success: false,
+          message: "ไม่พบสาขา",
+        },
+        {
+          status: 404,
+        },
       );
     }
 
-    const academicYear = getAcademicYear();
+    const academicYear =
+      getAcademicYear();
 
     const parsed: StudentDoc[] = [];
+
     const errors: ErrorItem[] = [];
 
     for (const s of students) {
-      const studentId = s.studentId?.trim();
-      const fullName = s.fullName?.trim();
+      const studentId =
+        s.studentId?.trim();
+
+      const fullName =
+        s.fullName?.trim();
+
       const email = s.email?.trim();
 
       if (!studentId || !fullName) {
-        errors.push({ student: s, message: "ข้อมูลไม่ครบ" });
+        errors.push({
+          student: s,
+          message: "ข้อมูลไม่ครบ",
+        });
+
         continue;
       }
 
-      if (!isValidStudentId(studentId)) {
-        errors.push({ student: s, message: "studentId ไม่ถูกต้อง" });
+      if (
+        !isValidStudentId(studentId)
+      ) {
+        errors.push({
+          student: s,
+          message:
+            "studentId ไม่ถูกต้อง",
+        });
+
         continue;
       }
 
       if (!isValidName(fullName)) {
-        errors.push({ student: s, message: "ชื่อไม่ถูกต้อง" });
+        errors.push({
+          student: s,
+          message: "ชื่อไม่ถูกต้อง",
+        });
+
         continue;
       }
 
-      if (email && !isValidEmail(email)) {
-        errors.push({ student: s, message: "email ไม่ถูกต้อง" });
+      if (
+        email &&
+        !isValidEmail(email)
+      ) {
+        errors.push({
+          student: s,
+          message: "email ไม่ถูกต้อง",
+        });
+
         continue;
       }
 
@@ -175,37 +271,71 @@ export async function POST(req: Request) {
       });
     }
 
-    const ids = parsed.map((s) => s.studentId);
-
     await Promise.all(
       parsed.map((s) =>
         studentsCol.updateOne(
-          { studentId: s.studentId, academicYear },
-          { $setOnInsert: s },
-          { upsert: true },
+          {
+            studentId: s.studentId,
+            academicYear,
+          },
+          {
+            $setOnInsert: s,
+          },
+          {
+            upsert: true,
+          },
         ),
       ),
     );
 
-    const allStudents = await studentsCol
-      .find({ studentId: { $in: ids }, academicYear })
-      .toArray();
+    const ids = parsed.map(
+      (s) => s.studentId,
+    );
 
-    const idMap = new Map<string, ObjectId>(
-      allStudents.map((s) => [s.studentId, s._id!]),
+    const allStudents =
+      await studentsCol
+        .find({
+          studentId: {
+            $in: ids,
+          },
+          academicYear,
+        })
+        .toArray();
+
+    const idMap = new Map<
+      string,
+      ObjectId
+    >(
+      allStudents.map((s) => [
+        s.studentId,
+        s._id!,
+      ]),
     );
 
     const details: ResultItem[] = [];
 
     for (const s of parsed) {
-      const sid = idMap.get(s.studentId);
+      const sid = idMap.get(
+        s.studentId,
+      );
 
       if (!sid) continue;
 
-      const exists = await studentClassesCol.findOne({
-        studentId: sid,
-        className,
-      });
+      const exists =
+        await studentClassesCol.findOne({
+          studentId: sid,
+
+          $or: [
+            {
+              classId: classObjectId,
+              section,
+            },
+            {
+              className,
+              section,
+            },
+          ],
+        });
 
       if (exists) {
         details.push({
@@ -218,13 +348,17 @@ export async function POST(req: Request) {
           status: "duplicate",
           relation: "exists",
         });
+
         continue;
       }
 
       await studentClassesCol.insertOne({
         studentId: sid,
+        classId: classObjectId,
         className,
         section,
+        academicYear,
+        createdAt: new Date(),
       });
 
       details.push({
@@ -238,16 +372,30 @@ export async function POST(req: Request) {
         relation: "added",
       });
 
-      const duplicateName = await studentsCol.findOne({
-        fullName: s.fullName,
-        academicYear,
-      });
+      const duplicateName =
+        await studentsCol.findOne({
+          fullName: s.fullName,
+          academicYear,
+        });
 
       if (duplicateName) {
-        const hasSameClass = await studentClassesCol.findOne({
-          studentId: duplicateName._id,
-          className,
-        });
+        const hasSameClass =
+          await studentClassesCol.findOne({
+            studentId:
+              duplicateName._id!,
+
+            $or: [
+              {
+                classId:
+                  classObjectId,
+                section,
+              },
+              {
+                className,
+                section,
+              },
+            ],
+          });
 
         if (hasSameClass) {
           details.push({
@@ -260,25 +408,43 @@ export async function POST(req: Request) {
             status: "duplicate",
             relation: "exists",
           });
-          continue;
         }
       }
     }
 
     return NextResponse.json({
       success: true,
+
       summary: {
         total: parsed.length,
-        added: details.filter((d) => d.relation === "added").length,
-        exists: details.filter((d) => d.relation === "exists").length,
+
+        added: details.filter(
+          (d) =>
+            d.relation === "added",
+        ).length,
+
+        exists: details.filter(
+          (d) =>
+            d.relation === "exists",
+        ).length,
       },
+
       details,
+
       errors,
     });
   } catch (error) {
+    console.error(
+      "UPLOAD STUDENTS ERROR:",
+      error,
+    );
+
     return NextResponse.json({
       success: false,
-      message: error instanceof Error ? error.message : "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "error",
     });
   }
 }

@@ -28,10 +28,16 @@ export default function StudentTable({
   data,
   onDeleteSuccess,
   onUpdateSuccess,
+  onWithdrawSuccess,
 }: {
   data: Student[];
   onDeleteSuccess: (id: string) => void;
   onUpdateSuccess: (student: Student) => void;
+  onWithdrawSuccess: (
+    studentId: string,
+    className: string,
+    section: string,
+  ) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [openView, setOpenView] = useState(false);
@@ -50,7 +56,7 @@ export default function StudentTable({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-
+  const [openWithdrawModal, setOpenWithdrawModal] = useState(false);
   const [editingClasses, setEditingClasses] = useState<
     { className: string; section: string }[]
   >([]);
@@ -203,21 +209,20 @@ export default function StudentTable({
     }
   };
 
-  const handleWithdraw = (student: Student) => {
-    if (!student.classes || student.classes.length === 0) {
-      showAlert("ไม่มีวิชาให้ถอน", "error");
-      return;
-    }
-
-    const className = student.classes[0].className;
-
+  const handleWithdraw = (
+    student: Student,
+    className: string,
+    section: string,
+  ) => {
     showConfirm(
       "ถอนวิชา?",
       async () => {
         try {
           const res = await fetch(
-            `/api/students/withdraw-course?studentId=${student._id}&className=${className}`,
-            { method: "DELETE" },
+            `/api/students/withdraw-course?studentId=${student._id}&className=${encodeURIComponent(className)}&section=${section}`,
+            {
+              method: "DELETE",
+            },
           );
 
           const data = await res.json();
@@ -229,16 +234,24 @@ export default function StudentTable({
 
           showAlert("ถอนวิชาสำเร็จ", "success");
 
-          onUpdateSuccess({
-            ...student,
-            classes: student.classes?.filter((c) => c.className !== className),
+          onWithdrawSuccess(student._id, className, section);
+
+          setSelectedStudent((prev) => {
+            if (!prev) return prev;
+
+            return {
+              ...prev,
+              classes: (prev.classes || []).filter(
+                (c) => !(c.className === className && c.section === section),
+              ),
+            };
           });
         } catch {
           showAlert("เกิดข้อผิดพลาด", "error");
         }
       },
       "withdraw",
-      "คุณต้องการถอนวิชานี้ใช่หรือไม่",
+      `คุณต้องการถอนวิชา ${className} Section ${section} ใช่หรือไม่`,
     );
   };
 
@@ -262,13 +275,13 @@ export default function StudentTable({
           <table className="w-full text-base table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold w-[160px]">
+                <th className="px-4 py-3 text-left font-semibold w-[180px]">
                   รหัสนักศึกษา
                 </th>
                 <th className="px-4 py-3 text-left font-semibold w-[260px]">
                   ชื่อ-นามสกุล
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[260px]">
+                <th className="px-4 py-3 text-left font-semibold w-[300px]">
                   อีเมล
                 </th>
                 <th className="px-4 py-3 text-left font-semibold w-[350px]">
@@ -290,7 +303,7 @@ export default function StudentTable({
                   <td className="px-4 py-3 truncate">{s.email || "-"}</td>
 
                   <td className="px-4 py-2">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => {
                           setSelectedStudent(s);
@@ -305,7 +318,9 @@ export default function StudentTable({
                       <button
                         onClick={() => {
                           setSelectedStudent(s);
+
                           setOriginalStudent(JSON.parse(JSON.stringify(s)));
+
                           setEditingClasses(
                             (s.classes || []).map((c) => ({
                               className: c.className,
@@ -324,20 +339,11 @@ export default function StudentTable({
                       <button
                         onClick={() => {
                           setOpenMenuId(null);
-                          handleWithdraw(s);
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-yellow-50 text-yellow-500 text-sm cursor-pointer"
-                      >
-                        ถอนวิชา
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setOpenMenuId(null);
                           handleDelete(s._id);
                         }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-red-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
                       >
+                        <TrashIcon className="w-4 h-4" />
                         ลบ
                       </button>
                     </div>
@@ -544,8 +550,8 @@ export default function StudentTable({
               </h2>
             </div>
 
-            <div className="overflow-y-auto pr-2">
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+            <div className="flex-1 overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 gap-4 text-base mb-6">
                 <div>
                   <p className="text-gray-500">รหัสนักศึกษา</p>
                   <p className="font-medium text-gray-800">
@@ -567,36 +573,93 @@ export default function StudentTable({
                   </p>
                 </div>
               </div>
-            </div>
-            <div>
-              <p className="text-gray-500 mb-2">รายวิชา</p>
 
-              {selectedStudent.classes && selectedStudent.classes.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedStudent.classes.map((c, i) => (
-                    <div
-                      key={i}
-                      className="border border-gray-200 rounded-lg px-3 py-2 flex justify-between items-center"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          {c.className}
-                        </p>
+              <div>
+                <p className="text-gray-500 mb-2">รายวิชา</p>
 
-                        <p className="text-xs text-gray-500">
-                          Section {c.section}
-                        </p>
-                      </div>
+                {selectedStudent.classes &&
+                selectedStudent.classes.length > 0 ? (
+                  <div className="space-y-6">
+                    {Object.entries(
+                      selectedStudent.classes.reduce(
+                        (acc, curr) => {
+                          const year = curr.academicYear;
 
-                      <span className="text-xs text-gray-400">
-                        ปี {c.academicYear}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400">ไม่มีข้อมูลรายวิชา</p>
-              )}
+                          if (!acc[year]) {
+                            acc[year] = [];
+                          }
+
+                          acc[year].push(curr);
+
+                          return acc;
+                        },
+                        {} as Record<
+                          number,
+                          {
+                            className: string;
+                            section: string;
+                            academicYear: number;
+                          }[]
+                        >,
+                      ),
+                    )
+                      .sort(([a], [b]) => Number(b) - Number(a))
+                      .map(([year, classes]) => (
+                        <div key={year}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="h-8 px-3 rounded-full bg-blue-50 border border-blue-100 flex items-center">
+                              <span className="text-sm font-semibold text-blue-700">
+                                ปีการศึกษา {year}
+                              </span>
+                            </div>
+
+                            <div className="flex-1 h-px bg-gray-100" />
+                          </div>
+
+                          <div className="space-y-3">
+                            {classes.map((c, i) => (
+                              <div
+                                key={`${c.className}-${c.section}-${i}`}
+                                className="group border border-gray-200 rounded-2xl p-4 hover:border-red-200 hover:bg-red-50/40 transition"
+                              >
+                                <div className="flex items-center justify-between gap-4">
+                                  <div>
+                                    <p className="font-semibold text-gray-800">
+                                      {c.className}
+                                    </p>
+
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                        Section {c.section}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={() => {
+                                      handleWithdraw(
+                                        selectedStudent,
+                                        c.className,
+                                        c.section,
+                                      );
+
+                                      setOpenWithdrawModal(false);
+                                    }}
+                                    className="shrink-0 px-4 py-2 rounded-xl bg-red-500 text-white text-sm hover:bg-red-600 transition cursor-pointer"
+                                  >
+                                    ถอนวิชา
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">ไม่มีข้อมูลรายวิชา</p>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end mt-6">
