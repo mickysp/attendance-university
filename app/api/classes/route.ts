@@ -64,6 +64,7 @@ export async function GET(req: Request) {
     const classesCol = db.collection<MongoClass>("classes");
     const scheduleCol = db.collection<ScheduleDoc>("schedule");
     const attendanceCol = db.collection<Document>("attendance");
+    const studentClassesCol = db.collection<Document>("student_classes");
 
     const data = await classesCol
       .find({})
@@ -119,7 +120,7 @@ export async function GET(req: Request) {
       else notAllowCheckIn++;
     });
 
-    const attendanceClasses = await attendanceCol
+    const studentClassDocs = await studentClassesCol
       .aggregate<AttendanceAgg>([
         {
           $match: {
@@ -129,16 +130,18 @@ export async function GET(req: Request) {
         },
         {
           $group: {
-            _id: { $toString: "$classId" },
+            _id: {
+              $toString: "$classId",
+            },
           },
         },
       ])
       .toArray();
 
     const classIdSet = new Set(
-      attendanceClasses.map((a) => a._id).filter(Boolean),
+      studentClassDocs.map((a) => a._id).filter(Boolean),
     );
-
+    
     const enrichedData: ClassResponse[] = safeData.map((c) => ({
       ...c,
       hasStudents: classIdSet.has(c._id),

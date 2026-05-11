@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useState, useRef, useEffect, useMemo } from "react";
+import {
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 type Subject = {
   id: string;
@@ -12,46 +16,170 @@ type Props = {
   subjects: Subject[];
   value: string | null;
   onChange: (id: string | null) => void;
+
+  keyword?: string;
+  onKeywordChange?: (
+    value: string,
+  ) => void;
+
+  showSearch?: boolean;
+
   showClear?: boolean;
   onClearAll?: () => void;
+
+  placeholder?: string;
 };
 
 export default function SubjectSelect({
   subjects,
   value,
   onChange,
+
+  keyword = "",
+  onKeywordChange,
+
+  showSearch = false,
+
   showClear = false,
   onClearAll,
-}: Props) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
 
-  const selected = subjects.find((s) => s.id === value);
+  placeholder = "เลือกวิชา",
+}: Props) {
+  const [open, setOpen] =
+    useState(false);
+
+  const ref =
+    useRef<HTMLDivElement | null>(
+      null,
+    );
+
+  const selected = subjects.find(
+    (s) => s.id === value,
+  );
+  
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    const handleClickOutside = (
+      e: MouseEvent,
+    ) => {
+      if (
+        ref.current &&
+        !ref.current.contains(
+          e.target as Node,
+        )
+      ) {
         setOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside,
+    );
+
+    return () =>
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside,
+      );
   }, []);
 
+  const filteredSubjects =
+    useMemo(() => {
+      if (!keyword?.trim())
+        return subjects;
+
+      return subjects.filter((s) =>
+        s.name
+          .toLowerCase()
+          .includes(
+            keyword.toLowerCase(),
+          ),
+      );
+    }, [subjects, keyword]);
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative w-full md:w-[300px] min-w-0" ref={ref}>
+    <div className="inline-flex items-center gap-4 flex-shrink-0">
+      {showSearch && (
+        <div className="relative w-[380px] flex-shrink-0">
+          <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+
+          <input
+            type="text"
+            placeholder="ค้นหาชื่อ หรือรหัสนักศึกษา"
+            value={keyword}
+            onChange={(e) =>
+              onKeywordChange?.(
+                e.target.value,
+              )
+            }
+            className="
+              w-full
+              pl-9
+              pr-9
+              py-[10px]
+              text-sm
+              border
+              border-gray-200
+              rounded-md
+              bg-white
+              focus:outline-none
+              focus:ring-1
+              focus:ring-blue-200
+              focus:border-blue-300
+            "
+          />
+
+          {keyword && (
+            <button
+              type="button"
+              onClick={() =>
+                onKeywordChange?.("")
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              <XMarkIcon className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-pointer" />
+            </button>
+          )}
+        </div>
+      )}
+
+      <div
+        className="relative w-[260px] flex-shrink-0"
+        ref={ref}
+      >
         <div
-          className="form-input-card text-sm flex items-center justify-between w-full min-w-0 overflow-hidden transition hover:bg-gray-50 cursor-pointer"
-          onClick={() => setOpen(!open)}
+          className="
+            px-3
+            py-[10px]
+            border
+            border-gray-200
+            rounded-md
+            bg-white
+            text-sm
+            flex
+            items-center
+            justify-between
+            w-full
+            overflow-hidden
+            transition
+            hover:bg-gray-50
+            cursor-pointer
+          "
+          onClick={() =>
+            setOpen(!open)
+          }
         >
           <span
             className={`block truncate flex-1 ${
-              selected ? "text-gray-800" : "text-gray-400"
+              selected
+                ? "text-gray-800"
+                : "text-gray-400"
             }`}
           >
-            {selected ? selected.name : "เลือกวิชา"}
+            {selected
+              ? selected.name
+              : placeholder}
           </span>
 
           <ChevronDownIcon
@@ -62,32 +190,45 @@ export default function SubjectSelect({
         </div>
 
         {open && (
-          <div className="absolute z-20 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-50 overflow-y-auto">
-            {subjects.length === 0 ? (
-              <div className="px-4 py-2 text-sm text-gray-400">ไม่พบข้อมูล</div>
-            ) : (
-              subjects.map((sub) => {
-                const isSelected = sub.id === value;
+          <div className="absolute z-20 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 overflow-hidden">
+            <div className="max-h-60 overflow-y-auto">
+              {filteredSubjects.length ===
+              0 ? (
+                <div className="px-4 py-3 text-sm text-gray-400">
+                  ไม่พบข้อมูล
+                </div>
+              ) : (
+                filteredSubjects.map(
+                  (sub) => {
+                    const isSelected =
+                      sub.id === value;
 
-                return (
-                  <button
-                    key={sub.id}
-                    type="button"
-                    onClick={() => {
-                      onChange(sub.id);
-                      setOpen(false);
-                    }}
-                    className={`w-full px-4 py-2.5 text-left text-sm cursor-pointer ${
-                      isSelected
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {sub.name}
-                  </button>
-                );
-              })
-            )}
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          onChange(
+                            sub.id,
+                          );
+
+                          setOpen(
+                            false,
+                          );
+                        }}
+                        className={`w-full px-4 py-2.5 text-left text-sm cursor-pointer transition ${
+                          isSelected
+                            ? "bg-blue-50 text-blue-600 font-medium"
+                            : "hover:bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {sub.name}
+                      </button>
+                    );
+                  },
+                )
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -102,7 +243,7 @@ export default function SubjectSelect({
               onChange(null);
             }
           }}
-          className="text-sm text-blue-500 whitespace-nowrap cursor-pointer"
+          className="text-sm text-blue-500 whitespace-nowrap cursor-pointer hover:underline flex-shrink-0"
         >
           ล้างค่า
         </button>

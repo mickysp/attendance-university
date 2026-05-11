@@ -50,6 +50,8 @@ export default function AttendancePage() {
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [loadingMajors, setLoadingMajors] = useState(false);
 
+  const [keyword, setKeyword] = useState("");
+
   const handleClearAll = () => {
     setSelectedClass(null);
     setSelectedMajor(null);
@@ -179,17 +181,19 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div className="px-6 mt-4 shrink-0 flex items-center gap-3 flex-wrap">
+            <div className="px-6 mt-4 flex items-start gap-4">
               <SubjectSelect
-                subjects={classes
-                  .filter((c) => c.hasStudents)
-                  .map((c) => ({
-                    id: c._id,
-                    name: `${c.className || c.name} (${c.classCode || ""})`,
-                  }))}
+                subjects={classes.map((c) => ({
+                  id: c._id,
+                  name: `${c.className || c.name} (${c.classCode || ""})`,
+                }))}
                 value={selectedClass}
                 onChange={setSelectedClass}
+                keyword={keyword}
+                onKeywordChange={setKeyword}
+                showSearch={true}
                 showClear={false}
+                placeholder="เลือกวิชา"
               />
 
               {selectedClass && (
@@ -197,12 +201,15 @@ export default function AttendancePage() {
                   subjects={
                     loadingMajors
                       ? [{ id: "loading", name: "กำลังโหลด..." }]
-                      : majors
+                      : selectedClass
+                        ? majors
+                        : []
                   }
                   value={selectedMajor}
                   onChange={setSelectedMajor}
                   showClear={true}
                   onClearAll={handleClearAll}
+                  placeholder="เลือกสาขา"
                 />
               )}
             </div>
@@ -252,7 +259,7 @@ export default function AttendancePage() {
                 </div>
               ) : (
                 <>
-                  <div className="text-base text-gray-600 font-semibold mt-6">
+                  <div className="text-base text-gray-600 font-semibold mb-6">
                     Student ทั้งหมด {students.length} รายการ
                   </div>
                   <AttendanceTable data={students} />
