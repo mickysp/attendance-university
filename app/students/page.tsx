@@ -549,7 +549,7 @@ export default function StudentsPage() {
                     <DocumentArrowUpIcon className="w-6 h-6 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-500">เลือกไฟล์ Excel</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      รองรับไฟล์ .xlsx และชื่อไฟล์ภาษาไทย เท่านั้น
+                      รองรับไฟล์ .xlsx และชื่อไฟล์ภาษาอังกฤษ เท่านั้น
                     </p>
 
                     {file && (

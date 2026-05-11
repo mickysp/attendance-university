@@ -202,7 +202,7 @@ export default function StudentTable({
       setLoading(false);
     }
   };
-
+  
   const handleWithdraw = (student: Student) => {
     if (!student.classes || student.classes.length === 0) {
       showAlert("ไม่มีวิชาให้ถอน", "error");
