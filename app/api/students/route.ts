@@ -87,9 +87,6 @@ export async function GET(req: Request) {
       ];
     }
 
-    /**
-     * FILTER BY CLASS
-     */
     if (className) {
       const matchedClasses = await classesCol
         .find({
@@ -129,28 +126,16 @@ export async function GET(req: Request) {
       const studentCodes: string[] = [];
 
       relations.forEach((r) => {
-        /**
-         * CASE:
-         * studentId stored as string
-         */
         if (typeof r.studentId === "string") {
-          /**
-           * string but ObjectId format
-           */
           if (ObjectId.isValid(r.studentId)) {
             studentObjectIds.push(
               new ObjectId(r.studentId),
             );
           } else {
-            /**
-             * real student code
-             */
+  
             studentCodes.push(r.studentId);
           }
         } else {
-          /**
-           * real ObjectId
-           */
           studentObjectIds.push(r.studentId);
         }
       });
@@ -198,9 +183,6 @@ export async function GET(req: Request) {
       ];
     }
 
-    /**
-     * GET STUDENTS
-     */
     const students = await studentsCol
       .find(query)
       .sort({
@@ -212,9 +194,6 @@ export async function GET(req: Request) {
 
     const total = await studentsCol.countDocuments(query);
 
-    /**
-     * PREPARE IDS
-     */
     const studentObjectIds = students.map((s) => s._id);
 
     const studentObjectIdStrings = studentObjectIds.map((id) =>
@@ -223,9 +202,6 @@ export async function GET(req: Request) {
 
     const studentCodes = students.map((s) => s.studentId);
 
-    /**
-     * GET RELATIONS
-     */
     const relations = await studentClassesCol
       .find({
         $or: [
@@ -248,9 +224,6 @@ export async function GET(req: Request) {
       })
       .toArray();
 
-    /**
-     * LOAD CLASS MASTER
-     */
     const relationClassIds = relations
       .map((r) => r.classId)
       .filter(Boolean)
@@ -268,9 +241,6 @@ export async function GET(req: Request) {
       })
       .toArray();
 
-    /**
-     * CLASS NAME MAP
-     */
     const classNameMap = new Map<string, string>();
 
     classDocs.forEach((c) => {
@@ -280,9 +250,6 @@ export async function GET(req: Request) {
       );
     });
 
-    /**
-     * CLASS MAP
-     */
     const classMap = new Map<
       string,
       {
@@ -295,10 +262,6 @@ export async function GET(req: Request) {
     relations.forEach((r) => {
       let matchedStudent: StudentDoc | undefined;
 
-      /**
-       * CASE:
-       * relation studentId = ObjectId
-       */
       matchedStudent = students.find((s) => {
         return (
           s._id.toString() ===
@@ -306,10 +269,6 @@ export async function GET(req: Request) {
         );
       });
 
-      /**
-       * CASE:
-       * relation studentId = student code
-       */
       if (!matchedStudent) {
         matchedStudent = students.find((s) => {
           return (
@@ -327,15 +286,8 @@ export async function GET(req: Request) {
         classMap.set(key, []);
       }
 
-      /**
-       * FINAL CLASS NAME
-       */
       let finalClassName = "";
 
-      /**
-       * PRIORITY 1:
-       * use className from relation
-       */
       if (
         r.className &&
         r.className.trim() !== ""
@@ -343,10 +295,6 @@ export async function GET(req: Request) {
         finalClassName = r.className.trim();
       }
 
-      /**
-       * PRIORITY 2:
-       * lookup by classId
-       */
       else if (r.classId) {
         finalClassName =
           classNameMap.get(
@@ -354,16 +302,10 @@ export async function GET(req: Request) {
           ) || "";
       }
 
-      /**
-       * FALLBACK
-       */
       if (!finalClassName) {
         finalClassName = "ไม่ทราบชื่อวิชา";
       }
 
-      /**
-       * CHECK DUPLICATE
-       */
       const existingClasses =
         classMap.get(key) || [];
 
@@ -387,35 +329,17 @@ export async function GET(req: Request) {
       }
     });
 
-    /**
-     * FINAL RESPONSE
-     */
     const data = students.map((s) => ({
       _id: s._id.toString(),
-
       studentId: s.studentId,
-
       fullName: s.fullName,
-
       email: s.email || "",
-
       section: s.section,
-
       major: s.major || "",
-
       academicYear: s.academicYear || null,
 
       createdAt: s.createdAt,
-
-      /**
-       * IMPORTANT
-       * frontend modal uses this
-       */
       classes: classMap.get(s._id.toString()) || [],
-
-      /**
-       * KEEP OLD STRUCTURE
-       */
       classNames:
         classMap.get(s._id.toString())?.map(
           (c) => c.className,
