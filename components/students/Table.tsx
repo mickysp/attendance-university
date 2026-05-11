@@ -75,7 +75,6 @@ export default function StudentTable({
     selectedStudent?.studentId !== originalStudent?.studentId ||
     selectedStudent?.fullName !== originalStudent?.fullName ||
     selectedStudent?.email !== originalStudent?.email ||
-    selectedStudent?.section !== originalStudent?.section ||
     JSON.stringify(editingClasses) !==
       JSON.stringify(
         (originalStudent?.classes || []).map((c) => ({
@@ -94,16 +93,17 @@ export default function StudentTable({
     selectedStudent &&
     selectedStudent.studentId.trim().length > 0 &&
     selectedStudent.fullName.trim().length > 0 &&
-    (selectedStudent.section || "").trim().length > 0 &&
     isValidStudentId(selectedStudent.studentId) &&
     isValidName(selectedStudent.fullName.trim()) &&
-    isValidSection(selectedStudent.section || "") &&
     (!selectedStudent.email || isValidEmail(selectedStudent.email.trim())) &&
     editingClasses.length > 0 &&
     editingClasses.every(
-      (c) => c.className.trim().length > 0 && c.section.trim().length > 0,
+      (c) =>
+        c.className.trim().length > 0 &&
+        c.section.trim().length > 0 &&
+        isValidSection(c.section),
     );
-
+    
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
