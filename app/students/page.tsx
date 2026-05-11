@@ -100,11 +100,13 @@ export default function StudentsPage() {
       (s.studentId || "").toLowerCase().includes(keyword);
 
     const matchClass = filters.className
-      ? (s.className || "").includes(filters.className)
+      ? (s.classes || []).some((c) =>
+          (c.className || "").includes(filters.className),
+        )
       : true;
 
     const matchBranch = filters.branch
-      ? (s.major || "").includes(filters.branch)
+      ? (s.major || "").toLowerCase().includes(filters.branch.toLowerCase())
       : true;
 
     const matchSection = filters.section ? s.section === filters.section : true;

@@ -75,7 +75,6 @@ export default function StudentTable({
     selectedStudent?.studentId !== originalStudent?.studentId ||
     selectedStudent?.fullName !== originalStudent?.fullName ||
     selectedStudent?.email !== originalStudent?.email ||
-    selectedStudent?.section !== originalStudent?.section ||
     JSON.stringify(editingClasses) !==
       JSON.stringify(
         (originalStudent?.classes || []).map((c) => ({
@@ -94,14 +93,15 @@ export default function StudentTable({
     selectedStudent &&
     selectedStudent.studentId.trim().length > 0 &&
     selectedStudent.fullName.trim().length > 0 &&
-    (selectedStudent.section || "").trim().length > 0 &&
     isValidStudentId(selectedStudent.studentId) &&
     isValidName(selectedStudent.fullName.trim()) &&
-    isValidSection(selectedStudent.section || "") &&
     (!selectedStudent.email || isValidEmail(selectedStudent.email.trim())) &&
     editingClasses.length > 0 &&
     editingClasses.every(
-      (c) => c.className.trim().length > 0 && c.section.trim().length > 0,
+      (c) =>
+        c.className.trim().length > 0 &&
+        c.section.trim().length > 0 &&
+        isValidSection(c.section),
     );
 
   useEffect(() => {
@@ -551,7 +551,7 @@ export default function StudentTable({
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2">
-              <div className="grid grid-cols-2 gap-4 text-base mb-6">
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
                 <div>
                   <p className="text-gray-500">รหัสนักศึกษา</p>
                   <p className="font-medium text-gray-800">
@@ -575,7 +575,7 @@ export default function StudentTable({
               </div>
 
               <div>
-                <p className="text-gray-500 mb-2">รายวิชา</p>
+                <p className="text-gray-500 text-sm mb-2">รายวิชา</p>
 
                 {selectedStudent.classes &&
                 selectedStudent.classes.length > 0 ? (
@@ -620,7 +620,7 @@ export default function StudentTable({
                             {classes.map((c, i) => (
                               <div
                                 key={`${c.className}-${c.section}-${i}`}
-                                className="group border border-gray-200 rounded-2xl p-4 hover:border-red-200 hover:bg-red-50/40 transition"
+                                className="group border border-gray-200 rounded-2xl p-4 hover:bg-gray-50 transition"
                               >
                                 <div className="flex items-center justify-between gap-4">
                                   <div>
