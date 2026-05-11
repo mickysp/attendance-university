@@ -21,6 +21,12 @@ type StudentInput = {
   major?: string;
   section?: string;
   academicYear?: number;
+
+  classes?: {
+    className: string;
+    section: string;
+    academicYear: number;
+  }[];
 };
 
 type ClassDoc = {
@@ -379,6 +385,26 @@ export default function StudentsPage() {
                           prev.map((s) =>
                             s._id === updatedStudent._id ? updatedStudent : s,
                           ),
+                        );
+                      }}
+                      onWithdrawSuccess={(studentId, className, section) => {
+                        setData((prev) =>
+                          prev.map((student) => {
+                            if (student._id !== studentId) {
+                              return student;
+                            }
+
+                            return {
+                              ...student,
+                              classes: (student.classes || []).filter(
+                                (c) =>
+                                  !(
+                                    c.className === className &&
+                                    c.section === section
+                                  ),
+                              ),
+                            };
+                          }),
                         );
                       }}
                     />
