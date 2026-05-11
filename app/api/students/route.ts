@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId, Filter } from "mongodb";
+import { ObjectId, Filter, Document } from "mongodb";
 
 type StudentDoc = {
   _id: ObjectId;
@@ -37,8 +37,20 @@ export async function GET(req: Request) {
 
     const yearParam = searchParams.get("year");
 
-    const page = Number(searchParams.get("page") || 1);
-    const limit = Number(searchParams.get("limit") || 20);
+    const currentYear =
+      new Date().getFullYear() + 543;
+
+    const selectedYear = yearParam
+      ? Number(yearParam)
+      : currentYear;
+
+    const page = Number(
+      searchParams.get("page") || 1,
+    );
+
+    const limit = Number(
+      searchParams.get("limit") || 20,
+    );
 
     const skip = (page - 1) * limit;
 
@@ -46,18 +58,20 @@ export async function GET(req: Request) {
 
     const db = client.db("attendance");
 
-    const studentsCol = db.collection<StudentDoc>("students");
+    const studentsCol =
+      db.collection<StudentDoc>("students");
 
     const studentClassesCol =
-      db.collection<StudentClassDoc>("student_classes");
+      db.collection<StudentClassDoc>(
+        "student_classes",
+      );
 
-    const classesCol = db.collection<ClassDoc>("classes");
+    const classesCol =
+      db.collection<ClassDoc>("classes");
 
     const query: Filter<StudentDoc> = {};
 
-    query.academicYear = yearParam
-      ? Number(yearParam)
-      : new Date().getFullYear() + 543;
+    query.academicYear = selectedYear;
 
     if (section) {
       query.section = section;
@@ -88,41 +102,47 @@ export async function GET(req: Request) {
     }
 
     if (className) {
-      const matchedClasses = await classesCol
-        .find({
-          className: {
-            $regex: className,
-            $options: "i",
-          },
-        })
-        .toArray();
+      const matchedClasses =
+        await classesCol
+          .find({
+            className: {
+              $regex: className,
+              $options: "i",
+            },
+          })
+          .toArray();
 
-      const classObjectIds = matchedClasses.map((c) => c._id);
+      const classObjectIds =
+        matchedClasses.map((c) => c._id);
 
-      const relations = await studentClassesCol
-        .find({
-          $or: [
-            {
-              className: {
-                $regex: className,
-                $options: "i",
+      const relations =
+        await studentClassesCol
+          .find({
+            $or: [
+              {
+                className: {
+                  $regex: className,
+                  $options: "i",
+                },
               },
-            },
-            {
-              classId: {
-                $in: classObjectIds,
+              {
+                classId: {
+                  $in: classObjectIds,
+                },
               },
-            },
-            {
-              classId: {
-                $in: classObjectIds.map((id) => id.toString()),
+              {
+                classId: {
+                  $in: classObjectIds.map((id) =>
+                    id.toString(),
+                  ),
+                },
               },
-            },
-          ],
-        })
-        .toArray();
+            ],
+          })
+          .toArray();
 
       const studentObjectIds: ObjectId[] = [];
+
       const studentCodes: string[] = [];
 
       relations.forEach((r) => {
@@ -132,7 +152,6 @@ export async function GET(req: Request) {
               new ObjectId(r.studentId),
             );
           } else {
-  
             studentCodes.push(r.studentId);
           }
         } else {
@@ -146,20 +165,28 @@ export async function GET(req: Request) {
       ) {
         return NextResponse.json({
           success: true,
+
           filters: {
             className,
             major,
             section,
             keyword,
-            academicYear: query.academicYear,
+            academicYear: selectedYear,
           },
+
+          currentYear,
+
+          years: [currentYear],
+
           pagination: {
             page,
             limit,
             total: 0,
             totalPages: 0,
           },
+
           count: 0,
+
           students: [],
         });
       }
@@ -183,6 +210,42 @@ export async function GET(req: Request) {
       ];
     }
 
+    const yearDocs = await studentsCol
+      .aggregate<Document>([
+        {
+          $match: {
+            academicYear: {
+              $exists: true,
+              $ne: null,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$academicYear",
+          },
+        },
+      ])
+      .toArray();
+
+    const years: number[] = yearDocs
+      .map((y) => Number(y._id))
+      .filter(
+        (y): y is number =>
+          !isNaN(y),
+      );
+
+    if (!years.includes(currentYear)) {
+      years.push(currentYear);
+    }
+
+    years.sort((a, b) => {
+      if (a === currentYear) return -1;
+      if (b === currentYear) return 1;
+
+      return b - a;
+    });
+
     const students = await studentsCol
       .find(query)
       .sort({
@@ -192,37 +255,44 @@ export async function GET(req: Request) {
       .limit(limit)
       .toArray();
 
-    const total = await studentsCol.countDocuments(query);
+    const total =
+      await studentsCol.countDocuments(query);
 
-    const studentObjectIds = students.map((s) => s._id);
-
-    const studentObjectIdStrings = studentObjectIds.map((id) =>
-      id.toString(),
+    const studentObjectIds = students.map(
+      (s) => s._id,
     );
 
-    const studentCodes = students.map((s) => s.studentId);
+    const studentObjectIdStrings =
+      studentObjectIds.map((id) =>
+        id.toString(),
+      );
 
-    const relations = await studentClassesCol
-      .find({
-        $or: [
-          {
-            studentId: {
-              $in: studentObjectIds,
+    const studentCodes = students.map(
+      (s) => s.studentId,
+    );
+
+    const relations =
+      await studentClassesCol
+        .find({
+          $or: [
+            {
+              studentId: {
+                $in: studentObjectIds,
+              },
             },
-          },
-          {
-            studentId: {
-              $in: studentObjectIdStrings,
+            {
+              studentId: {
+                $in: studentObjectIdStrings,
+              },
             },
-          },
-          {
-            studentId: {
-              $in: studentCodes,
+            {
+              studentId: {
+                $in: studentCodes,
+              },
             },
-          },
-        ],
-      })
-      .toArray();
+          ],
+        })
+        .toArray();
 
     const relationClassIds = relations
       .map((r) => r.classId)
@@ -241,7 +311,10 @@ export async function GET(req: Request) {
       })
       .toArray();
 
-    const classNameMap = new Map<string, string>();
+    const classNameMap = new Map<
+      string,
+      string
+    >();
 
     classDocs.forEach((c) => {
       classNameMap.set(
@@ -260,7 +333,9 @@ export async function GET(req: Request) {
     >();
 
     relations.forEach((r) => {
-      let matchedStudent: StudentDoc | undefined;
+      let matchedStudent:
+        | StudentDoc
+        | undefined;
 
       matchedStudent = students.find((s) => {
         return (
@@ -280,7 +355,8 @@ export async function GET(req: Request) {
 
       if (!matchedStudent) return;
 
-      const key = matchedStudent._id.toString();
+      const key =
+        matchedStudent._id.toString();
 
       if (!classMap.has(key)) {
         classMap.set(key, []);
@@ -292,10 +368,9 @@ export async function GET(req: Request) {
         r.className &&
         r.className.trim() !== ""
       ) {
-        finalClassName = r.className.trim();
-      }
-
-      else if (r.classId) {
+        finalClassName =
+          r.className.trim();
+      } else if (r.classId) {
         finalClassName =
           classNameMap.get(
             r.classId.toString(),
@@ -303,17 +378,24 @@ export async function GET(req: Request) {
       }
 
       if (!finalClassName) {
-        finalClassName = "ไม่ทราบชื่อวิชา";
+        finalClassName =
+          "ไม่ทราบชื่อวิชา";
       }
 
       const existingClasses =
         classMap.get(key) || [];
 
-      const isDuplicate = existingClasses.some(
-        (c) =>
-          c.className === finalClassName &&
-          c.section === (r.section || ""),
-      );
+      const isDuplicate =
+        existingClasses.some(
+          (c) =>
+            c.className ===
+              finalClassName &&
+            c.section ===
+              (r.section || "") &&
+            c.academicYear ===
+              (r.academicYear ||
+                matchedStudent?.academicYear),
+        );
 
       if (!isDuplicate) {
         classMap.get(key)!.push({
@@ -324,7 +406,7 @@ export async function GET(req: Request) {
           academicYear:
             r.academicYear ||
             matchedStudent.academicYear ||
-            new Date().getFullYear() + 543,
+            currentYear,
         });
       }
     });
@@ -336,14 +418,19 @@ export async function GET(req: Request) {
       email: s.email || "",
       section: s.section,
       major: s.major || "",
-      academicYear: s.academicYear || null,
-
+      academicYear:
+        s.academicYear || null,
       createdAt: s.createdAt,
-      classes: classMap.get(s._id.toString()) || [],
-      classNames:
-        classMap.get(s._id.toString())?.map(
-          (c) => c.className,
+      classes:
+        classMap.get(
+          s._id.toString(),
         ) || [],
+
+      classNames:
+        classMap
+          .get(s._id.toString())
+          ?.map((c) => c.className) ||
+        [],
     }));
 
     return NextResponse.json({
@@ -354,14 +441,19 @@ export async function GET(req: Request) {
         major,
         section,
         keyword,
-        academicYear: query.academicYear,
+        academicYear: selectedYear,
       },
+
+      currentYear,
+      years,
 
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(
+          total / limit,
+        ),
       },
 
       count: data.length,
