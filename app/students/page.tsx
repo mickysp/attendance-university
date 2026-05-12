@@ -271,7 +271,7 @@ export default function StudentsPage() {
                         {selectedYear || "เลือกปี"}
                       </span>
 
-                      <ChevronDownIcon className="w-4 h-4 text-gray-400 ml-2" />
+                      <ChevronDownIcon className="w-4 h-4 text-blue-500 ml-2" />
                     </button>
 
                     {openYear && (
