@@ -22,174 +22,266 @@ type AttendanceSummary = {
   averageScore: number;
 };
 
-const getAcademicYear = () => new Date().getFullYear() + 543;
+const getAcademicYear = () =>
+  new Date().getFullYear() + 543;
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } =
+      new URL(req.url);
 
-    const classId = searchParams.get("classId");
-    const yearParam = searchParams.get("year");
+    const classId =
+      searchParams.get("classId");
+
+    const yearParam =
+      searchParams.get("year");
 
     if (!classId) {
       return NextResponse.json({
         success: false,
-        message: "missing classId",
+        message:
+          "missing classId",
         data: [],
         majorsByClass: [],
       });
     }
 
-    const academicYear = yearParam
-      ? Number(yearParam)
-      : getAcademicYear();
+    const academicYear =
+      yearParam &&
+      yearParam !== ""
+        ? Number(yearParam)
+        : getAcademicYear();
 
-    const client = await clientPromise;
-    const db = client.db("attendance");
+    const client =
+      await clientPromise;
 
-    const attendanceCol = db.collection<Document>("attendance");
-    const studentsCol = db.collection<Document>("students");
+    const db =
+      client.db("attendance");
 
-    const classFilter = ObjectId.isValid(classId)
-      ? new ObjectId(classId)
-      : classId;
+    const attendanceCol =
+      db.collection<Document>(
+        "attendance",
+      );
 
-    const attendanceSummary = await attendanceCol
-      .aggregate<AttendanceSummary>([
-        {
-          $match: {
-            classId: classFilter,
-            academicYear,
-          },
-        },
-        {
-          $sort: { checkInTime: 1 },
-        },
-        {
-          $group: {
-            _id: "$studentId",
-            totalScore: { $sum: { $ifNull: ["$score", 0] } },
-            days: { $sum: 1 },
-            lastStatus: { $last: "$status" },
-            lastCheckInTime: { $last: "$checkInTime" },
-            lastCheckInHour: { $last: "$checkInHour" },
-          },
-        },
-        {
-          $lookup: {
-            from: "students",
-            let: { studentId: "$_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ["$studentId", "$$studentId"] },
-                      { $eq: ["$academicYear", academicYear] },
-                    ],
-                  },
-                },
-              },
+    const studentClassesCol =
+      db.collection<Document>(
+        "student_classes",
+      );
+
+    const studentsCol =
+      db.collection<Document>(
+        "students",
+      );
+
+    const classFilter =
+      ObjectId.isValid(classId)
+        ? new ObjectId(classId)
+        : classId;
+
+    const studentClasses =
+      await studentClassesCol
+        .find({
+          classId: {
+            $in: [
+              classFilter,
+              classId,
             ],
-            as: "student",
           },
-        },
-        {
-          $unwind: "$student",
-        },
-        {
-          $project: {
-            _id: 0,
-            studentId: "$_id",
-            name: "$student.fullName",
-            section: { $ifNull: ["$student.section", "-"] },
-            major: { $ifNull: ["$student.major", "-"] },
 
-            status: {
-              $ifNull: ["$lastStatus", "ยังไม่เช็คชื่อ"],
+          academicYear,
+        })
+        .toArray();
+
+    const studentObjectIds =
+      studentClasses
+        .map((s) => s.studentId)
+        .filter(Boolean);
+
+    const students =
+      await studentsCol
+        .find({
+          _id: {
+            $in: studentObjectIds,
+          },
+        })
+        .toArray();
+
+    const attendanceSummary =
+      await attendanceCol
+        .aggregate([
+          {
+            $match: {
+              classId: {
+                $in: [
+                  classFilter,
+                  classId,
+                ],
+              },
+
+              academicYear,
             },
+          },
 
-            score: { $ifNull: ["$totalScore", 0] },
+          {
+            $sort: {
+              checkInTime: 1,
+            },
+          },
 
-            checkInTime: {
-              $cond: [
-                { $ifNull: ["$lastCheckInHour", false] },
-                "$lastCheckInHour",
-                {
-                  $cond: [
-                    { $ifNull: ["$lastCheckInTime", false] },
-                    {
-                      $dateToString: {
-                        format: "%H:%M",
-                        date: "$lastCheckInTime",
-                      },
-                    },
-                    null,
+          {
+            $group: {
+              _id: "$studentId",
+
+              totalScore: {
+                $sum: {
+                  $ifNull: [
+                    "$score",
+                    0,
                   ],
                 },
-              ],
-            },
+              },
 
-            totalScore: 1,
-            days: 1,
+              days: {
+                $sum: 1,
+              },
 
-            averageScore: {
-              $cond: [
-                { $gt: ["$days", 0] },
-                { $divide: ["$totalScore", "$days"] },
-                0,
-              ],
+              lastStatus: {
+                $last:
+                  "$status",
+              },
+
+              lastCheckInTime:
+                {
+                  $last:
+                    "$checkInTime",
+                },
+
+              lastCheckInHour:
+                {
+                  $last:
+                    "$checkInHour",
+                },
             },
           },
-        },
-      ])
-      .toArray();
+        ])
+        .toArray();
 
-    const summaryMap = new Map<string, AttendanceSummary>();
-    attendanceSummary.forEach((a) => {
-      summaryMap.set(a.studentId, a);
-    });
-
-    const students = await studentsCol
-      .find({ academicYear })
-      .toArray();
-
-    const result: AttendanceSummary[] = students.map((s) => {
-      const summary = summaryMap.get(s.studentId);
-
-      return (
-        summary ?? {
-          studentId: s.studentId,
-          name: s.fullName,
-          section: s.section || "-",
-          major: s.major || "-",
-
-          status: "ยังไม่เช็คชื่อ",
-          score: 0,
-          checkInTime: null,
-          totalScore: 0,
-          days: 0,
-          averageScore: 0,
-        }
+    const attendanceMap =
+      new Map(
+        attendanceSummary.map(
+          (a) => [
+            String(a._id),
+            a,
+          ],
+        ),
       );
-    });
 
-    const majorsByClass: string[] = [
+    const result: AttendanceSummary[] =
+      students.map(
+        (student) => {
+          const summary =
+            attendanceMap.get(
+              String(
+                student.studentId,
+              ),
+            );
+
+          return {
+            studentId:
+              student.studentId ||
+              "",
+
+            name:
+              student.fullName ||
+              student.name ||
+              "",
+
+            section:
+              student.section ||
+              "-",
+
+            major:
+              student.major ||
+              student.branch ||
+              "-",
+
+            status:
+              summary
+                ?.lastStatus ||
+              "ยังไม่เช็คชื่อ",
+
+            score:
+              summary?.totalScore ||
+              0,
+
+            checkInTime:
+              summary?.lastCheckInHour ||
+              (summary?.lastCheckInTime
+                ? new Date(
+                    summary.lastCheckInTime,
+                  ).toLocaleTimeString(
+                    "th-TH",
+                    {
+                      hour:
+                        "2-digit",
+                      minute:
+                        "2-digit",
+                    },
+                  )
+                : null),
+
+            totalScore:
+              summary?.totalScore ||
+              0,
+
+            days:
+              summary?.days ||
+              0,
+
+            averageScore:
+              summary?.days &&
+              summary.days > 0
+                ? summary.totalScore /
+                  summary.days
+                : 0,
+          };
+        },
+      );
+
+    const majorsByClass = [
       ...new Set(
         result
-          .map((r) => r.major)
-          .filter((m): m is string => Boolean(m && m !== "-")),
+          .map((r) =>
+            r.major?.trim(),
+          )
+          .filter(
+            (
+              m,
+            ): m is string =>
+              Boolean(
+                m &&
+                  m !== "-",
+              ),
+          ),
       ),
-    ];
+    ].sort();
 
     return NextResponse.json({
       success: true,
+
       academicYear,
+
       data: result,
+
       majorsByClass,
     });
   } catch (error) {
-    console.error("attendance summary error:", error);
+    console.error(
+      "attendance summary error:",
+      error,
+    );
 
     return NextResponse.json(
       {
@@ -197,9 +289,11 @@ export async function GET(req: Request) {
         data: [],
         majorsByClass: [],
         message:
-          error instanceof Error ? error.message : "error",
+          error instanceof Error
+            ? error.message
+            : "error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

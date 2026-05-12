@@ -14,6 +14,7 @@ type ClassItem = {
   title?: string;
   isOpen?: boolean;
   hasStudents?: boolean;
+  academicYear?: number;
 };
 
 type Major = {
@@ -45,10 +46,7 @@ export default function AttendancePage() {
   const [majors, setMajors] = useState<{ id: string; name: string }[]>([]);
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
 
-  const currentYearBE = new Date().getFullYear() + 543;
-
-  const [selectedYear, setSelectedYear] = useState<number>(currentYearBE);
-
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [loadingMajors, setLoadingMajors] = useState(false);
 
@@ -76,44 +74,42 @@ export default function AttendancePage() {
   }, []);
 
   useEffect(() => {
-    const loadYears = async () => {
-      try {
-        const res = await fetch("/api/students/years");
-
-        if (!res.ok) throw new Error("โหลดปีไม่สำเร็จ");
-
-        const json = await res.json();
-
-        const years: number[] = json.years || [];
-
-        setYearOptions(years);
-
-        if (years.length > 0) {
-          setSelectedYear(years[0]);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    loadYears();
-  }, []);
-
-  useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
 
-        const res = await fetch(`/api/classes?year=${selectedYear}`);
+        const url = selectedYear
+          ? `/api/classes?year=${selectedYear}`
+          : "/api/classes";
+
+        const res = await fetch(url);
 
         if (!res.ok) {
-          const text = await res.text();
-          console.error("classes error:", text);
           throw new Error("Failed to fetch classes");
         }
 
         const json = await res.json();
-        setClasses(json?.data || []);
+
+        console.log("classes api:", json);
+
+        const allClasses: ClassItem[] = json?.data || [];
+
+        const years: number[] = json?.years || [];
+
+        setYearOptions(years);
+
+        let activeYear = selectedYear;
+
+        if (
+          years.length > 0 &&
+          (!selectedYear || !years.includes(selectedYear))
+        ) {
+          activeYear = years[0];
+
+          setSelectedYear(years[0]);
+        }
+
+        setClasses(allClasses);
       } catch (err) {
         console.error(err);
       } finally {
@@ -186,10 +182,7 @@ export default function AttendancePage() {
               </div>
 
               <div className="flex justify-end items-center gap-2 w-full sm:w-auto">
-                <div
-                  ref={yearRef}
-                  className="relative flex items-center gap-2"
-                >
+                <div ref={yearRef} className="relative flex items-center gap-2">
                   <span className="text-sm text-gray-500 whitespace-nowrap">
                     ปีการศึกษา:
                   </span>
@@ -231,10 +224,11 @@ export default function AttendancePage() {
                               setOpenYear(false);
                             }}
                             className={`block w-full px-3 py-2 text-left text-sm cursor-pointer
-                            ${selectedYear === year
+                            ${
+                              selectedYear === year
                                 ? "bg-blue-50 text-blue-600 font-medium"
                                 : "hover:bg-gray-100 text-gray-700"
-                              }`}
+                            }`}
                           >
                             {year}
                           </button>
@@ -253,7 +247,12 @@ export default function AttendancePage() {
                   name: `${c.className || c.name} (${c.classCode || ""})`,
                 }))}
                 value={selectedClass}
-                onChange={setSelectedClass}
+                onChange={(value) => {
+                  setSelectedClass(value);
+                  setSelectedMajor(null);
+                  setStudents([]);
+                  setMajors([]);
+                }}
                 keyword={keyword}
                 onKeywordChange={setKeyword}
                 showSearch={true}
@@ -261,7 +260,7 @@ export default function AttendancePage() {
                 placeholder="เลือกวิชา"
               />
 
-              {selectedClass && (
+              {selectedClass && majors.length > 0 && (
                 <SubjectSelect
                   subjects={
                     loadingMajors
@@ -292,6 +291,20 @@ export default function AttendancePage() {
 
                   <p className="text-sm text-gray-400 mt-1">
                     กรุณาเลือกวิชาจากด้านบนเพื่อดูข้อมูลการเข้าเรียน
+                  </p>
+                </div>
+              ) : majors.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-gray-400">
+                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
+                    <img src="/not-exist.png" className="w-28 h-28" />
+                  </div>
+
+                  <p className="text-base font-medium text-gray-500">
+                    ยังไม่มีข้อมูลนักศึกษา
+                  </p>
+
+                  <p className="text-sm text-gray-400 mt-1">
+                    วิชานี้ยังไม่มีนักศึกษาลงทะเบียน
                   </p>
                 </div>
               ) : !selectedMajor ? (
@@ -327,6 +340,7 @@ export default function AttendancePage() {
                   <div className="text-base text-gray-600 font-semibold mb-6">
                     Student ทั้งหมด {students.length} รายการ
                   </div>
+
                   <AttendanceTable data={students} />
                 </>
               )}
