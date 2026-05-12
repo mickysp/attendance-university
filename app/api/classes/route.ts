@@ -121,7 +121,7 @@ export async function GET(req: Request) {
     });
 
     const studentClassDocs = await studentClassesCol
-      .aggregate<AttendanceAgg>([
+      .aggregate([
         {
           $match: {
             ...(academicYear ? { academicYear } : {}),
@@ -129,10 +129,13 @@ export async function GET(req: Request) {
           },
         },
         {
+          $project: {
+            classId: { $toString: "$classId" },
+          },
+        },
+        {
           $group: {
-            _id: {
-              $toString: "$classId",
-            },
+            _id: "$classId",
           },
         },
       ])
@@ -141,7 +144,7 @@ export async function GET(req: Request) {
     const classIdSet = new Set(
       studentClassDocs.map((a) => a._id).filter(Boolean),
     );
-    
+
     const enrichedData: ClassResponse[] = safeData.map((c) => ({
       ...c,
       hasStudents: classIdSet.has(c._id),

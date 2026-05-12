@@ -34,12 +34,9 @@ export default function SubjectSelect({
   subjects,
   value,
   onChange,
-
   keyword = "",
   onKeywordChange,
-
   showSearch = false,
-
   showClear = false,
   onClearAll,
 
@@ -183,7 +180,7 @@ export default function SubjectSelect({
           </span>
 
           <ChevronDownIcon
-            className={`w-4 h-4 text-blue-400 flex-shrink-0 transition ${
+            className={`w-4 h-4 text-blue-500 flex-shrink-0 transition ${
               open ? "rotate-180" : ""
             }`}
           />
