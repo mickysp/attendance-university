@@ -21,6 +21,12 @@ type StudentInput = {
   major?: string;
   section?: string;
   academicYear?: number;
+
+  classes?: {
+    className: string;
+    section: string;
+    academicYear: number;
+  }[];
 };
 
 type ClassDoc = {
@@ -94,11 +100,13 @@ export default function StudentsPage() {
       (s.studentId || "").toLowerCase().includes(keyword);
 
     const matchClass = filters.className
-      ? (s.className || "").includes(filters.className)
+      ? (s.classes || []).some((c) =>
+          (c.className || "").includes(filters.className),
+        )
       : true;
 
     const matchBranch = filters.branch
-      ? (s.major || "").includes(filters.branch)
+      ? (s.major || "").toLowerCase().includes(filters.branch.toLowerCase())
       : true;
 
     const matchSection = filters.section ? s.section === filters.section : true;
@@ -263,7 +271,7 @@ export default function StudentsPage() {
                         {selectedYear || "เลือกปี"}
                       </span>
 
-                      <ChevronDownIcon className="w-4 h-4 text-gray-400 ml-2" />
+                      <ChevronDownIcon className="w-4 h-4 text-blue-500 ml-2" />
                     </button>
 
                     {openYear && (
@@ -379,6 +387,26 @@ export default function StudentsPage() {
                           prev.map((s) =>
                             s._id === updatedStudent._id ? updatedStudent : s,
                           ),
+                        );
+                      }}
+                      onWithdrawSuccess={(studentId, className, section) => {
+                        setData((prev) =>
+                          prev.map((student) => {
+                            if (student._id !== studentId) {
+                              return student;
+                            }
+
+                            return {
+                              ...student,
+                              classes: (student.classes || []).filter(
+                                (c) =>
+                                  !(
+                                    c.className === className &&
+                                    c.section === section
+                                  ),
+                              ),
+                            };
+                          }),
                         );
                       }}
                     />
@@ -549,7 +577,7 @@ export default function StudentsPage() {
                     <DocumentArrowUpIcon className="w-6 h-6 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-500">เลือกไฟล์ Excel</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      รองรับไฟล์ .xlsx และชื่อไฟล์ภาษาไทย เท่านั้น
+                      รองรับไฟล์ .xlsx และชื่อไฟล์ภาษาอังกฤษ เท่านั้น
                     </p>
 
                     {file && (
@@ -609,7 +637,7 @@ export default function StudentsPage() {
                 ${
                   isFormValid && !importLoading
                     ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer"
-                    : "bg-gray-300 cursor-not-allowed"
+                    : "bg-gray-300"
                 }`}
               >
                 {importLoading ? "กำลัง import..." : "Import"}
