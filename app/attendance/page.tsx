@@ -5,6 +5,7 @@ import Sidebar from "@/components/layouts/Sidebar";
 import SubjectSelect from "@/components/attendance/Select";
 import AttendanceTable from "@/components/attendance/Table";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import StudentSummaryCard from "@/components/attendance/Card";
 
 type ClassItem = {
   _id: string;
@@ -32,6 +33,7 @@ type StudentAttendance = {
   checkInTime: string | null;
   totalScore: number;
   days: number;
+  lateDays: number;
   averageScore: number;
 };
 
@@ -240,6 +242,11 @@ export default function AttendancePage() {
               </div>
             </div>
 
+            {selectedClass && selectedMajor && students.length > 0 && (
+              <div className="px-6 pt-4">
+                <StudentSummaryCard students={students} />
+              </div>
+            )}
             <div className="px-6 mt-4 flex items-start gap-4">
               <SubjectSelect
                 subjects={classes.map((c) => ({

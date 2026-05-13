@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  EyeIcon,
+  ClockIcon,
+  MapPinIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
 
 type StudentAttendance = {
   studentId: string;
@@ -13,6 +19,7 @@ type StudentAttendance = {
   checkInTime: string | null;
   totalScore: number;
   days: number;
+  lateDays: number;
   averageScore: number;
 };
 
@@ -23,7 +30,6 @@ type Props = {
 export default function AttendanceTable({ data }: Props) {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
   const paginatedData = data.slice(
@@ -33,6 +39,10 @@ export default function AttendanceTable({ data }: Props) {
 
   const pageSizeRef = useRef<HTMLDivElement>(null);
   const [openPageSize, setOpenPageSize] = useState(false);
+  const [selectedStudent, setSelectedStudent] =
+    useState<StudentAttendance | null>(null);
+
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -77,6 +87,24 @@ export default function AttendanceTable({ data }: Props) {
     return "text-blue-600";
   };
 
+  const mockLogs = [
+    {
+      timeText: "12 พ.ค. 2026 • 08:59",
+      status: "มาเรียน",
+      score: 10,
+      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+      location: {
+        lat: 13.7563,
+        lng: 100.5018,
+      },
+    },
+    {
+      timeText: "14 พ.ค. 2026 • 09:10",
+      status: "มาสาย",
+      score: 5,
+    },
+  ];
+
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
@@ -92,7 +120,7 @@ export default function AttendanceTable({ data }: Props) {
 
   return (
     <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
+      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[380px] flex flex-col">
         <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-base table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
@@ -106,6 +134,9 @@ export default function AttendanceTable({ data }: Props) {
                 <th className="px-4 py-3 text-center font-semibold w-[150px]">
                   ขาด
                 </th>
+                <th className="px-4 py-3 text-center font-semibold w-[150px]">
+                  มาสาย
+                </th>
                 <th className="px-4 py-3 text-center font-semibold w-[200px]">
                   เข้าเรียน
                 </th>
@@ -114,6 +145,9 @@ export default function AttendanceTable({ data }: Props) {
                 </th>
                 <th className="px-4 py-3 text-center font-semibold w-[150px]">
                   สถานะ
+                </th>
+                <th className="px-4 py-3 text-center font-semibold w-[100px]">
+                  รายละเอียด
                 </th>
               </tr>
             </thead>
@@ -131,13 +165,23 @@ export default function AttendanceTable({ data }: Props) {
 
                     <td className="px-4 py-3.5 text-sm">{s.name}</td>
 
-                    <td className="px-4 py-3.5 text-sm text-center">{s.days}</td>
+                    <td className="px-4 py-3.5 text-sm text-center">
+                      {s.days}
+                    </td>
+
+                    <td className="px-4 py-3.5 text-sm text-center">
+                      <span className="inline-flex items-center justify-center rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700 border border-yellow-100">
+                        {s.lateDays}
+                      </span>
+                    </td>
 
                     <td className="px-4 py-3.5 text-sm text-center">
                       {s.checkInTime ?? "-"}
                     </td>
 
-                    <td className={`px-4 py-3.5 text-sm text-center font-medium`}>
+                    <td
+                      className={`px-4 py-3.5 text-sm text-center font-medium`}
+                    >
                       {s.score}
                     </td>
 
@@ -153,6 +197,18 @@ export default function AttendanceTable({ data }: Props) {
                             .text
                         }
                       </span>
+                    </td>
+
+                    <td className="px-4 py-3.5 text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedStudent(s);
+                          setOpenModal(true);
+                        }}
+                        className="inline-flex items-center justify-center rounded-lg border border-gray-200 p-2 hover:bg-gray-50 transition cursor-pointer"
+                      >
+                        <EyeIcon className="w-4 h-4 text-gray-500" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -230,6 +286,165 @@ export default function AttendanceTable({ data }: Props) {
             >
               ถัดไป
             </button>
+          </div>
+        </div>
+      )}
+
+      {openModal && selectedStudent && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+          onClick={() => setOpenModal(false)}
+        >
+          <div
+            className="w-full max-w-3xl bg-white rounded-2xl shadow-sm max-h-[85vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 border-b border-gray-100 p-6 pb-4">
+              <div className="p-2 rounded-lg bg-blue-50">
+                <EyeIcon className="w-5 h-5 text-blue-600" />
+              </div>
+
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">
+                  รายละเอียดการเข้าเรียน
+                </h2>
+
+                <p className="text-sm text-gray-400 mt-0.5">
+                  {selectedStudent.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="grid grid-cols-3 gap-4 text-sm mb-6">
+                <div>
+                  <p className="text-gray-500">รหัสนักศึกษา</p>
+
+                  <p className="font-medium text-gray-800">
+                    {selectedStudent.studentId}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500">ชื่อ-นามสกุล</p>
+
+                  <p className="font-medium text-gray-800">
+                    {selectedStudent.name}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500">สาขา</p>
+
+                  <p className="font-medium text-gray-800">
+                    {selectedStudent.major}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500">Section</p>
+
+                  <p className="font-medium text-gray-800">
+                    {selectedStudent.section}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500">คะแนนรวม</p>
+
+                  <p className="font-semibold text-blue-600">
+                    {selectedStudent.totalScore}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 px-3 rounded-full bg-blue-50 border border-blue-100 flex items-center">
+                    <span className="text-sm font-semibold text-blue-700">
+                      ประวัติการเช็คชื่อ
+                    </span>
+                  </div>
+
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
+
+                <div className="space-y-4">
+                  {mockLogs.map((log, index) => (
+                    <div
+                      key={index}
+                      className="group border border-gray-200 rounded-2xl p-4 hover:bg-gray-50 transition"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <ClockIcon className="w-4 h-4" />
+
+                            <span>{log.timeText}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2 mt-3">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-xs border ${
+                                log.status === "มาเรียน"
+                                  ? "bg-green-50 text-green-600 border-green-100"
+                                  : log.status === "มาสาย"
+                                    ? "bg-yellow-50 text-yellow-600 border-yellow-100"
+                                    : "bg-red-50 text-red-600 border-red-100"
+                              }`}
+                            >
+                              {log.status}
+                            </span>
+
+                            {typeof log.score === "number" && (
+                              <span className="text-sm font-medium text-gray-700">
+                                +{log.score} คะแนน
+                              </span>
+                            )}
+                          </div>
+
+                          {log.location && (
+                            <a
+                              href={`https://maps.google.com/?q=${log.location.lat},${log.location.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-200 transition"
+                            >
+                              <MapPinIcon className="w-4 h-4" />
+                              เปิดตำแหน่งที่เช็คชื่อ
+                            </a>
+                          )}
+
+                          {!log.photo && (
+                            <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                              <PhotoIcon className="w-4 h-4" />
+                              ไม่มีรูปภาพ
+                            </div>
+                          )}
+                        </div>
+
+                        {log.photo && (
+                          <img
+                            src={log.photo}
+                            alt="attendance"
+                            className="h-24 w-24 rounded-2xl border border-gray-200 object-cover"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end border-t border-gray-100 p-6 pt-4">
+              <button
+                onClick={() => setOpenModal(false)}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 cursor-pointer"
+              >
+                ปิด
+              </button>
+            </div>
           </div>
         </div>
       )}
