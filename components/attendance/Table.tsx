@@ -23,14 +23,28 @@ type StudentAttendance = {
   averageScore: number;
 };
 
-type Props = {
-  data: StudentAttendance[];
+type AttendanceLog = {
+  timeText: string;
+  status?: string;
+  score?: number;
+  photo?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 };
 
-export default function AttendanceTable({ data }: Props) {
+type Props = {
+  data: StudentAttendance[];
+  classId: string | null;
+};
+
+export default function AttendanceTable({ data, classId }: Props) {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const totalPages = Math.ceil(data.length / itemsPerPage);
+  const [logs, setLogs] = useState<AttendanceLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   const paginatedData = data.slice(
     (page - 1) * itemsPerPage,
@@ -86,24 +100,6 @@ export default function AttendanceTable({ data }: Props) {
     if (score < 70) return "text-yellow-600";
     return "text-blue-600";
   };
-
-  const mockLogs = [
-    {
-      timeText: "12 พ.ค. 2026 • 08:59",
-      status: "มาเรียน",
-      score: 10,
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-      location: {
-        lat: 13.7563,
-        lng: 100.5018,
-      },
-    },
-    {
-      timeText: "14 พ.ค. 2026 • 09:10",
-      status: "มาสาย",
-      score: 5,
-    },
-  ];
 
   if (data.length === 0) {
     return (
@@ -201,9 +197,35 @@ export default function AttendanceTable({ data }: Props) {
 
                     <td className="px-4 py-3.5 text-center">
                       <button
-                        onClick={() => {
-                          setSelectedStudent(s);
-                          setOpenModal(true);
+                        onClick={async () => {
+                          try {
+                            setLoadingLogs(true);
+
+                            if (!classId) {
+                              alert("ไม่พบ classId");
+                              return;
+                            }
+
+                            const res = await fetch(
+                              `/api/attendance/logs?classId=${classId}&studentId=${s.studentId}`,
+                            );
+
+                            const json = await res.json();
+
+                            if (json.success) {
+                              setLogs(json.logs || []);
+                            } else {
+                              setLogs([]);
+                            }
+
+                            setSelectedStudent(s);
+                            setOpenModal(true);
+                          } catch (error) {
+                            console.error(error);
+                            setLogs([]);
+                          } finally {
+                            setLoadingLogs(false);
+                          }
                         }}
                         className="inline-flex items-center justify-center rounded-lg border border-gray-200 p-2 hover:bg-gray-50 transition cursor-pointer"
                       >
@@ -370,69 +392,99 @@ export default function AttendanceTable({ data }: Props) {
                 </div>
 
                 <div className="space-y-4">
-                  {mockLogs.map((log, index) => (
-                    <div
-                      key={index}
-                      className="group border border-gray-200 rounded-2xl p-4 hover:bg-gray-50 transition"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <ClockIcon className="w-4 h-4" />
+                  {loadingLogs && (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
 
-                            <span>{log.timeText}</span>
-                          </div>
+                        <p className="text-sm text-gray-400">
+                          กำลังโหลดข้อมูล...
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                          <div className="flex items-center gap-2 mt-3">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-xs border ${
-                                log.status === "มาเรียน"
-                                  ? "bg-green-50 text-green-600 border-green-100"
-                                  : log.status === "มาสาย"
-                                    ? "bg-yellow-50 text-yellow-600 border-yellow-100"
-                                    : "bg-red-50 text-red-600 border-red-100"
-                              }`}
-                            >
-                              {log.status}
-                            </span>
+                  {!loadingLogs && logs.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div className="mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gray-100">
+                        <PhotoIcon className="w-7 h-7 text-gray-400" />
+                      </div>
 
-                            {typeof log.score === "number" && (
-                              <span className="text-sm font-medium text-gray-700">
-                                +{log.score} คะแนน
+                      <p className="text-sm text-gray-500 font-medium">
+                        ไม่มีประวัติการเช็คชื่อ
+                      </p>
+
+                      <p className="text-xs text-gray-400 mt-1">
+                        ยังไม่มีข้อมูลการเข้าเรียนของนักศึกษาคนนี้
+                      </p>
+                    </div>
+                  )}
+
+                  {!loadingLogs &&
+                    logs.length > 0 &&
+                    logs.map((log, index) => (
+                      <div
+                        key={index}
+                        className="group border border-gray-200 rounded-2xl p-4 hover:bg-gray-50 transition"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <ClockIcon className="w-4 h-4" />
+
+                              <span>{log.timeText}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-3">
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-xs border ${
+                                  log.status === "มาเรียน"
+                                    ? "bg-green-50 text-green-600 border-green-100"
+                                    : log.status === "มาสาย"
+                                      ? "bg-yellow-50 text-yellow-600 border-yellow-100"
+                                      : "bg-red-50 text-red-600 border-red-100"
+                                }`}
+                              >
+                                {log.status}
                               </span>
+
+                              {typeof log.score === "number" && (
+                                <span className="text-sm font-medium text-gray-700">
+                                  +{log.score} คะแนน
+                                </span>
+                              )}
+                            </div>
+
+                            {log.location && (
+                              <a
+                                href={`https://maps.google.com/?q=${log.location.lat},${log.location.lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-200 transition"
+                              >
+                                <MapPinIcon className="w-4 h-4" />
+                                เปิดตำแหน่งที่เช็คชื่อ
+                              </a>
+                            )}
+
+                            {!log.photo && (
+                              <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                                <PhotoIcon className="w-4 h-4" />
+                                ไม่มีรูปภาพ
+                              </div>
                             )}
                           </div>
 
-                          {log.location && (
-                            <a
-                              href={`https://maps.google.com/?q=${log.location.lat},${log.location.lng}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-200 transition"
-                            >
-                              <MapPinIcon className="w-4 h-4" />
-                              เปิดตำแหน่งที่เช็คชื่อ
-                            </a>
-                          )}
-
-                          {!log.photo && (
-                            <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
-                              <PhotoIcon className="w-4 h-4" />
-                              ไม่มีรูปภาพ
-                            </div>
+                          {log.photo && (
+                            <img
+                              src={log.photo}
+                              alt="attendance"
+                              className="h-24 w-24 rounded-2xl border border-gray-200 object-cover"
+                            />
                           )}
                         </div>
-
-                        {log.photo && (
-                          <img
-                            src={log.photo}
-                            alt="attendance"
-                            className="h-24 w-24 rounded-2xl border border-gray-200 object-cover"
-                          />
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>

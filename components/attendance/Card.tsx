@@ -6,6 +6,7 @@ import {
   ClockIcon,
   XCircleIcon,
   ChartBarIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 
 type StudentAttendance = {
@@ -13,11 +14,17 @@ type StudentAttendance = {
   name: string;
   section: string;
   major: string;
-  status: string;
+
+  status: "มาเรียน" | "มาสาย" | "ลา" | "ขาด";
+
   score: number;
   checkInTime: string | null;
+
   totalScore: number;
+
   days: number;
+  lateDays: number;
+
   averageScore: number;
 };
 
@@ -25,7 +32,9 @@ type Props = {
   students: StudentAttendance[];
 };
 
-export default function StudentSummaryCard({ students }: Props) {
+export default function StudentSummaryCard({
+  students,
+}: Props) {
   const totalStudents = students.length;
 
   const normalCount = students.filter(
@@ -34,6 +43,10 @@ export default function StudentSummaryCard({ students }: Props) {
 
   const lateCount = students.filter(
     (s) => s.status === "มาสาย",
+  ).length;
+
+  const leaveCount = students.filter(
+    (s) => s.status === "ลา",
   ).length;
 
   const absentCount = students.filter(
@@ -57,7 +70,10 @@ export default function StudentSummaryCard({ students }: Props) {
       iconColor: "text-slate-600",
       valueColor: "text-slate-800",
       borderColor: "border-slate-200",
+      progress: "w-[95%]",
+      progressColor: "bg-slate-400",
     },
+
     {
       title: "มาเรียน",
       value: normalCount,
@@ -66,7 +82,10 @@ export default function StudentSummaryCard({ students }: Props) {
       iconColor: "text-green-600",
       valueColor: "text-green-600",
       borderColor: "border-green-100",
+      progress: "w-[85%]",
+      progressColor: "bg-green-500",
     },
+
     {
       title: "มาสาย",
       value: lateCount,
@@ -75,7 +94,22 @@ export default function StudentSummaryCard({ students }: Props) {
       iconColor: "text-yellow-600",
       valueColor: "text-yellow-600",
       borderColor: "border-yellow-100",
+      progress: "w-[55%]",
+      progressColor: "bg-yellow-500",
     },
+
+    {
+      title: "ลา",
+      value: leaveCount,
+      icon: DocumentTextIcon,
+      iconBg: "bg-gradient-to-br from-orange-100 to-orange-200",
+      iconColor: "text-orange-600",
+      valueColor: "text-orange-600",
+      borderColor: "border-orange-100",
+      progress: "w-[45%]",
+      progressColor: "bg-orange-500",
+    },
+
     {
       title: "ขาด",
       value: absentCount,
@@ -84,7 +118,10 @@ export default function StudentSummaryCard({ students }: Props) {
       iconColor: "text-red-600",
       valueColor: "text-red-600",
       borderColor: "border-red-100",
+      progress: "w-[35%]",
+      progressColor: "bg-red-500",
     },
+
     {
       title: "คะแนนเฉลี่ย",
       value: averageScore,
@@ -93,11 +130,13 @@ export default function StudentSummaryCard({ students }: Props) {
       iconColor: "text-blue-600",
       valueColor: "text-blue-600",
       borderColor: "border-blue-100",
+      progress: "w-[75%]",
+      progressColor: "bg-blue-500",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-5 mb-6">
       {cards.map((card) => {
         const Icon = card.icon;
 
@@ -148,17 +187,8 @@ export default function StudentSummaryCard({ students }: Props) {
               <div
                 className={`
                   h-full rounded-full
-                  ${
-                    card.title === "นักศึกษาทั้งหมด"
-                      ? "bg-slate-400 w-[95%]"
-                      : card.title === "มาเรียน"
-                        ? "bg-green-500 w-[85%]"
-                        : card.title === "มาสาย"
-                          ? "bg-yellow-500 w-[55%]"
-                          : card.title === "ขาด"
-                            ? "bg-red-500 w-[35%]"
-                            : "bg-blue-500 w-[75%]"
-                  }
+                  ${card.progress}
+                  ${card.progressColor}
                 `}
               />
             </div>

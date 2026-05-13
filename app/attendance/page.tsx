@@ -28,7 +28,7 @@ type StudentAttendance = {
   name: string;
   section: string;
   major: string;
-  status: string;
+  status: "มาเรียน" | "มาสาย" | "ลา" | "ขาด";
   score: number;
   checkInTime: string | null;
   totalScore: number;
@@ -348,7 +348,7 @@ export default function AttendancePage() {
                     Student ทั้งหมด {students.length} รายการ
                   </div>
 
-                  <AttendanceTable data={students} />
+                  <AttendanceTable data={students} classId={selectedClass} />
                 </>
               )}
             </div>
