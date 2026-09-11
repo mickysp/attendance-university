@@ -8,34 +8,39 @@ import {
   ArrowsPointingOutIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useAlert } from "@/context/AlertContext";
 import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
+
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+import "sweetalert2/dist/sweetalert2.min.css";
+import "@/styles/swal.css";
+
+const MySwal = withReactContent(Swal);
 
 type Teacher = {
   _id: string;
   name: string;
 };
 
-type Branch = {
-  _id: string;
-  name: string;
-};
-
-type ClassCode = {
-  code: string;
-  section: number;
-  branches: Branch[];
-};
-
 type ClassInfo = {
   _id: string;
   className: string;
-  classCodes: ClassCode[];
+  classCodes: string[];
+  teachers: Teacher[];
   description?: string;
-  teacher?: Teacher;
-  isOpen?: boolean;
+  isOpened: boolean;
+};
+
+type Schedule = {
+  date: Date;
+  startTime: string;
+  endTime: string;
+  lateAfter: number;
+  allowCheckIn: boolean;
+  isOpen: boolean;
 };
 
 export default function QRPage() {
@@ -44,22 +49,13 @@ export default function QRPage() {
 
   const classId = searchParams.get("classId");
 
-  const { showAlert } = useAlert();
-
   const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [openQR, setOpenQR] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [schedule, setSchedule] = useState<{
-    date: Date;
-    startTime: string;
-    endTime: string;
-    lateAfter: number;
-    allowCheckIn: boolean;
-    isOpen: boolean;
-  }>({
+  const [schedule, setSchedule] = useState<Schedule>({
     date: new Date(),
     startTime: "",
     endTime: "",
@@ -73,6 +69,63 @@ export default function QRPage() {
       ? `${window.location.origin}/check-in?classId=${classId}`
       : "";
 
+  const formatThaiDate = (date: Date) => {
+    const months = [
+      "มกราคม",
+      "กุมภาพันธ์",
+      "มีนาคม",
+      "เมษายน",
+      "พฤษภาคม",
+      "มิถุนายน",
+      "กรกฎาคม",
+      "สิงหาคม",
+      "กันยายน",
+      "ตุลาคม",
+      "พฤศจิกายน",
+      "ธันวาคม",
+    ];
+
+    return `${date.getDate()} ${months[date.getMonth()]} ${
+      date.getFullYear() + 543
+    }`;
+  };
+
+  // =========================================================
+  // SWEETALERT
+  // =========================================================
+
+  const showSuccess = (message: string) => {
+    MySwal.fire({
+      icon: "success",
+      title: message,
+      confirmButtonText: "ตกลง",
+      customClass: {
+        popup: "app-swal-popup app-swal-popup-success",
+        title: "app-swal-title-success",
+        confirmButton: "app-swal-ok-btn",
+      },
+    });
+  };
+
+  const showError = (message: string) => {
+    MySwal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: message,
+      confirmButtonText: "ตกลง",
+      customClass: {
+        popup: "app-swal-popup",
+        title: "app-swal-title",
+        htmlContainer: "app-swal-text",
+        confirmButton: "app-swal-ok-btn",
+      },
+    });
+  };
+
+  // =========================================================
+  // FETCH CLASS
+  // =========================================================
+
   useEffect(() => {
     const fetchClass = async () => {
       if (!classId) {
@@ -83,7 +136,10 @@ export default function QRPage() {
       try {
         setLoading(true);
 
-        const res = await fetch(`/api/classes/${classId}`);
+        const res = await fetch(`/api/classes/${classId}`, {
+          method: "GET",
+          cache: "no-store",
+        });
 
         const data = await res.json();
 
@@ -91,83 +147,169 @@ export default function QRPage() {
           throw new Error(data.message || "โหลดข้อมูลวิชาไม่สำเร็จ");
         }
 
-        const rawClass = data.data;
+        const rawClass =
+          data?.data?.class && typeof data.data.class === "object"
+            ? data.data.class
+            : data?.data;
 
-        const teacher: Teacher | undefined =
-          rawClass.teacher &&
-          typeof rawClass.teacher === "object" &&
-          rawClass.teacher._id
-            ? {
-                _id: String(rawClass.teacher._id),
-                name:
-                  typeof rawClass.teacher.name === "string"
-                    ? rawClass.teacher.name
-                    : "",
+        if (!rawClass || typeof rawClass !== "object") {
+          throw new Error("รูปแบบข้อมูลรายวิชาไม่ถูกต้อง");
+        }
+
+        const classData = rawClass as Record<string, unknown>;
+
+        const className =
+          typeof classData.className === "string" ? classData.className : "";
+
+        let classCodes: string[] = [];
+
+        if (Array.isArray(classData.classCodes)) {
+          classCodes = classData.classCodes
+            .map((item: unknown): string => {
+              if (typeof item === "string") {
+                return item;
               }
-            : undefined;
 
-        const classCodes: ClassCode[] = Array.isArray(rawClass.classCodes)
-          ? rawClass.classCodes.map(
-              (classCode: {
-                code?: unknown;
-                section?: unknown;
-                branches?: Array<{
-                  _id?: unknown;
-                  name?: unknown;
-                }>;
-              }) => ({
-                code:
-                  typeof classCode.code === "string" ? classCode.code : "",
+              if (typeof item === "object" && item !== null) {
+                const codeItem = item as Record<string, unknown>;
 
-                section:
-                  typeof classCode.section === "number"
-                    ? classCode.section
-                    : Number(classCode.section) || 1,
+                if (typeof codeItem.code === "string") {
+                  return codeItem.code;
+                }
+              }
 
-                branches: Array.isArray(classCode.branches)
-                  ? classCode.branches.map((branch) => ({
-                      _id: branch?._id ? String(branch._id) : "",
-                      name:
-                        typeof branch?.name === "string"
-                          ? branch.name
-                          : "",
-                    }))
-                  : [],
+              return "";
+            })
+            .filter((code: string) => code.trim() !== "");
+        }
+
+        if (classCodes.length === 0 && Array.isArray(classData.classCode)) {
+          classCodes = classData.classCode
+            .map((item: unknown): string => {
+              if (typeof item === "string") {
+                return item;
+              }
+
+              if (typeof item === "object" && item !== null) {
+                const codeItem = item as Record<string, unknown>;
+
+                return typeof codeItem.code === "string" ? codeItem.code : "";
+              }
+
+              return "";
+            })
+            .filter((code: string) => code.trim() !== "");
+        }
+
+        let teachers: Teacher[] = [];
+
+        if (Array.isArray(classData.teachers)) {
+          teachers = classData.teachers
+            .filter(
+              (item: unknown): item is Record<string, unknown> =>
+                typeof item === "object" && item !== null,
+            )
+            .map(
+              (teacher: Record<string, unknown>): Teacher => ({
+                _id:
+                  teacher._id !== undefined && teacher._id !== null
+                    ? String(teacher._id)
+                    : "",
+
+                name: typeof teacher.name === "string" ? teacher.name : "",
               }),
             )
-          : [];
+            .filter((teacher: Teacher) => teacher.name.trim() !== "");
+        }
+
+        if (
+          teachers.length === 0 &&
+          classData.teacher &&
+          typeof classData.teacher === "object" &&
+          !Array.isArray(classData.teacher)
+        ) {
+          const teacherData = classData.teacher as Record<string, unknown>;
+
+          const teacherName =
+            typeof teacherData.name === "string" ? teacherData.name : "";
+
+          if (teacherName.trim() !== "") {
+            teachers = [
+              {
+                _id:
+                  teacherData._id !== undefined && teacherData._id !== null
+                    ? String(teacherData._id)
+                    : "",
+
+                name: teacherName,
+              },
+            ];
+          }
+        }
+
+        if (teachers.length === 0 && Array.isArray(classData.teacher)) {
+          teachers = classData.teacher
+            .filter(
+              (item: unknown): item is Record<string, unknown> =>
+                typeof item === "object" && item !== null,
+            )
+            .map(
+              (teacher: Record<string, unknown>): Teacher => ({
+                _id:
+                  teacher._id !== undefined && teacher._id !== null
+                    ? String(teacher._id)
+                    : "",
+
+                name: typeof teacher.name === "string" ? teacher.name : "",
+              }),
+            )
+            .filter((teacher: Teacher) => teacher.name.trim() !== "");
+        }
+
+        const description =
+          typeof classData.description === "string"
+            ? classData.description
+            : "";
+
+        const isOpened =
+          typeof classData.isOpened === "boolean"
+            ? classData.isOpened
+            : typeof classData.isOpen === "boolean"
+              ? classData.isOpen
+              : false;
+
+        const id =
+          classData._id !== undefined && classData._id !== null
+            ? String(classData._id)
+            : classId;
 
         setClassInfo({
-          _id: rawClass._id ? String(rawClass._id) : classId,
-          className:
-            typeof rawClass.className === "string"
-              ? rawClass.className
-              : "",
+          _id: id,
+          className,
           classCodes,
-          description:
-            typeof rawClass.description === "string"
-              ? rawClass.description
-              : "",
-          teacher,
-          isOpen:
-            typeof rawClass.isOpen === "boolean"
-              ? rawClass.isOpen
-              : undefined,
+          teachers,
+          description,
+          isOpened,
         });
       } catch (error) {
-        showAlert(
+        showError(
           error instanceof Error
             ? error.message
             : "โหลดข้อมูลวิชาไม่สำเร็จ",
-          "error",
         );
+
+        setClassInfo(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchClass();
-  }, [classId, showAlert]);
+  }, [classId]);
+
+  // =========================================================
+  // FETCH SCHEDULE
+  // =========================================================
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -176,7 +318,10 @@ export default function QRPage() {
       }
 
       try {
-        const res = await fetch(`/api/schedule?classId=${classId}`);
+        const res = await fetch(`/api/schedule?classId=${classId}`, {
+          method: "GET",
+          cache: "no-store",
+        });
 
         const data = await res.json();
 
@@ -184,61 +329,87 @@ export default function QRPage() {
           return;
         }
 
-        if (Array.isArray(data.data) && data.data.length > 0) {
-          const latest = data.data[data.data.length - 1];
+        let schedules: unknown[] = [];
 
-          setSchedule({
-            date: latest.date
-              ? new Date(latest.date)
-              : new Date(),
+        if (Array.isArray(data.data)) {
+          schedules = data.data;
+        } else if (data.data && typeof data.data === "object") {
+          schedules = [data.data];
+        }
 
-            startTime:
-              typeof latest.startTime === "string"
-                ? latest.startTime
+        if (schedules.length === 0) {
+          return;
+        }
+
+        const latest = schedules[schedules.length - 1];
+
+        if (!latest || typeof latest !== "object") {
+          return;
+        }
+
+        const scheduleData = latest as Record<string, unknown>;
+
+        const parsedDate = scheduleData.date
+          ? new Date(String(scheduleData.date))
+          : new Date();
+
+        const validDate = !Number.isNaN(parsedDate.getTime());
+
+        setSchedule({
+          date: validDate ? parsedDate : new Date(),
+
+          startTime:
+            typeof scheduleData.startTime === "string"
+              ? scheduleData.startTime
+              : "",
+
+          endTime:
+            typeof scheduleData.endTime === "string"
+              ? scheduleData.endTime
+              : typeof scheduleData.startTime === "string"
+                ? scheduleData.startTime
                 : "",
 
-            endTime:
-              typeof latest.endTime === "string"
-                ? latest.endTime
-                : latest.startTime || "",
+          lateAfter:
+            typeof scheduleData.lateAfter === "number"
+              ? scheduleData.lateAfter
+              : 15,
 
-            lateAfter:
-              typeof latest.lateAfter === "number"
-                ? latest.lateAfter
-                : 15,
+          allowCheckIn:
+            typeof scheduleData.allowCheckIn === "boolean"
+              ? scheduleData.allowCheckIn
+              : true,
 
-            allowCheckIn:
-              typeof latest.allowCheckIn === "boolean"
-                ? latest.allowCheckIn
-                : true,
-
-            isOpen:
-              typeof latest.isOpen === "boolean"
-                ? latest.isOpen
-                : true,
-          });
-        }
+          isOpen:
+            typeof scheduleData.isOpen === "boolean"
+              ? scheduleData.isOpen
+              : true,
+        });
       } catch (error) {
-        console.error("FETCH SCHEDULE ERROR:", error);
+        // ไม่ต้องแสดง Alert เพราะ schedule เป็นข้อมูลเสริม
       }
     };
 
     fetchSchedule();
   }, [classId]);
 
+  // =========================================================
+  // SAVE SCHEDULE
+  // =========================================================
+
   const handleSaveSchedule = async () => {
     if (!classId) {
-      showAlert("ไม่พบรายวิชา", "error");
+      showError("ไม่พบรายวิชา");
       return;
     }
 
     if (!schedule.date) {
-      showAlert("กรุณาเลือกวันที่", "error");
+      showError("กรุณาเลือกวันที่");
       return;
     }
 
     if (!schedule.startTime) {
-      showAlert("กรุณาเลือกเวลาเริ่มเรียน", "error");
+      showError("กรุณาเลือกเวลาเริ่มเรียน");
       return;
     }
 
@@ -247,16 +418,17 @@ export default function QRPage() {
 
       const res = await fetch("/api/schedule", {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           classId,
           className: classInfo?.className || "",
           date: schedule.date.toISOString().split("T")[0],
           startTime: schedule.startTime,
-          endTime:
-            schedule.endTime || schedule.startTime,
+          endTime: schedule.endTime || schedule.startTime,
           lateAfter: schedule.lateAfter,
           allowCheckIn: schedule.allowCheckIn,
           isOpen: schedule.isOpen,
@@ -266,45 +438,46 @@ export default function QRPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        showAlert(
-          data.message || "บันทึกเวลาไม่สำเร็จ",
-          "error",
-        );
+        showError(data.message || "บันทึกเวลาไม่สำเร็จ");
         return;
       }
 
-      showAlert("บันทึกเวลาเรียบร้อย", "success");
+      showSuccess("บันทึกเวลาเรียบร้อย");
     } catch (error) {
-      console.error("SAVE SCHEDULE ERROR:", error);
-
-      showAlert("เกิดข้อผิดพลาดในการบันทึกเวลา", "error");
+      showError("เกิดข้อผิดพลาดในการบันทึกเวลา");
     } finally {
       setSaving(false);
     }
   };
 
+  // =========================================================
+  // COPY LINK
+  // =========================================================
+
   const handleCopy = async () => {
     if (!link) {
-      showAlert("ไม่พบลิงก์เช็คชื่อ", "error");
+      showError("ไม่พบลิงก์เช็คชื่อ");
       return;
     }
 
     try {
       await navigator.clipboard.writeText(link);
 
-      showAlert("คัดลอกลิงก์แล้ว", "success");
+      showSuccess("คัดลอกลิงก์แล้ว");
     } catch (error) {
-      console.error("COPY LINK ERROR:", error);
-
-      showAlert("ไม่สามารถคัดลอกลิงก์ได้", "error");
+      showError("ไม่สามารถคัดลอกลิงก์ได้");
     }
   };
+
+  // =========================================================
+  // DOWNLOAD QR
+  // =========================================================
 
   const handleDownloadQR = () => {
     const svg = document.querySelector(".qr-code svg");
 
     if (!svg) {
-      showAlert("ไม่พบ QR Code", "error");
+      showError("ไม่พบ QR Code");
       return;
     }
 
@@ -317,7 +490,7 @@ export default function QRPage() {
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
-      showAlert("ไม่สามารถสร้างรูป QR Code ได้", "error");
+      showError("ไม่สามารถสร้างรูป QR Code ได้");
       return;
     }
 
@@ -364,49 +537,48 @@ export default function QRPage() {
     img.onerror = () => {
       URL.revokeObjectURL(url);
 
-      showAlert("ไม่สามารถสร้าง QR Code ได้", "error");
+      showError("ไม่สามารถสร้าง QR Code ได้");
     };
 
     img.src = url;
   };
 
+  // =========================================================
+  // LATE TIME
+  // =========================================================
 
   const getLateTime = () => {
     if (!schedule.startTime) {
       return "";
     }
 
-    const [hours, minutes] = schedule.startTime
-      .split(":")
-      .map(Number);
+    const [hours, minutes] = schedule.startTime.split(":").map(Number);
 
-    if (
-      Number.isNaN(hours) ||
-      Number.isNaN(minutes)
-    ) {
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
       return "";
     }
 
     const date = new Date();
 
     date.setHours(hours);
-
-    date.setMinutes(
-      minutes + schedule.lateAfter,
-    );
+    date.setMinutes(minutes + schedule.lateAfter);
 
     return date.toTimeString().slice(0, 5);
   };
 
+  // =========================================================
+  // RENDER
+  // =========================================================
+
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 overflow-y-auto p-6 font-noto relative">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-300/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-500 border-t-transparent" />
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
 
-              <p className="text-gray-600 text-sm">
+              <p className="text-base font-medium text-white">
                 กำลังโหลด...
               </p>
             </div>
@@ -414,14 +586,15 @@ export default function QRPage() {
         )}
 
         {!loading && (
-          <div className="flex flex-col bg-white rounded-2xl px-6 pt-6 pb-8">
+          <div className="flex flex-col rounded-2xl bg-white px-6 pb-8 pt-6">
+            {/* HEADER */}
             <div className="mb-6 flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100 transition cursor-pointer"
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 transition hover:bg-gray-100"
               >
-                <ArrowLeftIcon className="w-3 h-3 text-gray-700" />
+                <ArrowLeftIcon className="h-3 w-3 text-gray-700" />
               </button>
 
               <div>
@@ -436,91 +609,84 @@ export default function QRPage() {
             </div>
 
             {!classId ? (
-              <p className="text-gray-500 text-sm">
-                ไม่พบรายวิชา
-              </p>
+              <p className="text-sm text-gray-500">ไม่พบรายวิชา</p>
             ) : !classInfo ? (
-              <p className="text-gray-500 text-sm">
+              <p className="text-sm text-gray-500">
                 ไม่พบข้อมูลรายวิชา
               </p>
             ) : (
               <>
-                <div className="bg-blue-50 border border-gray-200 rounded-xl p-4 mb-4">
-                  <p className="text-sm text-gray-500 mb-1">
-                    วิชา
-                  </p>
+                {/* CLASS INFO */}
+                <div className="mb-4 rounded-xl border border-gray-200 bg-blue-50 p-4">
+                  <p className="mb-1 text-sm text-gray-500">วิชา</p>
 
                   <h2 className="text-base font-semibold text-gray-800">
                     {classInfo.className || "-"}
                   </h2>
 
-                  <div className="flex flex-col gap-3 mt-3 text-sm text-gray-600">
+                  <div className="mt-3 flex flex-col gap-3 text-sm text-gray-600">
                     <div>
                       <span className="text-gray-500">
-                        อาจารย์ประจำวิชา:
+                        อาจารย์ผู้สอน:
                       </span>{" "}
-                      <span className="font-medium text-gray-700">
-                        {classInfo.teacher?.name || "-"}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="text-gray-500">
-                        รหัสวิชา / Section:
-                      </span>
-
-                      {classInfo.classCodes.length === 0 ? (
-                        <span className="ml-2">
-                          -
+                      {classInfo.teachers.length > 0 ? (
+                        <span className="font-medium text-gray-700">
+                          {classInfo.teachers
+                            .map((teacher) => teacher.name)
+                            .filter(Boolean)
+                            .join(", ") || "-"}
                         </span>
                       ) : (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {classInfo.classCodes.map(
-                            (classCode, index) => (
-                              <div
-                                key={`${classCode.code}-${classCode.section}-${index}`}
-                                className="bg-white border border-blue-100 rounded-lg px-3 py-2"
-                              >
-                                <div className="font-medium text-gray-700">
-                                  {classCode.code || "-"}
-                                  {" / "}
-                                  Section{" "}
-                                  {classCode.section}
-                                </div>
-
-                                {classCode.branches.length >
-                                  0 && (
-                                  <div className="mt-1 text-xs text-gray-500">
-                                    สาขา:{" "}
-                                    {classCode.branches
-                                      .map(
-                                        (branch) =>
-                                          branch.name,
-                                      )
-                                      .filter(Boolean)
-                                      .join(", ") ||
-                                      "-"}
-                                  </div>
-                                )}
-                              </div>
-                            ),
-                          )}
-                        </div>
+                        <span className="font-medium text-gray-700">
+                          -
+                        </span>
                       )}
                     </div>
+
+                    <div>
+                      <span className="text-gray-500">รหัสวิชา:</span>
+
+                      {classInfo.classCodes.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {classInfo.classCodes.map((code, index) => (
+                            <span
+                              key={`${code}-${index}`}
+                              className="rounded-lg border border-blue-100 bg-white px-3 py-2 font-medium text-gray-700"
+                            >
+                              {code || "-"}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="ml-2">-</span>
+                      )}
+                    </div>
+
+                    {classInfo.description && (
+                      <div>
+                        <span className="text-gray-500">
+                          รายละเอียด:
+                        </span>{" "}
+                        <span className="text-gray-700">
+                          {classInfo.description}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-5 mb-8">
-                  <div className="flex items-center justify-between mb-4">
+                {/* SCHEDULE */}
+                <div className="mb-8 mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+                  <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-sm text-gray-800">
                       ตั้งเวลาเช็คชื่อ
                     </h3>
                   </div>
 
-                  <div className="flex items-end gap-4 flex-wrap">
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+                    {/* DATE */}
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         วันที่
                       </label>
 
@@ -529,19 +695,24 @@ export default function QRPage() {
                         onChange={(date: Date | null) =>
                           setSchedule((prev) => ({
                             ...prev,
-                            date:
-                              date || new Date(),
+                            date: date || new Date(),
                           }))
                         }
                         dateFormat="dd/MM/yyyy"
-                        className="w-full h-[46px] rounded-xl border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                        calendarClassName="rounded-2xl border border-gray-200 shadow-2xl overflow-hidden"
+                        value={
+                          schedule.date
+                            ? formatThaiDate(schedule.date)
+                            : ""
+                        }
+                        className="h-[46px] w-full rounded-xl border border-gray-200 bg-white px-4 text-left text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-[250px]"
+                        calendarClassName="rounded-2xl border border-gray-200 overflow-hidden"
                         popperClassName="z-50"
                       />
                     </div>
 
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                    {/* START TIME */}
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         เวลาเริ่มเรียน
                       </label>
 
@@ -551,16 +722,16 @@ export default function QRPage() {
                         onChange={(e) =>
                           setSchedule((prev) => ({
                             ...prev,
-                            startTime:
-                              e.target.value,
+                            startTime: e.target.value,
                           }))
                         }
-                        className="border border-gray-200 rounded-lg px-3 py-2 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-[250px]"
                       />
                     </div>
 
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                    {/* END TIME */}
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         เวลาเลิกเรียน
                       </label>
 
@@ -570,40 +741,39 @@ export default function QRPage() {
                         onChange={(e) =>
                           setSchedule((prev) => ({
                             ...prev,
-                            endTime:
-                              e.target.value,
+                            endTime: e.target.value,
                           }))
                         }
-                        className="border border-gray-200 rounded-lg px-3 py-2 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-[250px]"
                       />
                     </div>
 
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                    {/* LATE */}
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         มาสายได้ภายใน
                       </label>
 
-                      <div className="relative">
+                      <div className="relative w-full sm:w-[250px]">
                         <input
                           type="number"
                           min={0}
                           max={120}
                           value={schedule.lateAfter}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+
                             setSchedule((prev) => ({
                               ...prev,
-                              lateAfter: Math.max(
-                                0,
-                                Math.min(
-                                  120,
-                                  Number(
-                                    e.target.value,
+                              lateAfter: Number.isNaN(value)
+                                ? 0
+                                : Math.max(
+                                    0,
+                                    Math.min(120, value),
                                   ),
-                                ),
-                              ),
-                            }))
-                          }
-                          className="border border-gray-200 rounded-lg px-3 py-2 pr-10 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            }));
+                          }}
+                          className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 pr-10 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
 
                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
@@ -612,27 +782,24 @@ export default function QRPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-end">
+                    {/* SAVE */}
+                    <div className="flex w-full sm:w-auto">
                       <button
                         type="button"
                         disabled={saving}
                         onClick={handleSaveSchedule}
-                        className="px-6 py-2.5 bg-blue-500 text-white rounded-lg text-sm shadow hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="h-[46px] w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-2.5 text-sm text-white shadow transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                       >
-                        {saving
-                          ? "กำลังบันทึก..."
-                          : "บันทึก"}
+                        {saving ? "กำลังบันทึก..." : "บันทึก"}
                       </button>
                     </div>
                   </div>
 
                   {schedule.startTime && (
                     <div className="mt-4 text-xs text-gray-500">
-                      เริ่ม:{" "}
-                      <b>
-                        {schedule.startTime}
-                      </b>{" "}
-                      | มาสายถึง:{" "}
+                      เริ่ม: <b>{schedule.startTime}</b>
+                      {" | "}
+                      มาสายถึง:{" "}
                       <b className="text-yellow-600">
                         {getLateTime()}
                       </b>
@@ -640,13 +807,14 @@ export default function QRPage() {
                   )}
                 </div>
 
-                <div className="flex flex-col h-full">
+                {/* LINK */}
+                <div className="flex h-full flex-col">
                   <div className="mb-6">
                     <label className="text-sm text-gray-700">
                       ลิงก์เช็คชื่อ
                     </label>
 
-                    <div className="flex gap-2 mt-1">
+                    <div className="mt-1 flex gap-2">
                       <input
                         value={link}
                         readOnly
@@ -656,38 +824,40 @@ export default function QRPage() {
                       <button
                         type="button"
                         onClick={handleCopy}
-                        className="px-3 border rounded-md hover:bg-gray-100 cursor-pointer"
+                        className="cursor-pointer rounded-md border px-3 hover:bg-gray-100"
                       >
-                        <ClipboardIcon className="w-4 h-4" />
+                        <ClipboardIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                    <div className="qr-code relative p-5 border border-gray-300 rounded-2xl bg-white">
+                  {/* QR CODE */}
+                  <div className="flex flex-1 flex-col items-center justify-center gap-3">
+                    <div className="qr-code relative w-full max-w-[390px] rounded-2xl border border-gray-300 bg-white p-3 sm:p-5">
                       <QRCode
                         value={link || "loading"}
                         size={350}
+                        className="h-auto w-full"
                       />
 
                       <button
                         type="button"
                         aria-label="ขยาย QR Code"
                         onClick={() => setOpenQR(true)}
-                        className="absolute top-2 right-2 bg-white border border-gray-300 rounded-md p-1 hover:bg-gray-100 cursor-pointer"
+                        className="absolute right-2 top-2 cursor-pointer rounded-md border border-gray-300 bg-white p-1 hover:bg-gray-100"
                       >
-                        <ArrowsPointingOutIcon className="w-4 h-4 text-gray-600" />
+                        <ArrowsPointingOutIcon className="h-4 w-4 text-gray-600" />
                       </button>
                     </div>
 
-                    <p className="text-sm text-gray-500 text-center">
+                    <p className="text-center text-sm text-gray-500">
                       QR Code เช็คชื่อ
                     </p>
 
                     <button
                       type="button"
                       onClick={() => setOpenQR(true)}
-                      className="text-sm text-blue-500 hover:underline cursor-pointer"
+                      className="cursor-pointer text-sm text-blue-500 hover:underline"
                     >
                       คลิกเพื่อขยาย QR Code
                     </button>
@@ -699,41 +869,40 @@ export default function QRPage() {
         )}
       </div>
 
+      {/* =========================================================
+          QR MODAL
+      ========================================================= */}
+
       {openQR && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 font-noto"
-          onClick={() => setOpenQR(false)}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-xl w-full max-w-[800px] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-6 pt-4">
-              <h2 className="text-lg font-semibold text-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 font-noto sm:p-6">
+          <div className="max-h-[95vh] w-full max-w-[800px] overflow-y-auto rounded-2xl bg-white shadow-xl sm:rounded-3xl">
+            <div className="flex items-center justify-between px-4 pt-4 sm:px-6 sm:pt-5">
+              <h2 className="text-base font-semibold text-gray-800 sm:text-lg">
                 QR Code เช็คชื่อ
               </h2>
 
               <button
                 type="button"
                 onClick={() => setOpenQR(false)}
-                className="p-1 rounded-md hover:bg-gray-100 transition cursor-pointer"
+                className="cursor-pointer rounded-md p-1 transition hover:bg-gray-100"
               >
-                <XMarkIcon className="w-6 h-6 text-gray-600" />
+                <XMarkIcon className="h-5 w-5 text-gray-600 sm:h-6 sm:w-6" />
               </button>
             </div>
 
-            <div className="p-8 flex flex-col items-center gap-6">
-              <div className="border border-gray-300 p-4 rounded-xl">
+            <div className="flex flex-col items-center gap-5 p-4 sm:gap-6 sm:p-8">
+              <div className="w-full max-w-[480px] rounded-xl border border-gray-300 bg-white p-3 sm:p-4">
                 <QRCode
                   value={link || "loading"}
                   size={480}
+                  className="h-auto w-full"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={handleDownloadQR}
-                className="px-6 py-2 rounded-xl border border-blue-400 text-blue-400 font-semibold hover:bg-blue-50 transition cursor-pointer"
+                className="cursor-pointer rounded-xl border border-blue-400 px-5 py-2 text-sm font-semibold text-blue-400 transition hover:bg-blue-50 sm:px-6 sm:py-2"
               >
                 บันทึก QR Code
               </button>

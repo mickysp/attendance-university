@@ -39,109 +39,374 @@ export default function ClassFilter({ data, onChange }: Props) {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const branchOptions = useMemo(() => {
     const all = data.flatMap((c) => (c.branches || []).map((b) => b.name));
+
     return [...new Set(all)];
   }, [data]);
 
   const handleChange = (k: string, b: string) => {
-    onChange({ keyword: k, branch: b });
+    onChange({
+      keyword: k,
+      branch: b,
+    });
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-3 w-full">
-      <div className="relative w-full md:w-[380px]">
-        <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+    <div className="flex w-full flex-col gap-3">
+      {/* ================= DESKTOP / IPAD ================= */}
+      <div className="hidden items-center gap-3 md:flex">
+        <div className="relative w-[380px]">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
-        <input
-          type="text"
-          placeholder="ค้นหาได้จากรายวิชา และรหัสวิชา"
-          value={keyword}
-          onChange={(e) => {
-            setKeyword(e.target.value);
-            handleChange(e.target.value, branch);
-          }}
-          className="w-full pl-9 pr-9 py-[9px] text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-200 text-xs"
-        />
+          <input
+            type="text"
+            placeholder="ค้นหาได้จากรายวิชา และรหัสวิชา"
+            value={keyword}
+            onChange={(e) => {
+              const value = e.target.value;
 
-        {keyword && (
-          <button
-            onClick={() => {
-              setKeyword("");
-              handleChange("", branch);
+              setKeyword(value);
+              handleChange(value, branch);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-          >
-            <XMarkIcon className="w-5 h-5 text-blue-500" />
-          </button>
-        )}
-      </div>
+            className="
+              w-full
+              rounded-md
+              border
+              border-gray-200
+              py-[9px]
+              pl-9
+              pr-9
+              text-[14px]
+              text-gray-700
+              outline-none
+              focus:ring-1
+              focus:ring-gray-200
+            "
+          />
 
-      <div ref={ref} className="relative w-full md:w-[280px]">
+          {keyword && (
+            <button
+              type="button"
+              onClick={() => {
+                setKeyword("");
+                handleChange("", branch);
+              }}
+              className="
+                absolute
+                right-3
+                top-1/2
+                -translate-y-1/2
+                cursor-pointer
+                text-gray-400
+                hover:text-gray-600
+              "
+            >
+              <XMarkIcon className="h-5 w-5 text-blue-500" />
+            </button>
+          )}
+        </div>
+
+        <div ref={ref} className="relative w-[280px]">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className="
+              flex
+              w-full
+              cursor-pointer
+              items-center
+              justify-between
+              rounded-md
+              border
+              border-gray-200
+              bg-white
+              px-3
+              py-[9px]
+              text-[14px]
+              outline-none
+              focus:ring-1
+              focus:ring-gray-200
+            "
+          >
+            <span className={branch ? "text-gray-800" : "text-gray-400"}>
+              {branch || "เลือกสาขา"}
+            </span>
+
+            <ChevronDownIcon className="h-4 w-4 text-blue-500" />
+          </button>
+
+          {open && (
+            <div
+              className="
+                absolute
+                z-20
+                mt-1
+                max-h-48
+                w-full
+                overflow-y-auto
+                rounded-md
+                border
+                border-gray-200
+                bg-white
+                shadow
+              "
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setBranch("");
+                  handleChange(keyword, "");
+                  setOpen(false);
+                }}
+                className="
+                  block
+                  w-full
+                  cursor-pointer
+                  px-3
+                  py-2
+                  text-left
+                  text-sm
+                  hover:bg-gray-100
+                "
+              >
+                ทั้งหมด
+              </button>
+
+              {branchOptions.map((b) => {
+                const isSelected = branch === b;
+
+                return (
+                  <button
+                    type="button"
+                    key={b}
+                    onClick={() => {
+                      setBranch(b);
+                      handleChange(keyword, b);
+                      setOpen(false);
+                    }}
+                    className={`
+                      flex
+                      w-full
+                      cursor-pointer
+                      items-center
+                      justify-between
+                      px-3
+                      py-2
+                      text-left
+                      text-sm
+                      ${
+                        isSelected
+                          ? "bg-blue-50 font-medium text-blue-600"
+                          : "hover:bg-gray-100"
+                      }
+                    `}
+                  >
+                    <span>{b}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <button
           type="button"
-          onClick={() => setOpen(!open)}
-          className="w-full px-3 py-[9px] text-[14px] border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 text-xs cursor-pointer"
+          onClick={() => {
+            setKeyword("");
+            setBranch("");
+            handleChange("", "");
+          }}
+          className="
+            cursor-pointer
+            whitespace-nowrap
+            text-[13px]
+            text-blue-500
+            hover:underline
+          "
         >
-          <span className={branch ? "text-gray-800" : "text-gray-400"}>
-            {branch || "เลือกสาขา"}
-          </span>
-
-          <ChevronDownIcon className="w-4 h-4 text-blue-500" />
+          ล้างค่า
         </button>
-
-        {open && (
-          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto">
-            <button
-              onClick={() => {
-                setBranch("");
-                handleChange(keyword, "");
-                setOpen(false);
-              }}
-              className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-sm cursor-pointer"
-            >
-              ทั้งหมด
-            </button>
-
-            {branchOptions.map((b) => {
-              const isSelected = branch === b;
-
-              return (
-                <button
-                  key={b}
-                  onClick={() => {
-                    setBranch(b);
-                    handleChange(keyword, b);
-                    setOpen(false);
-                  }}
-                  className={`block w-full px-3 py-2 text-left text-sm flex items-center justify-between
-                  ${
-                    isSelected
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "hover:bg-gray-100"
-                  } cursor-pointer`}
-                >
-                  <span>{b}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
-      <button
-        onClick={() => {
-          setKeyword("");
-          setBranch("");
-          handleChange("", "");
-        }}
-        className="text-[13px] text-blue-500 hover:underline whitespace-nowrap text-xs cursor-pointer"
-      >
-        ล้างค่า
-      </button>
+      {/* ================= MOBILE ================= */}
+      <div className="flex w-full flex-col items-center gap-3 md:hidden">
+        <div className="relative w-full">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
+          <input
+            type="text"
+            placeholder="ค้นหาได้จากรายวิชา และรหัสวิชา"
+            value={keyword}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              setKeyword(value);
+              handleChange(value, branch);
+            }}
+            className="
+              w-full
+              rounded-md
+              border
+              border-gray-200
+              py-[9px]
+              pl-9
+              pr-9
+              text-[14px]
+              text-gray-700
+              outline-none
+              focus:ring-1
+              focus:ring-gray-200
+            "
+          />
+
+          {keyword && (
+            <button
+              type="button"
+              onClick={() => {
+                setKeyword("");
+                handleChange("", branch);
+              }}
+              className="
+                absolute
+                right-3
+                top-1/2
+                -translate-y-1/2
+                cursor-pointer
+              "
+            >
+              <XMarkIcon className="h-5 w-5 text-blue-500" />
+            </button>
+          )}
+        </div>
+
+        <div ref={ref} className="relative w-full">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className="
+              flex
+              w-full
+              cursor-pointer
+              items-center
+              justify-between
+              rounded-md
+              border
+              border-gray-200
+              bg-white
+              px-3
+              py-[9px]
+              text-[14px]
+              outline-none
+              focus:ring-1
+              focus:ring-gray-200
+            "
+          >
+            <span className={branch ? "text-gray-800" : "text-gray-400"}>
+              {branch || "เลือกสาขา"}
+            </span>
+
+            <ChevronDownIcon className="h-4 w-4 text-blue-500" />
+          </button>
+
+          {open && (
+            <div
+              className="
+                absolute
+                z-20
+                mt-1
+                max-h-48
+                w-full
+                overflow-y-auto
+                rounded-md
+                border
+                border-gray-200
+                bg-white
+                shadow
+              "
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setBranch("");
+                  handleChange(keyword, "");
+                  setOpen(false);
+                }}
+                className="
+                  block
+                  w-full
+                  cursor-pointer
+                  px-3
+                  py-2
+                  text-left
+                  text-sm
+                  hover:bg-gray-100
+                "
+              >
+                ทั้งหมด
+              </button>
+
+              {branchOptions.map((b) => {
+                const isSelected = branch === b;
+
+                return (
+                  <button
+                    type="button"
+                    key={b}
+                    onClick={() => {
+                      setBranch(b);
+                      handleChange(keyword, b);
+                      setOpen(false);
+                    }}
+                    className={`
+                      flex
+                      w-full
+                      cursor-pointer
+                      items-center
+                      justify-between
+                      px-3
+                      py-2
+                      text-left
+                      text-sm
+                      ${
+                        isSelected
+                          ? "bg-blue-50 font-medium text-blue-600"
+                          : "hover:bg-gray-100"
+                      }
+                    `}
+                  >
+                    <span>{b}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setKeyword("");
+            setBranch("");
+            handleChange("", "");
+          }}
+          className="
+            cursor-pointer
+            whitespace-nowrap
+            text-[13px]
+            text-blue-500
+            hover:underline
+          "
+        >
+          ล้างค่า
+        </button>
+      </div>
     </div>
   );
 }

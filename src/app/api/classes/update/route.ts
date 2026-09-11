@@ -2,46 +2,20 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-type Branch = {
-  _id: string;
-  name: string;
-};
-
-type Teacher = {
-  _id: string;
-  name: string;
-};
-
-type IncomingClassCode = {
-  code?: string;
-  section?: number;
-  branchIds?: string[];
-};
-
-type ClassCodePayload = {
-  code: string;
-  section: number;
-  branches: Branch[];
-};
-
-type IncomingClass = {
-  className?: string;
-  classCodes?: IncomingClassCode[];
-  teacherIds?: string[];
-  description?: string;
-};
+import type { ClassDocument, Teacher } from "@/types/classes";
 
 type UpdateClassPayload = {
   className?: string;
-  classCodes?: ClassCodePayload[];
-  description?: string;
+  classCodes?: string[];
   teachers?: Teacher[];
-  updatedAt?: Date;
+  description?: string;
+  updatedAt: Date;
 };
 
 export async function PUT(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
+
     const id = searchParams.get("id");
 
     if (!id) {
@@ -64,16 +38,15 @@ export async function PUT(req: Request) {
       );
     }
 
-    const body: IncomingClass = await req.json();
+    const body: Partial<ClassDocument> = await req.json();
+
+    const { className, classCodes, teachers, description } = body;
 
     const client = await clientPromise;
+
     const db = client.db("attendance");
 
-    const classes = db.collection<UpdateClassPayload>("classes");
-
-    const majors = db.collection("majors");
-
-    const teachersCol = db.collection("teachers");
+    const classes = db.collection<ClassDocument>("classes");
 
     const objectId = new ObjectId(id);
 
@@ -91,41 +64,105 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { className, classCodes, teacherIds, description } = body;
-
-    if (className !== undefined && !className.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "กรุณากรอกชื่อวิชา",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (classCodes !== undefined && classCodes.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "ต้องมีอย่างน้อย 1 รหัสวิชา",
-        },
-        { status: 400 },
-      );
-    }
-
-    const updateData: Partial<UpdateClassPayload> = {};
+    const updateData: UpdateClassPayload = {
+      updatedAt: new Date(),
+    };
 
     if (className !== undefined) {
-      updateData.className = className.trim();
+      if (typeof className !== "string") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "ชื่อวิชาไม่ถูกต้อง",
+          },
+          { status: 400 },
+        );
+      }
+
+      const trimmedClassName = className.trim();
+
+      if (!trimmedClassName) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "กรุณากรอกชื่อวิชา",
+          },
+          { status: 400 },
+        );
+      }
+
+      updateData.className = trimmedClassName;
     }
 
-    if (description !== undefined) {
-      updateData.description = description.trim();
+    if (classCodes !== undefined) {
+      if (!Array.isArray(classCodes)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "รหัสวิชาไม่ถูกต้อง",
+          },
+          { status: 400 },
+        );
+      }
+
+      const normalizedClassCodes = Array.from(
+        new Set(
+          classCodes
+            .filter((code): code is string => typeof code === "string")
+            .map((code) => code.trim())
+            .filter(Boolean),
+        ),
+      );
+
+      if (normalizedClassCodes.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "วิชาต้องมีรหัสวิชาอย่างน้อย 1 รหัส",
+          },
+          { status: 400 },
+        );
+      }
+
+      const duplicateClass = await classes.findOne({
+        _id: {
+          $ne: objectId,
+        },
+
+        classCodes: {
+          $in: normalizedClassCodes,
+        },
+      });
+
+      if (duplicateClass) {
+        const duplicateCode = duplicateClass.classCodes.find((code) =>
+          normalizedClassCodes.includes(code),
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            message: `รหัสวิชา ${duplicateCode ?? ""} มีอยู่แล้ว`,
+          },
+          { status: 400 },
+        );
+      }
+
+      updateData.classCodes = normalizedClassCodes;
     }
 
+    if (teachers !== undefined) {
+      if (!Array.isArray(teachers)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "ข้อมูลอาจารย์ไม่ถูกต้อง",
+          },
+          { status: 400 },
+        );
+      }
 
-    if (teacherIds !== undefined) {
-      if (teacherIds.length === 0) {
+      if (teachers.length === 0) {
         return NextResponse.json(
           {
             success: false,
@@ -135,183 +172,48 @@ export async function PUT(req: Request) {
         );
       }
 
-      const uniqueTeacherIds = Array.from(new Set(teacherIds));
+      const normalizedTeachers: Teacher[] = teachers
+        .filter(
+          (teacher) =>
+            teacher &&
+            typeof teacher === "object" &&
+            typeof teacher._id === "string" &&
+            teacher._id.trim() !== "",
+        )
+        .map((teacher) => ({
+          _id: teacher._id.trim(),
 
-      const invalidTeacherId = uniqueTeacherIds.find(
-        (teacherId) => !ObjectId.isValid(teacherId),
-      );
+          name: typeof teacher.name === "string" ? teacher.name.trim() : "",
+        }));
 
-      if (invalidTeacherId) {
+      if (normalizedTeachers.length === 0) {
         return NextResponse.json(
           {
             success: false,
-            message: `รูปแบบรหัสอาจารย์ไม่ถูกต้อง: ${invalidTeacherId}`,
+            message: "กรุณาเลือกอาจารย์ผู้สอนอย่างน้อย 1 คน",
           },
           { status: 400 },
         );
       }
-
-      const teacherObjectIds = uniqueTeacherIds.map(
-        (teacherId) => new ObjectId(teacherId),
-      );
-
-      const foundTeachers = await teachersCol
-        .find({
-          _id: {
-            $in: teacherObjectIds,
-          },
-        })
-        .toArray();
-
-      if (foundTeachers.length !== uniqueTeacherIds.length) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "พบข้อมูลอาจารย์ไม่ครบ",
-          },
-          { status: 400 },
-        );
-      }
-
-      const normalizedTeachers: Teacher[] = foundTeachers.map((teacher) => ({
-        _id: teacher._id.toString(),
-        name: teacher.name,
-      }));
 
       updateData.teachers = normalizedTeachers;
     }
 
-    if (classCodes !== undefined) {
-      const normalizedClassCodes: ClassCodePayload[] = [];
-
-      for (const classCodeItem of classCodes) {
-        const code = classCodeItem.code?.trim();
-
-        const section = Number(classCodeItem.section);
-
-        if (!code) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: "มีบางรายการไม่ได้กรอกรหัสวิชา",
-            },
-            { status: 400 },
-          );
-        }
-
-        if (!Number.isInteger(section) || section <= 0) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `Section ของรหัสวิชา ${code} ไม่ถูกต้อง`,
-            },
-            { status: 400 },
-          );
-        }
-
-        if (!classCodeItem.branchIds || classCodeItem.branchIds.length === 0) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `รหัสวิชา ${code} Section ${section} ต้องมีอย่างน้อย 1 สาขา`,
-            },
-            { status: 400 },
-          );
-        }
-
-        const uniqueBranchIds = Array.from(new Set(classCodeItem.branchIds));
-
-        const duplicateInRequest = normalizedClassCodes.some(
-          (item) => item.code === code && item.section === section,
-        );
-
-        if (duplicateInRequest) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `รหัสวิชา ${code} Section ${section} ซ้ำกันในรายการที่ส่งมา`,
-            },
-            { status: 400 },
-          );
-        }
-
-        const duplicate = await classes.findOne({
-          _id: {
-            $ne: objectId,
+    if (description !== undefined) {
+      if (typeof description !== "string") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "รายละเอียดไม่ถูกต้อง",
           },
-
-          classCodes: {
-            $elemMatch: {
-              code,
-              section,
-            },
-          },
-        });
-
-        if (duplicate) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `รหัสวิชา ${code} Section ${section} มีอยู่แล้ว`,
-            },
-            { status: 400 },
-          );
-        }
-
-        const invalidBranchId = uniqueBranchIds.find(
-          (branchId) => !ObjectId.isValid(branchId),
+          { status: 400 },
         );
-
-        if (invalidBranchId) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `รูปแบบรหัสสาขาไม่ถูกต้อง: ${invalidBranchId}`,
-            },
-            { status: 400 },
-          );
-        }
-
-        const branchObjectIds = uniqueBranchIds.map(
-          (branchId) => new ObjectId(branchId),
-        );
-
-        const foundMajors = await majors
-          .find({
-            _id: {
-              $in: branchObjectIds,
-            },
-          })
-          .toArray();
-
-        if (foundMajors.length !== uniqueBranchIds.length) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `พบสาขาไม่ครบสำหรับรหัสวิชา ${code} Section ${section}`,
-            },
-            { status: 400 },
-          );
-        }
-
-        const normalizedBranches: Branch[] = foundMajors.map((major) => ({
-          _id: major._id.toString(),
-          name: major.name,
-        }));
-
-        normalizedClassCodes.push({
-          code,
-          section,
-          branches: normalizedBranches,
-        });
       }
 
-      updateData.classCodes = normalizedClassCodes;
+      updateData.description = description.trim();
     }
 
-    updateData.updatedAt = new Date();
-
-    await classes.updateOne(
+    const result = await classes.updateOne(
       {
         _id: objectId,
       },
@@ -320,15 +222,31 @@ export async function PUT(req: Request) {
       },
     );
 
-    return NextResponse.json({
-      success: true,
-      message: "อัปเดตรายวิชาสำเร็จ",
-    });
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "ไม่สามารถอัปเดตรายวิชาได้",
+        },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "อัปเดตรายวิชาสำเร็จ",
+      },
+      { status: 200 },
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "เกิดข้อผิดพลาดในการอัปเดตรายวิชา",
       },
       { status: 500 },
     );

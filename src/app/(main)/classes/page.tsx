@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
 import Table from "@/components/classes/Table";
 import Select from "@/components/classes/Select";
+
 import type { ClassResponse } from "@/types/classes";
 
 export default function ClassesPage() {
@@ -23,15 +25,15 @@ export default function ClassesPage() {
         setLoading(true);
 
         const res = await fetch("/api/classes");
+
         const data = await res.json();
 
         if (data.success && Array.isArray(data.data)) {
-          setClasses(data.data as ClassResponse[]);
+          setClasses(data.data);
         } else {
           setClasses([]);
         }
       } catch (error) {
-        console.error("Fetch classes error:", error);
         setClasses([]);
       } finally {
         setLoading(false);
@@ -41,20 +43,16 @@ export default function ClassesPage() {
     fetchData();
   }, []);
 
-  const filteredClasses = classes.filter((c) => {
+  const filteredClasses = classes.filter((item) => {
     const keyword = filter.keyword.toLowerCase().trim();
 
     const matchKeyword =
-      c.className.toLowerCase().includes(keyword) ||
-      c.classCodes.some((classCode) =>
-        classCode.code.toLowerCase().includes(keyword),
+      item.className.toLowerCase().includes(keyword) ||
+      item.classCodes.some((classCode) =>
+        classCode.toLowerCase().includes(keyword),
       );
 
-    const matchBranch = filter.branch
-      ? c.classCodes.some((classCode) =>
-          classCode.branches.some((branch) => branch.name === filter.branch),
-        )
-      : true;
+    const matchBranch = true;
 
     return matchKeyword && matchBranch;
   });
@@ -67,11 +65,42 @@ export default function ClassesPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 p-6 font-noto relative">
+      <div
+        className="
+          relative
+          flex-1
+          min-h-0
+          overflow-hidden
+          p-6
+          pt-[80px]
+          font-noto
+          lg:pt-6
+        "
+      >
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
+          <div
+            className="
+              absolute
+              inset-0
+              z-10
+              flex
+              items-center
+              justify-center
+              bg-gray-300
+            "
+          >
             <div className="flex flex-col items-center gap-4">
-              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <div
+                className="
+                  h-14
+                  w-14
+                  animate-spin
+                  rounded-full
+                  border-4
+                  border-white
+                  border-t-transparent
+                "
+              />
 
               <p className="text-base text-white">กำลังโหลด...</p>
             </div>
@@ -79,37 +108,75 @@ export default function ClassesPage() {
         )}
 
         {!loading && hasData && (
-          <div className="flex flex-col bg-white rounded-2xl">
-            <div className="px-6 pt-6 flex items-center justify-between">
+          <div
+            className="
+              flex
+              h-full
+              min-h-0
+              flex-col
+              overflow-hidden
+              rounded-2xl
+              bg-white
+            "
+          >
+            <div
+              className="
+                flex
+                shrink-0
+                flex-col
+                px-6
+                pt-6
+                pb-4
+                md:flex-row
+                md:items-center
+                md:justify-between
+              "
+            >
               <div>
                 <h1 className="text-[26px] font-semibold text-gray-800">
                   Classes
                 </h1>
 
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="mt-1 text-sm text-gray-400">
                   จัดการข้อมูลรายวิชาที่มีอยู่ในระบบ
                 </p>
               </div>
 
               <button
+                type="button"
                 onClick={() => router.push("/classes/create")}
-                className="h-[40px] px-6 py-2 rounded-md bg-[var(--primary)] text-white text-base hover:bg-[var(--primary-hover)] cursor-pointer"
+                className="
+                  mt-4
+                  h-[40px]
+                  w-full
+                  cursor-pointer
+                  rounded-md
+                  bg-[var(--primary)]
+                  px-6
+                  py-2
+                  text-base
+                  text-white
+                  transition
+                  hover:bg-[var(--primary-hover)]
+                  md:mt-0
+                  md:w-auto
+                "
               >
                 + เพิ่มวิชา
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="shrink-0 px-6 pb-4">
               <div className="flex items-center justify-between">
                 <Select data={classes} onChange={setFilter} />
               </div>
 
-              <div className="text-base text-gray-600 font-semibold mt-6">
+              <div className="mt-6 text-base font-semibold text-gray-600">
                 Classes ทั้งหมด {filteredClasses.length} รายการ
               </div>
             </div>
 
-            <div className="px-6 pb-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
               <Table
                 data={filteredClasses}
                 onDeleteSuccess={handleDeleteSuccess}
@@ -119,32 +186,87 @@ export default function ClassesPage() {
         )}
 
         {!loading && !hasData && (
-          <div className="flex flex-col h-[90vh] bg-white rounded-2xl">
-            <div className="px-6 py-4">
+          <div
+            className="
+              flex
+              h-full
+              min-h-0
+              flex-col
+              overflow-hidden
+              rounded-2xl
+              bg-white
+            "
+          >
+            <div className="shrink-0 px-6 pt-6 pb-4">
               <h1 className="text-[26px] font-semibold text-gray-800">
                 Classes
               </h1>
             </div>
 
-            <div className="flex flex-1 flex-col items-center justify-center text-center">
-              <div className="mb-3 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                <img
-                  src="/not-exist.png"
-                  alt="ไม่มีข้อมูล"
-                  className="w-28 h-28"
-                />
-              </div>
-
-              <p className="text-sm text-gray-400 mb-4">
-                ยังไม่มีข้อมูลรายวิชาล่าสุด
-              </p>
-
-              <button
-                onClick={() => router.push("/classes/create")}
-                className="px-5 py-2.5 rounded-md text-sm bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] flex items-center gap-2 shadow-sm cursor-pointer"
+            <div
+              className="
+                min-h-0
+                flex-1
+                overflow-y-auto
+                px-6
+                pb-6
+              "
+            >
+              <div
+                className="
+                  flex
+                  min-h-full
+                  flex-col
+                  items-center
+                  justify-center
+                  text-center
+                "
               >
-                + เพิ่มวิชา
-              </button>
+                <div
+                  className="
+                    mb-3
+                    flex
+                    h-28
+                    w-28
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-gray-100
+                  "
+                >
+                  <img
+                    src="/not-exist.png"
+                    alt="ไม่มีข้อมูล"
+                    className="h-28 w-28"
+                  />
+                </div>
+
+                <p className="mb-4 text-sm text-gray-400">
+                  ยังไม่มีข้อมูลรายวิชาล่าสุด
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/classes/create")}
+                  className="
+                    flex
+                    cursor-pointer
+                    items-center
+                    gap-2
+                    rounded-md
+                    bg-[var(--primary)]
+                    px-5
+                    py-2.5
+                    text-sm
+                    text-white
+                    shadow-sm
+                    transition
+                    hover:bg-[var(--primary-hover)]
+                  "
+                >
+                  + เพิ่มวิชา
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -219,7 +219,7 @@ export default function StudentsPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 p-6 font-noto relative">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
             <div className="flex flex-col items-center gap-4">

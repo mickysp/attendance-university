@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import type { ClassDocument } from "@/types/classes";
 
-export async function GET(req: Request, context: { params?: { id?: string } }) {
+import type { ClassDocument, ClassResponse, Teacher } from "@/types/classes";
+
+export async function GET(
+  req: Request,
+  context: {
+    params: Promise<{
+      id: string;
+    }>;
+  },
+) {
   try {
+    const { id: paramsId } = await context.params;
+
     const url = new URL(req.url);
-
-    const pathParts = url.pathname.split("/");
-
-    const pathId = pathParts[pathParts.length - 1];
 
     const queryId = url.searchParams.get("id");
 
-    const id = context?.params?.id || pathId || queryId;
+    const id = paramsId || queryId;
 
     if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -22,7 +28,9 @@ export async function GET(req: Request, context: { params?: { id?: string } }) {
           message: "id ไม่ถูกต้อง",
           id,
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -32,67 +40,87 @@ export async function GET(req: Request, context: { params?: { id?: string } }) {
 
     const classes = db.collection<ClassDocument>("classes");
 
+    const studentClasses = db.collection<{
+      _id?: ObjectId;
+      studentId: ObjectId | string;
+      classId: ObjectId | string;
+      offeringId: ObjectId | string;
+      createdAt?: Date;
+      updatedAt?: Date;
+    }>("student_classes");
+
+    const classObjectId = new ObjectId(id);
+
     const data = await classes.findOne({
-      _id: new ObjectId(id),
+      _id: classObjectId,
     });
 
     if (!data) {
       return NextResponse.json(
         {
           success: false,
-          message: "ไม่พบข้อมูล",
+          message: "ไม่พบข้อมูลรายวิชา",
         },
-        { status: 404 },
+        {
+          status: 404,
+        },
       );
     }
 
-    const teachers = Array.isArray(data.teachers)
-      ? data.teachers.map((teacher) => ({
-          _id: teacher._id.toString(),
-
-          name: typeof teacher.name === "string" ? teacher.name : "",
-        }))
-      : [];
-
-    const classCodes = Array.isArray(data.classCodes)
-      ? data.classCodes.map((classCode) => ({
-          code: typeof classCode.code === "string" ? classCode.code : "",
-
-          section:
-            typeof classCode.section === "number" ? classCode.section : 1,
-
-          branches: Array.isArray(classCode.branches)
-            ? classCode.branches.map((branch) => ({
-                _id: branch?._id ? branch._id.toString() : "",
-
-                name: typeof branch?.name === "string" ? branch.name : "",
-              }))
-            : [],
-        }))
-      : [];
-
-    return NextResponse.json({
-      success: true,
-
-      data: {
-        _id: data._id ? data._id.toString() : id,
-        className: data.className,
-        classCodes,
-        description: data.description,
-        teachers,
-        academicYear: data.academicYear,
-        isOpen: data.isOpen,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-      },
+    const studentCount = await studentClasses.countDocuments({
+      classId: classObjectId,
     });
+
+    const isOpened = studentCount > 0;
+
+    const teachers: Teacher[] = Array.isArray(data.teachers)
+      ? data.teachers
+          .filter(
+            (teacher) =>
+              teacher &&
+              typeof teacher === "object" &&
+              typeof teacher._id !== "undefined",
+          )
+          .map((teacher) => ({
+            _id: String(teacher._id),
+            name: typeof teacher.name === "string" ? teacher.name : "",
+          }))
+      : [];
+
+    const responseData: ClassResponse = {
+      _id: data._id.toString(),
+      className: typeof data.className === "string" ? data.className : "",
+      classCodes: Array.isArray(data.classCodes) ? data.classCodes : [],
+      teachers,
+      description:
+        typeof data.description === "string" ? data.description : undefined,
+      studentCount,
+      isOpened,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: responseData,
+      },
+      {
+        status: 200,
+      },
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "เกิดข้อผิดพลาดในการดึงข้อมูลรายวิชา",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }

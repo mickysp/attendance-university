@@ -2,7 +2,6 @@
 
 import {
   HomeIcon,
-  CalendarDaysIcon,
   UserGroupIcon,
   IdentificationIcon,
   BookOpenIcon,
@@ -10,6 +9,8 @@ import {
   Bars3Icon,
   ClipboardDocumentCheckIcon,
   Cog6ToothIcon,
+  CalendarDaysIcon,
+  BellIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -17,9 +18,12 @@ import { useRouter, usePathname } from "next/navigation";
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+
   const [user, setUser] = useState({
     fullname: "",
     role: "",
@@ -30,32 +34,23 @@ export default function Sidebar() {
 
   const SWIPE_DISTANCE = 60;
 
-  const handleTouchStart = (
-    e: React.TouchEvent<HTMLDivElement>
-  ) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     touchStartX.current = e.touches[0].clientX;
     touchCurrentX.current = e.touches[0].clientX;
   };
 
-  const handleTouchMove = (
-    e: React.TouchEvent<HTMLDivElement>
-  ) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     touchCurrentX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
-    const distance =
-      touchCurrentX.current - touchStartX.current;
-    if (
-      touchStartX.current < 30 &&
-      distance > SWIPE_DISTANCE
-    ) {
+    const distance = touchCurrentX.current - touchStartX.current;
+
+    if (touchStartX.current < 30 && distance > SWIPE_DISTANCE) {
       setMobileOpen(true);
     }
-    if (
-      mobileOpen &&
-      distance < -SWIPE_DISTANCE
-    ) {
+
+    if (mobileOpen && distance < -SWIPE_DISTANCE) {
       setMobileOpen(false);
     }
   };
@@ -89,7 +84,7 @@ export default function Sidebar() {
   }, [pathname]);
 
   useEffect(() => {
-    if (mobileOpen) {
+    if (mobileOpen || logoutLoading) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -98,18 +93,23 @@ export default function Sidebar() {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [mobileOpen]);
+  }, [mobileOpen, logoutLoading]);
 
   const handleLogout = async () => {
+    if (logoutLoading) return;
+
+    setLogoutLoading(true);
+    setMobileOpen(false);
+
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
-
-      router.push("/login");
     } catch (err) {
       console.error("Logout error:", err);
+    } finally {
+      router.replace("/login");
     }
   };
 
@@ -124,8 +124,120 @@ export default function Sidebar() {
 
   return (
     <>
+      {logoutLoading && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-[9999]
+            flex
+            items-center
+            justify-center
+            bg-gray-500/40
+            backdrop-blur-sm
+          "
+        >
+          <div className="flex flex-col items-center gap-4">
+            <div
+              className="
+                h-14
+                w-14
+                animate-spin
+                rounded-full
+                border-4
+                border-white
+                border-t-transparent
+              "
+            />
+
+            <p
+              className="
+                text-base
+                font-medium
+                text-white
+              "
+            >
+              กำลังออกจากระบบ...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          Mobile
+      ===================================================== */}
+
+      <header
+        className="
+          absolute
+          left-0
+          right-0
+          top-0
+          z-[40]
+          flex
+          h-[75px]
+          items-center
+          justify-between
+          bg-blue-50
+          px-6
+          lg:hidden
+        "
+      >
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="
+            flex
+            h-10
+            w-10
+            shrink-0
+            cursor-pointer
+            items-center
+            justify-center
+            rounded-lg
+            bg-white
+            shadow-sm
+            transition-all
+            duration-200
+            hover:bg-blue-50
+            active:scale-95
+          "
+          aria-label="Open menu"
+        >
+          <Bars3Icon className="h-6 w-6 text-blue-700" />
+        </button>
+
+        <button
+          type="button"
+          className="
+            relative
+            flex
+            h-10
+            w-10
+            shrink-0
+            cursor-pointer
+            items-center
+            justify-center
+            rounded-lg
+            transition-all
+            duration-200
+            hover:bg-white/60
+            active:scale-95
+          "
+          aria-label="Notifications"
+        ></button>
+      </header>
+
       <div
-        className="lg:hidden fixed left-0 top-0 z-[45] w-[25px] h-screen"
+        className="
+          fixed
+          left-0
+          top-[64px]
+          z-[45]
+          h-[calc(100vh-64px)]
+          w-[25px]
+          lg:hidden
+        "
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -133,7 +245,13 @@ export default function Sidebar() {
 
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-[50] bg-black/40"
+          className="
+            fixed
+            inset-0
+            z-[50]
+            bg-black/40
+            lg:hidden
+          "
           onClick={() => setMobileOpen(false)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -143,53 +261,91 @@ export default function Sidebar() {
 
       <aside
         className={`
-          lg:hidden
           fixed
-          top-0
           left-0
+          top-0
           z-[60]
+          flex
           h-screen
           w-[280px]
           max-w-[85vw]
-          bg-white
-          border-r
-          border-gray-200
-          shadow-xl
-          flex
           flex-col
           justify-between
-          p-4
+          bg-white
+          px-4
+          pt-4
+          pb-0
           font-noto
+          shadow-xl
           transition-transform
           duration-300
           ease-out
-          ${
-            mobileOpen
-              ? "translate-x-0"
-              : "-translate-x-full"
-          }
+          lg:hidden
+
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
         `}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div>
-          <div className="mb-6 flex items-center justify-between pb-4 border-b border-gray-200">
+        <div className="min-h-0 w-full">
+          <div
+            className="
+              mb-6
+              flex
+              items-center
+              justify-between
+              pb-4
+            "
+          >
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-sm">
+              <div
+                className="
+                  flex
+                  h-10
+                  w-10
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-gradient-to-br
+                  from-emerald-500
+                  to-blue-600
+                  shadow-sm
+                "
+              >
                 <CalendarDaysIcon className="h-5 w-5 text-white" />
               </div>
 
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">
-                  Attendy
-                </h1>
+                <h1 className="text-lg font-semibold text-gray-900">Attendy</h1>
 
-                <p className="text-xs text-gray-500">
-                  Management System
-                </p>
+                <p className="text-xs text-gray-500">Management System</p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              className="
+                flex
+                h-9
+                w-9
+                shrink-0
+                cursor-pointer
+                items-center
+                justify-center
+                rounded-lg
+                bg-gray-50
+                text-gray-600
+                transition
+                hover:bg-gray-100
+                hover:text-gray-900
+              "
+              aria-label="Close menu"
+            >
+              <Bars3Icon className="h-5 w-5 rotate-180" />
+            </button>
           </div>
 
           <SidebarMenu
@@ -199,36 +355,35 @@ export default function Sidebar() {
           />
         </div>
 
-        <UserSection
-          user={user}
-          loading={loading}
-          userInitial={userInitial}
-          collapsed={false}
-          onLogout={handleLogout}
-        />
+        <div className="mb-8 w-full shrink-0">
+          <UserSection
+            user={user}
+            loading={loading}
+            userInitial={userInitial}
+            collapsed={false}
+            onLogout={handleLogout}
+            logoutLoading={logoutLoading}
+          />
+        </div>
       </aside>
 
       <aside
         className={`
           hidden
-          lg:flex
-          flex-col
           h-screen
           shrink-0
+          flex-col
+          justify-between
           overflow-y-auto
           bg-white
-          border-r
-          border-gray-200
           p-4
-          justify-between
           font-noto
+          shadow-lg
           transition-all
           duration-300
-          ${
-            desktopCollapsed
-              ? "w-[70px]"
-              : "w-[280px]"
-          }
+          lg:flex
+
+          ${desktopCollapsed ? "w-[70px]" : "w-[280px]"}
         `}
       >
         <div>
@@ -237,19 +392,30 @@ export default function Sidebar() {
               mb-6
               flex
               items-center
-              pb-4
               border-b
               border-gray-200
-              ${
-                desktopCollapsed
-                  ? "justify-center"
-                  : "justify-between"
-              }
+              pb-4
+
+              ${desktopCollapsed ? "justify-center" : "justify-between"}
             `}
           >
             {!desktopCollapsed && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-sm">
+                <div
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-gradient-to-br
+                    from-emerald-500
+                    to-blue-600
+                    shadow-sm
+                  "
+                >
                   <CalendarDaysIcon className="h-5 w-5 text-white" />
                 </div>
 
@@ -258,19 +424,21 @@ export default function Sidebar() {
                     Attendy
                   </h1>
 
-                  <p className="text-xs text-gray-500">
-                    Management System
-                  </p>
+                  <p className="text-xs text-gray-500">Management System</p>
                 </div>
               </div>
             )}
 
             <button
               type="button"
-              onClick={() =>
-                setDesktopCollapsed(!desktopCollapsed)
-              }
-              className="p-2 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+              onClick={() => setDesktopCollapsed(!desktopCollapsed)}
+              className="
+                cursor-pointer
+                rounded-lg
+                p-2
+                transition
+                hover:bg-gray-100
+              "
               aria-label="Toggle sidebar"
             >
               <Bars3Icon className="h-5 w-5 text-gray-700" />
@@ -290,6 +458,7 @@ export default function Sidebar() {
           userInitial={userInitial}
           collapsed={desktopCollapsed}
           onLogout={handleLogout}
+          logoutLoading={logoutLoading}
         />
       </aside>
     </>
@@ -302,17 +471,11 @@ type SidebarMenuProps = {
   onNavigate: (path: string) => void;
 };
 
-function SidebarMenu({
-  pathname,
-  collapsed,
-  onNavigate,
-}: SidebarMenuProps) {
+function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
   return (
     <nav className="flex flex-col gap-6 text-sm font-medium">
       {!collapsed && (
-        <p className="text-xs text-gray-400 uppercase px-3">
-          Menu
-        </p>
+        <p className="px-3 text-xs uppercase text-gray-400">Menu</p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -352,19 +515,13 @@ function SidebarMenu({
           icon={<ClipboardDocumentCheckIcon />}
           label="Form Attendance"
           collapsed={collapsed}
-          active={pathname.startsWith(
-            "/check-in/configform"
-          )}
-          onClick={() =>
-            onNavigate("/check-in/configform")
-          }
+          active={pathname.startsWith("/check-in/configform")}
+          onClick={() => onNavigate("/check-in/configform")}
         />
       </div>
 
       {!collapsed && (
-        <p className="text-xs text-gray-400 uppercase px-3 mt-2">
-          Other
-        </p>
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">Other</p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -401,45 +558,37 @@ function SidebarItem({
       onClick={onClick}
       title={collapsed ? label : undefined}
       className={`
-        w-full
         flex
+        shrink-0
         items-center
-        ${
-          collapsed
-            ? "justify-center px-2"
-            : "gap-3 px-3"
-        }
-        py-3
-        rounded-lg
+        ${collapsed ? "justify-center px-2" : "gap-3 px-3"}
         cursor-pointer
+        rounded-lg
+        py-3
+        text-left
+        whitespace-nowrap
         transition-all
         duration-200
-        text-left
+
+        ${collapsed ? "lg:w-full" : "w-auto lg:w-full"}
+
         ${
           active
-            ? "bg-blue-100 text-blue-600 font-medium"
-            : "hover:bg-gray-100 text-gray-700"
+            ? "bg-blue-100 font-medium text-blue-600"
+            : "text-gray-700 hover:bg-gray-100"
         }
       `}
     >
       <span
         className={`
           shrink-0
-          ${
-            collapsed
-              ? "h-6 w-6"
-              : "h-5 w-5"
-          }
+          ${collapsed ? "h-6 w-6" : "h-5 w-5"}
         `}
       >
         {icon}
       </span>
 
-      {!collapsed && (
-        <span className="truncate">
-          {label}
-        </span>
-      )}
+      {!collapsed && <span className="whitespace-nowrap">{label}</span>}
     </button>
   );
 }
@@ -453,6 +602,7 @@ type UserSectionProps = {
   userInitial: string;
   collapsed: boolean;
   onLogout: () => void;
+  logoutLoading: boolean;
 };
 
 function UserSection({
@@ -461,51 +611,80 @@ function UserSection({
   userInitial,
   collapsed,
   onLogout,
+  logoutLoading,
 }: UserSectionProps) {
   return (
-    <div className="pt-4 border-t border-gray-200">
+    <div
+      className={`
+        pt-4
+        ${collapsed ? "" : "border-t border-gray-200"}
+      `}
+    >
       <div
         className={`
           flex
           items-center
-          ${
-            collapsed
-              ? "justify-center"
-              : "justify-between"
-          }
-          px-3
-          py-2
+          ${collapsed ? "justify-center" : "justify-between"}
           rounded-lg
           bg-gray-50
+          px-3
+          py-2
         `}
       >
         <div
           className={`
             flex
             items-center
-            ${
-              collapsed
-                ? "justify-center"
-                : "gap-3"
-            }
+            ${collapsed ? "justify-center" : "gap-3"}
           `}
         >
-          <div className="h-9 w-9 shrink-0 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-700">
+          <div
+            className="
+              flex
+              h-9
+              w-9
+              shrink-0
+              items-center
+              justify-center
+              rounded-full
+              bg-gray-300
+              text-sm
+              font-semibold
+              text-gray-700
+            "
+          >
             {userInitial}
           </div>
 
           {!collapsed && (
-            <div className="flex flex-col leading-tight min-w-0">
-              <span className="text-sm font-medium truncate max-w-[150px]">
-                {loading
-                  ? "กำลังโหลด..."
-                  : user.fullname || "ไม่ระบุชื่อ"}
+            <div
+              className="
+                flex
+                min-w-0
+                flex-col
+                leading-tight
+              "
+            >
+              <span
+                className="
+                  max-w-[150px]
+                  truncate
+                  text-sm
+                  font-medium
+                "
+              >
+                {loading ? "กำลังโหลด..." : user.fullname || "ไม่ระบุชื่อ"}
               </span>
 
-              <span className="text-xs text-gray-500 truncate max-w-[150px]">
-                {loading
-                  ? ""
-                  : user.role || "ไม่ระบุ Role"}
+              <span
+                className="
+                  max-w-[150px]
+                  truncate
+                  text-xs
+                  text-gray-500
+                "
+              >
+                {loading ? "" : user.role || "ไม่ระบุ Role"}
               </span>
             </div>
           )}
@@ -515,18 +694,35 @@ function UserSection({
           <button
             type="button"
             onClick={onLogout}
+            disabled={logoutLoading}
             className="
               shrink-0
-              p-2
+              cursor-pointer
               rounded-md
+              p-2
+              transition
               hover:bg-red-100
               hover:text-red-600
-              transition
-              cursor-pointer
+              disabled:cursor-not-allowed
+              disabled:opacity-50
             "
-            title="Logout"
+            title={logoutLoading ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
           >
-            <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            {logoutLoading ? (
+              <div
+                className="
+                  h-5
+                  w-5
+                  animate-spin
+                  rounded-full
+                  border-2
+                  border-gray-400
+                  border-t-transparent
+                "
+              />
+            ) : (
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            )}
           </button>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
-import { useConfirm } from "@/context/ConfirmContext";
+import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
 
 type FormConfig = {
@@ -72,20 +72,22 @@ export default function CheckInFormPage() {
     if (key === "note") {
       return (
         <div className="w-full">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-base text-gray-800">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs text-gray-800 lg:text-base">
               {fieldLabels[key]}
             </label>
 
             <button
               onClick={() => toggleField(key)}
-              className={`w-10 h-5 flex items-center rounded-full px-1 transition cursor-pointer ${
+              className={`flex h-4 w-8 items-center rounded-full px-0.5 transition cursor-pointer lg:h-5 lg:w-10 lg:px-1 ${
                 config[key] ? "bg-green-500" : "bg-gray-300"
               }`}
             >
               <div
-                className={`h-3.5 w-3.5 bg-white rounded-full shadow-sm transform transition duration-200 ${
-                  config[key] ? "translate-x-5" : "translate-x-0"
+                className={`h-3 w-3 rounded-full bg-white shadow-sm transform transition duration-200 lg:h-3.5 lg:w-3.5 ${
+                  config[key]
+                    ? "translate-x-4 lg:translate-x-5"
+                    : "translate-x-0"
                 }`}
               />
             </button>
@@ -95,50 +97,54 @@ export default function CheckInFormPage() {
             disabled
             placeholder={fieldPlaceholders[key]}
             rows={3}
-            className="w-full border border-gray-200 bg-gray-100 text-gray-400 rounded-lg px-3 py-2 placeholder:text-sm resize-none"
+            className="w-full resize-none rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-2 text-xs text-gray-400 placeholder:text-xs lg:px-3 lg:text-sm lg:placeholder:text-sm"
           />
         </div>
       );
     }
+
     if (key === "photo") {
       return (
         <div className="w-full">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-base text-gray-800">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs text-gray-800 lg:text-base">
               {fieldLabels[key]}
             </label>
 
             <button
               onClick={() => toggleField(key)}
-              className={`w-10 h-5 flex items-center rounded-full px-1 transition cursor-pointer ${
+              className={`flex h-4 w-8 items-center rounded-full px-0.5 transition cursor-pointer lg:h-5 lg:w-10 lg:px-1 ${
                 config[key] ? "bg-green-500" : "bg-gray-300"
               }`}
             >
               <div
-                className={`h-3.5 w-3.5 bg-white rounded-full shadow-sm transform transition duration-200 ${
-                  config[key] ? "translate-x-5" : "translate-x-0"
+                className={`h-3 w-3 rounded-full bg-white shadow-sm transform transition duration-200 lg:h-3.5 lg:w-3.5 ${
+                  config[key]
+                    ? "translate-x-4 lg:translate-x-5"
+                    : "translate-x-0"
                 }`}
               />
             </button>
           </div>
 
-          <div className="w-full border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 py-10 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 bg-blue-100 text-blue-500 flex items-center justify-center rounded-lg mb-3 text-xl">
-              <Upload className="w-6 h-6 text-blue-500" />
+          <div className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-7 text-center lg:py-10">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-500 lg:h-12 lg:w-12">
+              <Upload className="h-5 w-5 text-blue-500 lg:h-6 lg:w-6" />
             </div>
 
-            <p className="text-sm text-gray-600 mb-1">
+            <p className="mb-1 text-xs text-gray-600 lg:text-sm">
               เลือกรูปภาพ หรือ ลากและวางรูปภาพที่นี่
             </p>
-            <p className="text-xs text-gray-400 mb-4">
+
+            <p className="mb-4 text-[10px] text-gray-400 lg:text-xs">
               ไฟล์ต้องมีขนาดไม่เกิน 10 MB
             </p>
 
             <button
               disabled
-              className="px-4 py-1.5 text-sm border border-gray-300 rounded-md text-gray-500 bg-white flex items-center gap-2"
+              className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-500 lg:px-4 lg:text-sm"
             >
-              <Upload className="w-4 h-4" />
+              <Upload className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               อัปโหลดรูปภาพ
             </button>
           </div>
@@ -148,18 +154,20 @@ export default function CheckInFormPage() {
 
     return (
       <div className="w-full">
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-base text-gray-800">{fieldLabels[key]}</label>
+        <div className="mb-2 flex items-center justify-between">
+          <label className="text-xs text-gray-800 lg:text-base">
+            {fieldLabels[key]}
+          </label>
 
           <button
             onClick={() => toggleField(key)}
-            className={`w-10 h-5 flex items-center rounded-full px-1 transition cursor-pointer ${
+            className={`flex h-4 w-8 items-center rounded-full px-0.5 transition cursor-pointer lg:h-5 lg:w-10 lg:px-1 ${
               config[key] ? "bg-green-500" : "bg-gray-300"
             }`}
           >
             <div
-              className={`h-3.5 w-3.5 bg-white rounded-full shadow-sm transform transition duration-200 ${
-                config[key] ? "translate-x-5" : "translate-x-0"
+              className={`h-3 w-3 rounded-full bg-white shadow-sm transform transition duration-200 lg:h-3.5 lg:w-3.5 ${
+                config[key] ? "translate-x-4 lg:translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -169,7 +177,7 @@ export default function CheckInFormPage() {
           type="text"
           disabled
           placeholder={fieldPlaceholders[key]}
-          className="w-full border border-gray-200 bg-gray-100 text-gray-400 rounded-lg px-3 py-2 placeholder:text-sm"
+          className="w-full rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-2 text-xs text-gray-400 placeholder:text-[10px] lg:px-3 lg:text-sm lg:placeholder:text-sm"
         />
       </div>
     );
@@ -224,29 +232,29 @@ export default function CheckInFormPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 overflow-y-auto p-6 font-noto">
-        <div className="bg-white rounded-2xl p-8 w-full">
-          <h1 className="text-[26px] font-semibold text-gray-800">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
+        <div className="w-full rounded-2xl bg-white p-6 lg:p-8">
+          <h1 className="text-[20px] font-semibold text-gray-800 lg:text-[26px]">
             ตั้งค่าแบบฟอร์มเช็คชื่อ
           </h1>
 
-          <p className="text-sm text-gray-500 mb-9">
+          <p className="mb-7 text-xs text-gray-500 lg:mb-9 lg:text-sm">
             เลือกเปิด–ปิดช่องข้อมูลที่ต้องการให้ผู้ใช้งานกรอก
           </p>
 
-          <div className="space-y-6">
-            <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-5 lg:space-y-6">
+            <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
               {renderField("prefix")}
               {renderField("firstname")}
               {renderField("lastname")}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 lg:gap-4">
               {renderField("studentId")}
               {renderField("section")}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 lg:gap-4">
               {renderField("email")}
               {renderField("location")}
             </div>
@@ -255,39 +263,41 @@ export default function CheckInFormPage() {
 
             {renderField("photo")}
 
-            <div className="flex justify-end gap-3 mt-6 text-sm">
-              <button
-                className="px-6 py-2.5 rounded-md border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 cursor-pointer"
-                onClick={() =>
-                  showConfirm(
-                    "ยกเลิกการแก้ไขข้อมูล",
-                    () => setConfig(initialConfig),
-                    "edit",
-                    "คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่",
-                  )
-                }
-              >
-                ยกเลิก
-              </button>
+            <div className="mt-6 w-full">
+              <div className="flex w-full flex-col gap-2 text-sm lg:flex-row lg:justify-end lg:gap-3">
+                <button
+                  onClick={() =>
+                    showConfirm(
+                      "บันทึกแก้ไขข้อมูล",
+                      handleSaveConfig,
+                      "info",
+                      "คุณต้องการยืนยันการบันทึกแก้ไขข้อมูลใช่หรือไม่",
+                    )
+                  }
+                  disabled={saving || !isDirty}
+                  className={`w-full rounded-lg px-5 py-2.5 text-xs text-white lg:w-auto lg:px-6 lg:text-sm ${
+                    saving || !isDirty
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                  }`}
+                >
+                  {saving ? "กำลังบันทึก..." : "บันทึก"}
+                </button>
 
-              <button
-                onClick={() =>
-                  showConfirm(
-                    "บันทึกแก้ไขข้อมูล",
-                    handleSaveConfig,
-                    "info",
-                    "คุณต้องการยืนยันการบันทึกแก้ไขข้อมูลใช่หรือไม่",
-                  )
-                }
-                disabled={saving || !isDirty}
-                className={`px-6 py-2.5 rounded-lg text-white ${
-                  saving || !isDirty
-                    ? "bg-gray-300"
-                    : "bg-blue-500 hover:bg-blue-600 cursor-pointer"
-                }`}
-              >
-                {saving ? "กำลังบันทึก..." : "บันทึก"}
-              </button>
+                <button
+                  className="w-full rounded-md border border-gray-300 px-5 py-2.5 text-xs text-gray-600 hover:bg-gray-100 cursor-pointer lg:w-auto lg:px-6 lg:text-sm"
+                  onClick={() =>
+                    showConfirm(
+                      "ยกเลิกการแก้ไขข้อมูล",
+                      () => setConfig(initialConfig),
+                      "edit",
+                      "คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่",
+                    )
+                  }
+                >
+                  ยกเลิก
+                </button>
+              </div>
             </div>
           </div>
         </div>

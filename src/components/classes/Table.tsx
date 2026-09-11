@@ -9,52 +9,19 @@ import {
   ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useRef, useEffect } from "react";
-import { useConfirm } from "@/context/ConfirmContext";
+import { useConfirm } from "@/context/swal";
 
-type Branch = {
-  _id: string;
-  name: string;
-};
-
-type Teacher = {
-  _id: string;
-  name: string;
-};
-
-type ClassCode = {
-  code: string;
-  section: number;
-  branches: Branch[];
-};
-
-type ClassItem = {
-  _id: string;
-  className: string;
-  academicYear?: number;
-  classCodes: ClassCode[];
-  description?: string;
-  teacher?: Teacher;
-  isOpen?: boolean;
-  hasStudents?: boolean;
-};
-
-const BRANCH_COLOR_MAP: Record<string, string> = {
-  เทคโนโลยีสารสนเทศและนวัตกรรมอัจฉริยะ:
-    "bg-purple-50 text-purple-600 border-purple-200",
-  วิทยาการคอมพิวเตอร์: "bg-blue-50 text-blue-600 border-blue-200",
-  ภูมิสารสนเทศศาสตร์: "bg-green-50 text-green-600 border-green-200",
-  ปัญญาประดิษฐ์: "bg-pink-50 text-pink-600 border-pink-200",
-  ความมั่นคงปลอดภัยไซเบอร์: "bg-red-50 text-red-600 border-red-200",
-};
+import type { ClassResponse } from "@/types/classes";
 
 export default function Table({
   data,
   onDeleteSuccess,
 }: {
-  data: ClassItem[];
+  data: ClassResponse[];
   onDeleteSuccess: (id: string) => void;
 }) {
   const router = useRouter();
+
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
 
@@ -157,114 +124,199 @@ export default function Table({
     router.push(`/classes/form?classId=${id}`);
   };
 
-  const renderClassCodes = (classCodes: ClassCode[]) => {
+  const renderClassCodes = (classCodes: string[]) => {
     if (!classCodes?.length) {
       return "-";
     }
 
     return (
-      <div className="flex flex-col gap-1.5">
-        {classCodes.map((classCode, index) => (
-          <div
-            key={`${classCode.code}-${classCode.section}-${index}`}
-            className="flex items-center gap-2"
+      <div className="flex flex-wrap items-center gap-1">
+        {classCodes.map((code, index) => (
+          <span
+            key={`${code}-${index}`}
+            className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-sm text-gray-600"
           >
-            <span className="font-medium text-gray-700">
-              {classCode.code || "-"}
-            </span>
-
-            <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs border border-gray-200">
-              Sec {classCode.section || "-"}
-            </span>
-          </div>
+            {code || "-"}
+          </span>
         ))}
       </div>
     );
   };
 
-  const renderBranches = (classCodes: ClassCode[]) => {
-    if (!classCodes?.length) {
+  const renderTeachers = (teachers: ClassResponse["teachers"]) => {
+    if (!teachers?.length) {
       return "-";
     }
 
     return (
-      <div className="flex flex-col gap-2">
-        {classCodes.map((classCode, index) => (
-          <div
-            key={`${classCode.code}-${classCode.section}-branch-${index}`}
-            className="flex flex-wrap gap-1"
-          >
-            {classCode.branches?.length ? (
-              classCode.branches.map((branch) => (
-                <span
-                  key={`${classCode.section}-${branch._id || branch.name}`}
-                  className={`px-2 py-0.5 rounded-full text-[12px] border ${
-                    BRANCH_COLOR_MAP[branch.name] ||
-                    "bg-gray-100 text-gray-600 border-gray-200"
-                  }`}
-                >
-                  {branch.name}
-                </span>
-              ))
-            ) : (
-              <span className="text-gray-400 text-xs">ไม่ระบุสาขา</span>
-            )}
-          </div>
+      <div className="flex flex-col gap-1">
+        {teachers.map((teacher) => (
+          <span key={teacher._id} className="break-words text-sm text-gray-700">
+            {teacher.name || "-"}
+          </span>
         ))}
       </div>
+    );
+  };
+
+  const renderStatus = (isOpened: boolean) => {
+    if (isOpened) {
+      return (
+        <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600">
+          เปิดใช้งานแล้ว
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">
+        ยังไม่เปิดใช้งาน
+      </span>
     );
   };
 
   if (data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-        <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
+      <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
+        <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
           <img
             src="/not_exist_search.svg"
             alt="ไม่พบข้อมูล"
-            className="w-28 h-28"
+            className="h-28 w-28"
           />
         </div>
 
         <p className="text-sm text-gray-400">
-          ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
+          ไม่พบข้อมูลที่ค้นหา
+          <br />
+          กรุณาลองใหม่อีกครั้ง
         </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[560px] flex flex-col">
-        <div className="overflow-x-auto overflow-y-auto">
-          <table className="w-full text-base table-fixed">
-            <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
+    <div className="w-full min-w-0">
+      {/* ==================== MOBILE ==================== */}
+      <div className="block space-y-3 md:hidden">
+        {paginatedData.map((item) => (
+          <div
+            key={item._id}
+            className="w-full rounded-xl border border-gray-200 bg-white p-4"
+          >
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">
+                  รหัสวิชา / Section
+                </span>
+
+                <div className="min-w-0 max-w-[65%] text-right text-sm">
+                  {renderClassCodes(item.classCodes)}
+                </div>
+              </div>
+
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">ชื่อวิชา</span>
+
+                <div className="min-w-0 max-w-[65%] text-right text-sm text-gray-700">
+                  <div className="break-words">{item.className || "-"}</div>
+                </div>
+              </div>
+
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">
+                  อาจารย์ผู้สอน
+                </span>
+
+                <div className="min-w-0 max-w-[65%] text-right text-sm">
+                  {renderTeachers(item.teachers)}
+                </div>
+              </div>
+
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">สถานะ</span>
+
+                <div className="text-right">{renderStatus(item.isOpened)}</div>
+              </div>
+            </div>
+
+            <div className="my-4 border-t border-gray-100" />
+
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-gray-500">จัดการ</span>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleCheckIn(item._id)}
+                  className="flex cursor-pointer items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
+                >
+                  <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
+
+                  <span>เช็คชื่อ</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleEdit(item._id)}
+                  className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <PencilSquareIcon className="h-4 w-4 shrink-0" />
+
+                  <span>แก้ไข</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item._id)}
+                  className="flex cursor-pointer items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50"
+                >
+                  <TrashIcon className="h-4 w-4 shrink-0" />
+
+                  <span>ลบ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ==================== DESKTOP ==================== */}
+      <div className="hidden w-full overflow-hidden rounded-xl border border-gray-200 md:block">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-[900px] w-full table-fixed text-sm">
+            <colgroup>
+              <col className="w-[20%]" />
+              <col className="w-[25%]" />
+              <col className="w-[20%]" />
+              <col className="w-[15%]" />
+              <col className="w-[20%] md:max-lg:w-[250px] lg:w-[20%]" />
+            </colgroup>
+
+            <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold w-[180px]">
+                <th className="px-3 py-3 text-left font-semibold">
                   รหัสวิชา / Section
                 </th>
 
-                <th className="px-4 py-3 text-left font-semibold w-[240px]">
-                  ชื่อวิชา
-                </th>
+                <th className="px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
 
-                <th className="px-4 py-3 text-left font-semibold w-[300px]">
-                  สาขา
-                </th>
-
-                <th className="px-4 py-3 text-left font-semibold w-[190px]">
+                <th className="px-3 py-3 text-left font-semibold">
                   อาจารย์ผู้สอน
                 </th>
 
-                <th className="px-4 py-3 text-center font-semibold w-[120px]">
-                  สถานะ
-                </th>
+                <th className="px-3 py-3 text-left font-semibold">สถานะ</th>
 
-                <th className="px-4 py-3 text-center font-semibold w-[130px]">
-                  นักศึกษา
-                </th>
-
-                <th className="px-4 py-3 text-left font-semibold w-[330px]">
+                <th
+                  className="
+                    sticky right-0 z-20
+                    bg-gray-50
+                    px-3 py-3
+                    text-left
+                    font-semibold
+                    shadow-[-4px_0_8px_rgba(0,0,0,0.06)]
+                  "
+                >
                   จัดการ
                 </th>
               </tr>
@@ -274,66 +326,51 @@ export default function Table({
               {paginatedData.map((item) => (
                 <tr
                   key={item._id}
-                  className="border-t border-gray-200 hover:bg-gray-50 transition"
+                  className="border-t border-gray-200 hover:bg-gray-50"
                 >
-                  <td className="px-4 py-3 align-top text-sm">
+                  <td className="px-3 py-3 align-top text-left text-sm">
                     {renderClassCodes(item.classCodes)}
                   </td>
 
-                  <td className="px-4 py-3 align-top">
-                    <div className="text-sm font-medium text-gray-800 whitespace-normal break-words">
+                  <td className="px-3 py-3 align-top text-left text-sm">
+                    <div className="break-words text-sm text-gray-700">
                       {item.className || "-"}
                     </div>
-
-                    {item.academicYear && (
-                      <div className="mt-1 text-xs text-gray-400">
-                        ปีการศึกษา {item.academicYear}
-                      </div>
-                    )}
                   </td>
 
-                  <td className="px-4 py-3 align-top">
-                    {renderBranches(item.classCodes)}
+                  <td className="px-3 py-3 align-top text-left text-sm">
+                    {renderTeachers(item.teachers)}
                   </td>
 
-                  <td className="px-4 py-3 align-top text-sm">
-                    <span className="text-gray-700">
-                      {item.teacher?.name || "-"}
-                    </span>
+                  <td className="px-3 py-3 align-top text-left text-sm">
+                    {renderStatus(item.isOpened)}
                   </td>
 
-                  <td className="px-4 py-3 align-top text-center">
-                    {item.isOpen === true ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-600 border border-green-200">
-                        เปิด
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                        ปิด
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="px-4 py-3 align-top text-center">
-                    {item.hasStudents === true ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200">
-                        มีข้อมูล
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                        ยังไม่มี
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="px-4 py-3 align-top">
+                  <td
+                    className="
+                      sticky right-0 z-10
+                      bg-white
+                      px-3 py-3
+                      align-top
+                      text-left
+                      text-sm
+                      shadow-[-4px_0_8px_rgba(0,0,0,0.06)]
+                    "
+                  >
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => handleCheckIn(item._id)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm cursor-pointer"
+                        className="
+                          flex cursor-pointer items-center gap-1
+                          rounded-md
+                          border border-blue-200
+                          px-2.5 py-1.5
+                          text-sm text-blue-600
+                          hover:bg-blue-50
+                        "
                       >
-                        <ClipboardDocumentCheckIcon className="w-4 h-4" />
+                        <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
                         <span>เช็คชื่อ</span>
                       </button>
@@ -341,9 +378,16 @@ export default function Table({
                       <button
                         type="button"
                         onClick={() => handleEdit(item._id)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700 text-sm cursor-pointer"
+                        className="
+                          flex cursor-pointer items-center gap-1
+                          rounded-md
+                          border border-gray-200
+                          px-2.5 py-1.5
+                          text-sm text-gray-700
+                          hover:bg-gray-100
+                        "
                       >
-                        <PencilSquareIcon className="w-4 h-4" />
+                        <PencilSquareIcon className="h-4 w-4 shrink-0" />
 
                         <span>แก้ไข</span>
                       </button>
@@ -351,9 +395,16 @@ export default function Table({
                       <button
                         type="button"
                         onClick={() => handleDelete(item._id)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-red-200 text-red-500 hover:bg-red-50 text-sm cursor-pointer"
+                        className="
+                          flex cursor-pointer items-center gap-1
+                          rounded-md
+                          border border-red-200
+                          px-2.5 py-1.5
+                          text-sm text-red-500
+                          hover:bg-red-50
+                        "
                       >
-                        <TrashIcon className="w-4 h-4" />
+                        <TrashIcon className="h-4 w-4 shrink-0" />
 
                         <span>ลบ</span>
                       </button>
@@ -367,23 +418,23 @@ export default function Table({
       </div>
 
       {data.length > 10 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
+        <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 text-sm">
             <span>แสดง</span>
 
             <div ref={pageSizeRef} className="relative">
               <button
                 type="button"
                 onClick={() => setOpenPageSize(!openPageSize)}
-                className="form-input-card flex items-center justify-between gap-2 px-3 py-1 text-xs min-w-[60px] cursor-pointer"
+                className="form-input-card flex min-w-[60px] cursor-pointer items-center justify-between gap-2 px-3 py-1 text-sm"
               >
                 <span>{itemsPerPage}</span>
 
-                <ChevronDownIcon className="w-3 h-3 text-gray-400" />
+                <ChevronDownIcon className="h-3.5 w-3.5 text-gray-400" />
               </button>
 
               {openPageSize && (
-                <div className="absolute bottom-full left-0 mb-1 z-20 w-full rounded-md bg-white shadow-lg border border-gray-200 overflow-hidden">
+                <div className="absolute bottom-full left-0 z-20 mb-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
                   {[10, 15, 20].map((size) => (
                     <button
                       key={size}
@@ -393,9 +444,9 @@ export default function Table({
                         setPage(1);
                         setOpenPageSize(false);
                       }}
-                      className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer ${
+                      className={`block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-gray-100 ${
                         itemsPerPage === size
-                          ? "bg-blue-50 text-blue-600 font-medium"
+                          ? "bg-blue-50 font-medium text-blue-600"
                           : ""
                       }`}
                     >
@@ -409,12 +460,12 @@ export default function Table({
             <span>จากทั้งหมด {data.length} รายการ</span>
           </div>
 
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center justify-center gap-1.5">
             <button
               type="button"
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="px-3 py-2 text-[13px] rounded-md border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               ก่อนหน้า
             </button>
@@ -424,9 +475,9 @@ export default function Table({
                 type="button"
                 key={p}
                 onClick={() => setPage(p)}
-                className={`px-3.5 py-2 rounded-md border text-[13px] cursor-pointer ${
+                className={`cursor-pointer rounded-md border px-3 py-2 text-sm ${
                   page === p
-                    ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-white"
                     : "border-gray-200 hover:bg-gray-100"
                 }`}
               >
@@ -438,7 +489,7 @@ export default function Table({
               type="button"
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="px-4 py-2 text-[13px] rounded-md border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               ถัดไป
             </button>

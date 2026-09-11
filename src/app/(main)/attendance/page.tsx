@@ -192,7 +192,7 @@ export default function AttendancePage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <div className="flex-1 overflow-y-auto p-6 relative">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto sm:p-4 lg:p-6 lg:pt-6">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
             <div className="flex flex-col items-center gap-4">
@@ -219,7 +219,7 @@ export default function AttendancePage() {
                   : "min-h-fit"
             }`}
           >
-            <div className="px-6 pt-6 shrink-0 flex flex-wrap items-start justify-between gap-4">
+            <div className="px-4 pt-5 shrink-0 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
               <div className="min-w-0">
                 <h1 className="text-[26px] font-semibold text-gray-800">
                   Attendance
@@ -230,7 +230,7 @@ export default function AttendancePage() {
                 </p>
               </div>
 
-              <div className="flex justify-end items-center gap-2 w-full sm:w-auto">
+              <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
                 <div ref={yearRef} className="relative flex items-center gap-2">
                   <span className="text-sm text-gray-500 whitespace-nowrap">
                     ปีการศึกษา:
@@ -239,7 +239,7 @@ export default function AttendancePage() {
                   <button
                     type="button"
                     onClick={() => setOpenYear(!openYear)}
-                    className="h-[40px] px-3 border border-gray-200 rounded-md bg-white flex items-center justify-between text-sm hover:bg-gray-50 w-[140px] focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer"
+                    className="h-[40px] w-full rounded-md border border-gray-200 bg-white px-3 text-sm flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer sm:w-[140px]"
                   >
                     <span
                       className={
@@ -302,7 +302,7 @@ export default function AttendancePage() {
               </div>
             )}
 
-            <div className="px-6 mt-4 flex items-start gap-4">
+            <div className="mt-4 flex w-full flex-col items-stretch gap-3 px-4 sm:flex-row sm:items-start sm:gap-4 sm:px-6">
               <SubjectSelect
                 subjects={classes.map((c) => ({
                   id: c._id,
