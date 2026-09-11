@@ -174,7 +174,7 @@ export default function AttendanceTable({ data, classId }: Props) {
               : "overflow-y-visible"
           }`}
         >
-          <table className="w-max min-w-full text-base table-fixed">
+          <table className="app-data-table w-max min-w-full text-base table-fixed">
             <thead className="sticky top-0 z-50 bg-gray-50 text-gray-600">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold w-[150px]">

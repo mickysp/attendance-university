@@ -11,6 +11,7 @@ import {
   Cog6ToothIcon,
   CalendarDaysIcon,
   BellIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -20,7 +21,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);  
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
@@ -501,6 +502,14 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
           collapsed={collapsed}
           active={pathname.startsWith("/students")}
           onClick={() => onNavigate("/students")}
+        />
+
+        <SidebarItem
+          icon={<AcademicCapIcon />}
+          label="Teachers"
+          collapsed={collapsed}
+          active={pathname.startsWith("/teachers")}
+          onClick={() => onNavigate("/teachers")}
         />
 
         <SidebarItem

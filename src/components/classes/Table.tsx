@@ -243,37 +243,43 @@ export default function Table({
             <div className="my-4 border-t border-gray-100" />
 
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm text-gray-500">จัดการ</span>
+              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
 
-              <div className="flex flex-wrap justify-end gap-2">
+              <div className="@container/actions flex min-w-0 flex-1 flex-nowrap justify-end gap-2 whitespace-nowrap [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0 [&>button]:justify-center">
                 <button
                   type="button"
+                  aria-label="เช็คชื่อ"
+                  title="เช็คชื่อ"
                   onClick={() => handleCheckIn(item._id)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
                 >
                   <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
-                  <span>เช็คชื่อ</span>
+                  <span className="hidden @[260px]/actions:inline">เช็คชื่อ</span>
                 </button>
 
                 <button
                   type="button"
+                  aria-label="แก้ไข"
+                  title="แก้ไข"
                   onClick={() => handleEdit(item._id)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <PencilSquareIcon className="h-4 w-4 shrink-0" />
 
-                  <span>แก้ไข</span>
+                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
                 </button>
 
                 <button
                   type="button"
+                  aria-label="ลบ"
+                  title="ลบ"
                   onClick={() => handleDelete(item._id)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50"
                 >
                   <TrashIcon className="h-4 w-4 shrink-0" />
 
-                  <span>ลบ</span>
+                  <span className="hidden @[260px]/actions:inline">ลบ</span>
                 </button>
               </div>
             </div>
@@ -284,13 +290,13 @@ export default function Table({
       {/* ==================== DESKTOP ==================== */}
       <div className="hidden w-full overflow-hidden rounded-xl border border-gray-200 md:block">
         <div className="w-full overflow-x-auto">
-          <table className="min-w-[900px] w-full table-fixed text-sm">
+          <table className="app-data-table min-w-[900px] w-full table-fixed text-sm">
             <colgroup>
-              <col className="w-[20%]" />
-              <col className="w-[25%]" />
-              <col className="w-[20%]" />
-              <col className="w-[15%]" />
-              <col className="w-[20%] md:max-lg:w-[250px] lg:w-[20%]" />
+              <col className="w-[calc((100%-280px)*0.25)]" />
+              <col className="w-[calc((100%-280px)*0.3125)]" />
+              <col className="w-[calc((100%-280px)*0.25)]" />
+              <col className="w-[calc((100%-280px)*0.1875)]" />
+              <col className="w-[280px]" />
             </colgroup>
 
             <thead className="bg-gray-50 text-gray-600">
@@ -357,7 +363,7 @@ export default function Table({
                       shadow-[-4px_0_8px_rgba(0,0,0,0.06)]
                     "
                   >
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap [&>button]:shrink-0">
                       <button
                         type="button"
                         onClick={() => handleCheckIn(item._id)}

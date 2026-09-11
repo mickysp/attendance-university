@@ -3,6 +3,23 @@
   font-family: "Noto Sans Thai", sans-serif !important;
 }
 
+.swal2-popup.app-swal-bounce {
+  animation: app-swal-bounce 320ms ease-in-out !important;
+}
+
+@keyframes app-swal-bounce {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.035); }
+  65% { transform: scale(0.985); }
+  85% { transform: scale(1.01); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swal2-popup.app-swal-bounce {
+    animation: none !important;
+  }
+}
+
 .app-swal-popup {
   width: 390px !important;
   max-width: calc(100vw - 32px) !important;
@@ -91,6 +108,85 @@
 /* =========================================================
    BUTTONS
 ========================================================= */
+
+.app-swal-popup.app-swal-form {
+  width: 460px !important;
+  padding: 28px !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px !important;
+  text-align: left;
+  font-family: var(--font-noto), sans-serif !important;
+}
+
+.app-swal-form .app-swal-form-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 0 18px;
+  border: 0;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.app-swal-form .app-swal-title {
+  text-align: left;
+  font-size: 21px !important;
+  font-weight: 600 !important;
+  line-height: 1.5;
+}
+
+.app-swal-form .app-swal-form-description {
+  margin: 6px 0 0;
+  padding: 0;
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.app-swal-form .swal2-actions {
+  width: 100%;
+  justify-content: flex-end;
+  margin: 24px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.app-swal-form .swal2-validation-message {
+  margin: 12px 0 0;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.app-swal-form .app-swal-input-label {
+  justify-content: flex-start;
+  margin: 24px 0 8px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.app-swal-form .app-swal-input {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  height: 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: none;
+  font-size: 14px;
+}
+
+.app-swal-form .app-swal-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 10%);
+}
+
+.app-swal-popup .swal2-actions {
+  gap: 12px;
+}
 
 .app-swal-confirm-btn,
 .app-swal-cancel-btn,

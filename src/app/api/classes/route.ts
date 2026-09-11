@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { getTeacherNames } from "@/lib/teacher-names";
 
 import type {
   ClassResponse,
@@ -50,6 +51,10 @@ export async function GET() {
       );
     }
 
+    const teacherNames = await getTeacherNames(db, classes.flatMap((item) =>
+      Array.isArray(item.teachers) ? item.teachers.map((teacher) => String(teacher?._id)) : [],
+    ));
+
     const classIds = classes.map((item) => item._id);
 
     const studentCounts = await studentClassesCol
@@ -92,7 +97,8 @@ export async function GET() {
             )
             .map((teacher) => ({
               _id: String(teacher._id),
-              name: typeof teacher.name === "string" ? teacher.name : "",
+              name: teacherNames.get(String(teacher._id).toLowerCase())
+                ?? (typeof teacher.name === "string" ? teacher.name : ""),
             }))
         : [];
 

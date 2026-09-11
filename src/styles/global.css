@@ -9,6 +9,13 @@
   --input-border-hover: #c1c1c5;
   --navbar-font: #0e69e9;
   --card: #f9fbfc;
+  --table-header-padding-y: 16px;
+}
+
+/* Shared spacing for data tables across all management pages. */
+.app-data-table > thead > tr > th {
+  padding-block: var(--table-header-padding-y);
+  vertical-align: middle;
 }
 
 @theme inline {

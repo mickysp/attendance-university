@@ -3,6 +3,8 @@ import { Prompt, Sarabun, Noto_Sans_Thai } from "next/font/google";
 import { AlertProvider } from "@/context/AlertContext";
 import { ConfirmProvider } from "@/context/swal";
 import "@/styles/global.css";
+import "sweetalert2/dist/sweetalert2.min.css";
+import "@/styles/swal.css";
 
 const prompt = Prompt({
   subsets: ["thai", "latin"],

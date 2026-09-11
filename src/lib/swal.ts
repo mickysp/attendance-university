@@ -1,17 +1,6 @@
 import Swal from "sweetalert2";
 import type { SweetAlertOptions } from "sweetalert2";
 
-import "sweetalert2/dist/sweetalert2.min.css";
-import "@/styles/swal.css";
-
-import {
-  ExclamationTriangleIcon,
-  DocumentCheckIcon,
-  TrashIcon,
-  PencilSquareIcon,
-  ArrowUturnLeftIcon,
-} from "@heroicons/react/24/outline";
-
 export type ConfirmVariant =
   | "delete"
   | "warning"
@@ -20,7 +9,24 @@ export type ConfirmVariant =
   | "withdraw";
 
 const baseSwalOptions: SweetAlertOptions = {
-  allowOutsideClick: false,
+  target: "body",
+  position: "center",
+  backdrop: true,
+  allowOutsideClick: () => {
+    const popup = Swal.getPopup();
+
+    if (popup) {
+      popup.classList.remove("app-swal-bounce");
+      // Restart the animation even when the backdrop is clicked repeatedly.
+      void popup.offsetWidth;
+      popup.classList.add("app-swal-bounce");
+    }
+
+    return false;
+  },
+  willClose: (popup) => {
+    popup.classList.remove("app-swal-bounce");
+  },
   allowEscapeKey: false,
   showCloseButton: true,
   buttonsStyling: false,
@@ -46,25 +52,6 @@ const getDefaultDescription = (variant: ConfirmVariant) => {
   }
 };
 
-const getIcon = (variant: ConfirmVariant) => {
-  switch (variant) {
-    case "delete":
-      return TrashIcon;
-
-    case "warning":
-      return ExclamationTriangleIcon;
-
-    case "edit":
-      return PencilSquareIcon;
-
-    case "withdraw":
-      return ArrowUturnLeftIcon;
-
-    default:
-      return DocumentCheckIcon;
-  }
-};
-
 const getIconColor = (variant: ConfirmVariant) => {
   switch (variant) {
     case "delete":
@@ -85,7 +72,6 @@ const getIconColor = (variant: ConfirmVariant) => {
 };
 
 const getIconHtml = (variant: ConfirmVariant) => {
-  const Icon = getIcon(variant);
   const color = getIconColor(variant);
 
   const paths = {
@@ -180,6 +166,52 @@ const getIconHtml = (variant: ConfirmVariant) => {
 };
 
 export const appSwal = {
+  nameForm({ title, initialValue = "", onSave }: {
+    title: string;
+    initialValue?: string;
+    onSave: (name: string) => Promise<void>;
+  }) {
+    return Swal.fire({
+      ...baseSwalOptions,
+      titleText: title,
+      text: "กรอกชื่อ-นามสกุลอาจารย์ให้ครบถ้วนก่อนบันทึก",
+      iconHtml: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-5 9 5-9 5-9-5Zm3 2v6c3 3 9 3 12 0v-6M21 9v7" /></svg>',
+      input: "text",
+      inputLabel: "ชื่อ-นามสกุลอาจารย์",
+      inputPlaceholder: "กรอกชื่อ-นามสกุลอาจารย์",
+      inputValue: initialValue,
+      inputAttributes: { autocomplete: "name" },
+      showCloseButton: false,
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "บันทึก",
+      reverseButtons: true,
+      showLoaderOnConfirm: true,
+      inputValidator: (value) => !value.trim() ? "กรุณากรอกชื่อ-นามสกุลอาจารย์" : undefined,
+      preConfirm: async (value: string) => {
+        try {
+          await onSave(value.trim());
+          return true;
+        } catch (error) {
+          // Use textContent because API error messages must not become HTML.
+          Swal.showValidationMessage("บันทึกไม่สำเร็จ");
+          const message = Swal.getValidationMessage();
+          if (message) message.textContent = error instanceof Error ? error.message : "บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง";
+          return false;
+        }
+      },
+      customClass: {
+        popup: "app-swal-popup app-swal-form",
+        title: "app-swal-title",
+        htmlContainer: "app-swal-form-description",
+        icon: "app-swal-form-icon",
+        input: "app-swal-input",
+        inputLabel: "app-swal-input-label",
+        confirmButton: "app-swal-confirm-btn app-swal-confirm-info",
+        cancelButton: "app-swal-cancel-btn",
+      },
+    });
+  },
   confirm({
     title,
     text,
@@ -193,16 +225,14 @@ export const appSwal = {
     variant?: ConfirmVariant;
     description?: string;
   }) {
-    const confirmHtml = html ?? (description || getDefaultDescription(variant));
-
     return Swal.fire({
       ...baseSwalOptions,
 
-      title,
+      titleText: title,
 
-      text,
+      text: text ?? description ?? getDefaultDescription(variant),
 
-      html: confirmHtml,
+      html,
 
       showCancelButton: true,
 
