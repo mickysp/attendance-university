@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Table from "@/components/classes/Table";
 import Select from "@/components/classes/Select";
@@ -19,29 +19,49 @@ export default function ClassesPage() {
     branch: "",
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
 
-        const res = await fetch("/api/classes");
+      const res = await fetch("/api/classes", {
+        cache: "no-store",
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (data.success && Array.isArray(data.data)) {
-          setClasses(data.data);
-        } else {
-          setClasses([]);
-        }
-      } catch (error) {
+      if (data.success && Array.isArray(data.data)) {
+        setClasses(data.data);
+      } else {
         setClasses([]);
-      } finally {
-        setLoading(false);
+      }
+    } catch {
+      setClasses([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchData();
+
+    const refreshAfterReturning = () => {
+      if (document.visibilityState === "visible") {
+        void fetchData();
       }
     };
 
-    fetchData();
-  }, []);
+    window.addEventListener("focus", refreshAfterReturning);
+    document.addEventListener("visibilitychange", refreshAfterReturning);
+    const statusRefreshTimer = window.setInterval(() => {
+      void fetchData();
+    }, 60_000);
+
+    return () => {
+      window.removeEventListener("focus", refreshAfterReturning);
+      document.removeEventListener("visibilitychange", refreshAfterReturning);
+      window.clearInterval(statusRefreshTimer);
+    };
+  }, [fetchData]);
 
   const filteredClasses = classes.filter((item) => {
     const keyword = filter.keyword.toLowerCase().trim();

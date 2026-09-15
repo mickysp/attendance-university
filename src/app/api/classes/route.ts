@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { getTeacherNames } from "@/lib/teacher-names";
+import { getClassStatus } from "@/lib/class-status";
+import type { ObjectId } from "mongodb";
 
 import type {
   ClassResponse,
@@ -23,6 +25,15 @@ export async function GET() {
       createdAt?: Date;
       updatedAt?: Date;
     }>("student_classes");
+
+    const sessionsCol = db.collection<{
+      classId: ObjectId | string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      allowCheckIn?: boolean;
+      isOpen?: boolean;
+    }>("sessions");
 
     const classes = await classesCol
       .find({})
@@ -86,6 +97,27 @@ export async function GET() {
       studentCountMap.set(String(item._id), item.count);
     });
 
+    const classSessions = await sessionsCol.find({
+      classId: {
+        $in: [
+          ...classIds,
+          ...classIds.map((classId) => classId.toString()),
+        ],
+      },
+    })
+      .sort({ date: -1, startTime: -1, updatedAt: -1 })
+      .toArray();
+
+    const latestSessionMap = new Map<
+      string,
+      (typeof classSessions)[number]
+    >();
+
+    classSessions.forEach((session) => {
+      const key = String(session.classId);
+      if (!latestSessionMap.has(key)) latestSessionMap.set(key, session);
+    });
+
     const data: ClassResponse[] = classes.map((item) => {
       const teachers: Teacher[] = Array.isArray(item.teachers)
         ? item.teachers
@@ -104,7 +136,8 @@ export async function GET() {
 
       const studentCount = studentCountMap.get(String(item._id)) ?? 0;
 
-      const isOpened = studentCount > 0;
+      const status = getClassStatus(latestSessionMap.get(String(item._id)));
+      const isOpened = status === "active";
 
       return {
         _id: item._id.toString(),
@@ -115,6 +148,7 @@ export async function GET() {
           typeof item.description === "string" ? item.description : undefined,
         studentCount,
         isOpened,
+        status,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
       };

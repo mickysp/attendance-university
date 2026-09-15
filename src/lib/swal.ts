@@ -165,6 +165,28 @@ const getIconHtml = (variant: ConfirmVariant) => {
   return paths[variant];
 };
 
+const getStatusIconHtml = (status: "success" | "error") => {
+  if (status === "success") {
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+        class="swal-icon-svg" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m4.5 12.75 6 6 9-13.5" />
+      </svg>
+    `;
+  }
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+      class="swal-icon-svg" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  `;
+};
+
 export const appSwal = {
   nameForm({ title, initialValue = "", onSave }: {
     title: string;
@@ -270,7 +292,7 @@ export const appSwal = {
 
       showCloseButton: false,
 
-      icon: "success",
+      iconHtml: getStatusIconHtml("success"),
 
       title,
 
@@ -282,10 +304,10 @@ export const appSwal = {
 
       customClass: {
         popup: "app-swal-popup app-swal-popup-success",
-        title: "app-swal-title-success",
+        title: "app-swal-title app-swal-title-success",
         htmlContainer: "app-swal-text",
         confirmButton: "app-swal-ok-btn",
-        icon: "app-swal-success-icon",
+        icon: "app-swal-icon app-swal-success-icon",
       },
     });
   },
@@ -296,7 +318,7 @@ export const appSwal = {
 
       showCloseButton: false,
 
-      icon: "error",
+      iconHtml: getStatusIconHtml("error"),
 
       title: "เกิดข้อผิดพลาด",
 
@@ -309,7 +331,7 @@ export const appSwal = {
         title: "app-swal-title",
         htmlContainer: "app-swal-text",
         confirmButton: "app-swal-ok-btn",
-        icon: "app-swal-error-icon",
+        icon: "app-swal-icon app-swal-error-icon",
       },
     });
   },

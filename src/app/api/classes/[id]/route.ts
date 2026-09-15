@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { getTeacherNames } from "@/lib/teacher-names";
+import { getClassStatus } from "@/lib/class-status";
 import { ObjectId } from "mongodb";
 
 import type { ClassDocument, ClassResponse, Teacher } from "@/types/classes";
@@ -50,6 +51,15 @@ export async function GET(
       updatedAt?: Date;
     }>("student_classes");
 
+    const sessions = db.collection<{
+      classId: ObjectId | string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      allowCheckIn?: boolean;
+      isOpen?: boolean;
+    }>("sessions");
+
     const classObjectId = new ObjectId(id);
 
     const data = await classes.findOne({
@@ -72,7 +82,16 @@ export async function GET(
       classId: classObjectId,
     });
 
-    const isOpened = studentCount > 0;
+    const latestSession = await sessions.findOne({
+      classId: {
+        $in: [classObjectId, id],
+      },
+    }, {
+      sort: { date: -1, startTime: -1, updatedAt: -1 },
+    });
+
+    const status = getClassStatus(latestSession);
+    const isOpened = status === "active";
 
     const teacherNames = await getTeacherNames(db,
       Array.isArray(data.teachers) ? data.teachers.map((teacher) => String(teacher?._id)) : [],
@@ -102,6 +121,7 @@ export async function GET(
         typeof data.description === "string" ? data.description : undefined,
       studentCount,
       isOpened,
+      status,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     };

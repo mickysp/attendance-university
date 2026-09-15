@@ -159,18 +159,28 @@ export default function Table({
     );
   };
 
-  const renderStatus = (isOpened: boolean) => {
-    if (isOpened) {
-      return (
-        <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600">
-          เปิดใช้งานแล้ว
-        </span>
-      );
-    }
+  const renderStatus = (status: ClassResponse["status"]) => {
+    const styles = {
+      unused: "border-gray-200 bg-gray-50 text-gray-500",
+      scheduled: "border-blue-200 bg-blue-50 text-blue-600",
+      active: "border-green-200 bg-green-50 text-green-600",
+      ended: "border-amber-200 bg-amber-50 text-amber-700",
+    };
+
+    const labels = {
+      unused: "ยังไม่เคยใช้งาน",
+      scheduled: "รอเปิดเช็กชื่อ",
+      active: "กำลังเปิดเช็กชื่อ",
+      ended: "สิ้นสุดแล้ว",
+    };
+
+    const safeStatus = status ?? "unused";
 
     return (
-      <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">
-        ยังไม่เปิดใช้งาน
+      <span
+        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${styles[safeStatus]}`}
+      >
+        {labels[safeStatus]}
       </span>
     );
   };
@@ -236,7 +246,7 @@ export default function Table({
               <div className="flex items-start justify-between gap-4">
                 <span className="shrink-0 text-sm text-gray-500">สถานะ</span>
 
-                <div className="text-right">{renderStatus(item.isOpened)}</div>
+                <div className="text-right">{renderStatus(item.status)}</div>
               </div>
             </div>
 
@@ -351,7 +361,7 @@ export default function Table({
                   </td>
 
                   <td className="px-3 py-3 align-top text-left text-sm">
-                    {renderStatus(item.isOpened)}
+                    {renderStatus(item.status)}
                   </td>
 
                   <td

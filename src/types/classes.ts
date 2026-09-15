@@ -1,4 +1,5 @@
 import type { ObjectId } from "mongodb";
+import type { ClassStatus } from "@/lib/class-status";
 
 export interface Teacher {
   _id: string;
@@ -35,6 +36,7 @@ export interface ClassResponse {
   description?: string;
   studentCount: number;
   isOpened: boolean;
+  status: ClassStatus;
   createdAt?: Date;
   updatedAt?: Date;
 }
