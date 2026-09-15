@@ -64,10 +64,11 @@ export default function DashboardPage() {
             className="
               flex
               min-h-[calc(100vh-104px)]
+              w-full
               flex-col
+              overflow-hidden
               rounded-2xl
               bg-white
-              overflow-hidden
 
               lg:h-full
               lg:min-h-0
@@ -92,8 +93,11 @@ export default function DashboardPage() {
 
             <div
               className="
+                flex
                 min-h-[500px]
                 flex-1
+                items-center
+                justify-center
                 px-6
                 pb-6
 
@@ -101,7 +105,7 @@ export default function DashboardPage() {
                 lg:overflow-y-auto
               "
             >
-              <div className="flex min-h-[500px] flex-col items-center justify-center text-center">
+              <div className="flex flex-col items-center justify-center text-center">
                 <div
                   className="
                     mb-4

@@ -255,7 +255,9 @@ export default function Table({
                 >
                   <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
-                  <span className="hidden @[260px]/actions:inline">เช็คชื่อ</span>
+                  <span className="hidden @[260px]/actions:inline">
+                    เช็คชื่อ
+                  </span>
                 </button>
 
                 <button

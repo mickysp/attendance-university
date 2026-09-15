@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AcademicCapIcon, ChevronDownIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  AcademicCapIcon,
+  ChevronDownIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import type { Teacher } from "@/types/teachers";
 
 interface TeacherTableProps {
@@ -15,7 +20,16 @@ interface TeacherTableProps {
   onRetry: () => void;
 }
 
-export default function TeacherTable({ teachers, deletingId, loading, error, filterKey, onDeleteTeacher, onEditTeacher, onRetry }: TeacherTableProps) {
+export default function TeacherTable({
+  teachers,
+  deletingId,
+  loading,
+  error,
+  filterKey,
+  onDeleteTeacher,
+  onEditTeacher,
+  onRetry,
+}: TeacherTableProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [openPageSize, setOpenPageSize] = useState(false);
   const [requestedPage, setPage] = useState(1);
@@ -34,40 +48,113 @@ export default function TeacherTable({ teachers, deletingId, loading, error, fil
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
-      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) setOpenPageSize(false);
+      if (
+        pageSizeRef.current &&
+        !pageSizeRef.current.contains(event.target as Node)
+      )
+        setOpenPageSize(false);
     };
-    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpenPageSize(false); };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenPageSize(false);
+    };
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", escape);
-    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", escape); };
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", escape);
+    };
   }, []);
 
   const getVisiblePages = () => {
     const start = Math.max(1, Math.min(page - 1, totalPages - 2));
-    return Array.from({ length: Math.min(3, totalPages) }, (_, index) => start + index);
+    return Array.from(
+      { length: Math.min(3, totalPages) },
+      (_, index) => start + index,
+    );
   };
 
-  if (loading) return <div role="status" className="py-16 text-center text-sm text-gray-500">กำลังโหลดรายชื่ออาจารย์...</div>;
-  if (error) return <div role="alert" className="rounded-xl border border-red-100 bg-red-50 p-6 text-center text-sm text-red-600"><p>{error}</p><button type="button" onClick={onRetry} className="mt-3 cursor-pointer underline">ลองอีกครั้ง</button></div>;
-  if (!teachers.length) return <div className="flex flex-col items-center gap-4 py-16 text-sm text-gray-400"><AcademicCapIcon className="h-16 w-16" /><p>ไม่พบรายชื่ออาจารย์</p></div>;
+  if (loading)
+    return (
+      <div role="status" className="py-16 text-center text-sm text-gray-500">
+        กำลังโหลดรายชื่ออาจารย์...
+      </div>
+    );
+  if (error)
+    return (
+      <div
+        role="alert"
+        className="rounded-xl border border-red-100 bg-red-50 p-6 text-center text-sm text-red-600"
+      >
+        <p>{error}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-3 cursor-pointer underline"
+        >
+          ลองอีกครั้ง
+        </button>
+      </div>
+    );
+  if (!teachers.length)
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-sm text-gray-400">
+        <AcademicCapIcon className="h-16 w-16" />
+        <p>ไม่พบรายชื่ออาจารย์</p>
+      </div>
+    );
 
   return (
     <div className="w-full min-w-0">
       <div className="overflow-hidden rounded-xl border border-gray-200">
         <table className="app-data-table w-full table-fixed text-sm">
-          <thead className="bg-gray-50 text-gray-600"><tr>
-            <th className="px-3 py-3 text-left font-semibold">ชื่อ-นามสกุลอาจารย์</th>
-            <th className="w-[120px] px-3 py-3 text-left font-semibold sm:w-[190px]">จัดการ</th>
-          </tr></thead>
-          <tbody>{pageTeachers.map((teacher) => (
-            <tr key={teacher._id} className="border-t border-gray-200 hover:bg-gray-50">
-              <td className="break-words px-3 py-3 text-gray-700">{teacher.name}</td>
-              <td className="px-3 py-3"><div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
-                <button type="button" aria-label={`แก้ไขอาจารย์ ${teacher.name}`} title="แก้ไขอาจารย์" disabled={deletingId !== null} onClick={() => onEditTeacher(teacher)} className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"><PencilSquareIcon className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">แก้ไข</span></button>
-                <button type="button" aria-label={`ลบอาจารย์ ${teacher.name}`} title="ลบอาจารย์" disabled={deletingId !== null} onClick={() => onDeleteTeacher(teacher)} className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"><TrashIcon className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">ลบ</span></button>
-              </div></td>
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-3 py-3 text-left font-semibold">
+                ชื่อ-นามสกุล
+              </th>
+              <th className="w-[120px] px-3 py-3 text-left font-semibold sm:w-[190px]">
+                จัดการ
+              </th>
             </tr>
-          ))}</tbody>
+          </thead>
+          <tbody>
+            {pageTeachers.map((teacher) => (
+              <tr
+                key={teacher._id}
+                className="border-t border-gray-200 hover:bg-gray-50"
+              >
+                <td className="break-words px-3 py-3 text-gray-700">
+                  {teacher.name}
+                </td>
+                <td className="px-3 py-3">
+                  <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
+                    <button
+                      type="button"
+                      aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
+                      title="แก้ไขอาจารย์"
+                      disabled={deletingId !== null}
+                      onClick={() => onEditTeacher(teacher)}
+                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                    >
+                      <PencilSquareIcon className="h-4 w-4 shrink-0" />
+                      <span className="hidden sm:inline">แก้ไข</span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`ลบอาจารย์ ${teacher.name}`}
+                      title="ลบอาจารย์"
+                      disabled={deletingId !== null}
+                      onClick={() => onDeleteTeacher(teacher)}
+                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <TrashIcon className="h-4 w-4 shrink-0" />
+                      <span className="hidden sm:inline">ลบ</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
       {teachers.length > 10 && (
