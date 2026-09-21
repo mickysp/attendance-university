@@ -17,7 +17,7 @@ export interface ScheduleDocument {
 
 export interface ScheduleQuery {
   classId: ObjectId | string;
-  academicYear: number;
+  academicYear?: number;
   date?: string;
 }
 

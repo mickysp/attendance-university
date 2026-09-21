@@ -20,9 +20,9 @@ export default function ClassesPage() {
     branch: "",
   });
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (background = false) => {
     try {
-      setLoading(true);
+      if (!background) setLoading(true);
 
       const res = await classesApi.list({}, { cache: "no-store" });
 
@@ -30,13 +30,13 @@ export default function ClassesPage() {
 
       if (data.success && Array.isArray(data.data)) {
         setClasses(data.data);
-      } else {
+      } else if (!background) {
         setClasses([]);
       }
     } catch {
-      setClasses([]);
+      if (!background) setClasses([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   }, []);
 
@@ -45,14 +45,14 @@ export default function ClassesPage() {
 
     const refreshAfterReturning = () => {
       if (document.visibilityState === "visible") {
-        void fetchData();
+        void fetchData(true);
       }
     };
 
     window.addEventListener("focus", refreshAfterReturning);
     document.addEventListener("visibilitychange", refreshAfterReturning);
     const statusRefreshTimer = window.setInterval(() => {
-      void fetchData();
+      void fetchData(true);
     }, 60_000);
 
     return () => {

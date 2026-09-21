@@ -130,6 +130,18 @@ textarea {
   vertical-align: middle;
 }
 
+.app-table-sticky-end::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 4px;
+  pointer-events: none;
+  background: linear-gradient(to left, rgb(15 23 42 / 3%), transparent);
+  border-right: 1px solid rgb(15 23 42 / 2%);
+}
+
 /* =========================================================
   Dialog
 ========================================================= */
@@ -237,7 +249,7 @@ textarea {
     transform 120ms ease !important;
 }
 
-.react-datepicker__day:hover {
+.react-datepicker__day:not(.react-datepicker__day--disabled):hover {
   background: #eff6ff !important;
   color: #2563eb !important;
   transform: scale(1.08);
@@ -260,6 +272,17 @@ textarea {
 
 .react-datepicker__day--outside-month {
   color: #cbd5e1 !important;
+}
+
+.react-datepicker__day.react-datepicker__day--disabled,
+.react-datepicker__day.react-datepicker__day--disabled:hover {
+  color: #cbd5e1 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: 400 !important;
+  cursor: default !important;
+  transform: none !important;
 }
 
 .react-datepicker__navigation {

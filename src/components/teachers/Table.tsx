@@ -145,7 +145,7 @@ export default function TeacherTable({
                       title="ลบอาจารย์"
                       disabled={deletingId !== null}
                       onClick={() => onDeleteTeacher(teacher)}
-                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:opacity-50"
                     >
                       <TrashIcon className="h-4 w-4 shrink-0" />
                       <span className="hidden sm:inline">ลบ</span>
@@ -207,7 +207,7 @@ export default function TeacherTable({
               type="button"
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
             >
               ก่อนหน้า
             </button>
@@ -232,7 +232,7 @@ export default function TeacherTable({
               type="button"
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
             >
               ถัดไป
             </button>

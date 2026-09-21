@@ -1,14 +1,15 @@
-"use client";
-
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import CheckInContent from "../../check-in/CheckInStudent";
 
-export const dynamic = "force-dynamic";
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ classId?: string | string[] }>;
+}) {
+  const { classId } = await searchParams;
+  const id = Array.isArray(classId) ? classId[0] : classId;
 
-export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <CheckInContent />
-    </Suspense>
-  );
+  if (id) redirect(`/checkin/${encodeURIComponent(id)}`);
+
+  return <CheckInContent classId={null} />;
 }

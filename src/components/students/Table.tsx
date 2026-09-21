@@ -512,7 +512,7 @@ export default function StudentTable({
                 className={`px-5 py-2.5 rounded-md text-white text-sm transition
               ${
                 loading || !isFormValid || !isDirty
-                  ? "bg-gray-400 cursor-not-allowed"
+                  ? "bg-gray-400"
                   : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer"
               }`}
               >
@@ -730,7 +730,7 @@ export default function StudentTable({
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
               className={`px-4 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
-              ${page === totalPages ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
+              ${page === totalPages ? "opacity-40" : "cursor-pointer"}
               `}
             >
               ถัดไป

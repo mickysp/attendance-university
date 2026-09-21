@@ -3,7 +3,6 @@
 import { checkInApi } from "@/services/api/check-in";
 import { classesApi } from "@/services/api/classes";
 import { attendanceApi } from "@/services/api/attendance";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   CameraIcon,
@@ -32,9 +31,7 @@ const DEFAULT_CONFIG: CheckInConfigFields = {
   location: false,
 };
 
-export default function CheckInStudentPage() {
-  const searchParams = useSearchParams();
-  const classId = searchParams.get("classId");
+export default function CheckInStudentPage({ classId }: { classId: string | null }) {
 
   const [config, setConfig] = useState<CheckInConfigFields | null>(null);
   const [form, setForm] = useState<CheckInFormData>({});
