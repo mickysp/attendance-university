@@ -13,6 +13,7 @@ import {
 import DatePicker from "react-datepicker";
 import QRCode from "react-qr-code";
 import { appSwal } from "@/lib/swal";
+import { useAlert } from "@/context/AlertContext";
 import {
   formatCalendarDate,
   getBangkokDateKey,
@@ -101,6 +102,7 @@ function getTeachers(classData: Record<string, unknown>): Teacher[] {
 
 export default function QRPage({ classId }: { classId: string | null }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const qrDialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -405,7 +407,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
     try {
       await navigator.clipboard.writeText(link);
-      showSuccess("คัดลอกลิงก์แล้ว");
+      showAlert("คัดลอกลิงก์แล้ว", "success");
     } catch {
       showError("ไม่สามารถคัดลอกลิงก์ได้");
     }

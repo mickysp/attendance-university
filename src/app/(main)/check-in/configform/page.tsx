@@ -1,6 +1,8 @@
 "use client";
 
 import { checkInApi } from "@/services/api/check-in";
+import { classesApi } from "@/services/api/classes";
+import type { ClassResponse } from "@/types/classes";
 import { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { useConfirm } from "@/context/swal";
@@ -35,6 +37,14 @@ const fieldPlaceholders: Record<keyof CheckInConfigFields, string> = {
 };
 
 export default function CheckInFormPage() {
+  const [classes, setClasses] = useState<ClassResponse[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [loadedClassId, setLoadedClassId] = useState("");
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [configLoading, setConfigLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [usesDefault, setUsesDefault] = useState(true);
   const [config, setConfig] = useState<CheckInConfigFields>({
     ...defaultCheckInConfig,
   });
@@ -43,6 +53,8 @@ export default function CheckInFormPage() {
     ...defaultCheckInConfig,
   });
   const isDirty = JSON.stringify(config) !== JSON.stringify(initialConfig);
+  const configReady = Boolean(selectedClassId) && loadedClassId === selectedClassId && !configLoading && !loadError;
+  const canSave = configReady && !saving && (isDirty || usesDefault);
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
 
@@ -169,39 +181,72 @@ export default function CheckInFormPage() {
   };
 
   useEffect(() => {
-    const fetchConfig = async () => {
+    const controller = new AbortController();
+    const loadClasses = async () => {
+      setClassesLoading(true);
+      setLoadError("");
       try {
-        const res = await checkInApi.getConfig();
+        const res = await classesApi.list({}, { signal: controller.signal, cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok || !data.success || !Array.isArray(data.data)) throw new Error("โหลดรายวิชาไม่สำเร็จ");
+        if (!controller.signal.aborted) setClasses(data.data);
+      } catch {
+        if (!controller.signal.aborted) setLoadError("โหลดรายวิชาไม่สำเร็จ กรุณาลองอีกครั้ง");
+      } finally {
+        if (!controller.signal.aborted) setClassesLoading(false);
+      }
+    };
+    void loadClasses();
+    return () => controller.abort();
+  }, [retry]);
+
+  useEffect(() => {
+    if (!selectedClassId) return;
+    const controller = new AbortController();
+    const fetchConfig = async () => {
+      setConfigLoading(true);
+      setLoadedClassId("");
+      setLoadError("");
+      try {
+        const res = await checkInApi.getConfig(selectedClassId, { signal: controller.signal, cache: "no-store" });
 
         if (!res.ok) throw new Error("โหลดไม่สำเร็จ");
 
         const data = await res.json();
 
-        if (data.success) {
+        if (!data.success || !data.config) throw new Error("โหลดไม่สำเร็จ");
+        if (!controller.signal.aborted) {
           setConfig(data.config);
           setInitialConfig(data.config);
+          setUsesDefault(data.source !== "class");
+          setLoadedClassId(selectedClassId);
         }
-      } catch (err) {
-        console.error(err);
+      } catch {
+        if (!controller.signal.aborted) setLoadError("โหลดการตั้งค่าไม่สำเร็จ กรุณาลองอีกครั้ง");
+      } finally {
+        if (!controller.signal.aborted) setConfigLoading(false);
       }
     };
 
     fetchConfig();
-  }, []);
+    return () => controller.abort();
+  }, [selectedClassId, retry]);
 
   const handleSaveConfig = async () => {
+    if (!canSave) return;
     try {
       setSaving(true);
 
-      const res = await checkInApi.updateConfig({ config });
+      const res = await checkInApi.updateConfig({ classId: selectedClassId, config });
 
       const data = await res.json();
 
-      if (!data.success) throw new Error();
+      if (!res.ok || !data.success) throw new Error();
 
       setInitialConfig(config);
+      setUsesDefault(false);
 
-      showAlert("บันทึกข้อมูลสำเร็จ", "success");
+      showAlert("บันทึกการตั้งค่าของรายวิชานี้แล้ว", "success");
     } catch (err) {
       showAlert("เกิดข้อผิดพลาดในการบันทึก", "error");
     } finally {
@@ -218,10 +263,35 @@ export default function CheckInFormPage() {
           </h1>
 
           <p className="mb-7 text-xs text-gray-500 lg:mb-9 lg:text-sm">
-            เลือกเปิด–ปิดช่องข้อมูลที่ต้องการให้ผู้ใช้งานกรอก
+            เลือกรายวิชา แล้วเปิด–ปิดช่องข้อมูลที่ต้องการให้นักศึกษากรอก การตั้งค่าจะมีผลเฉพาะวิชาที่เลือก
           </p>
 
-          <div className="space-y-5 lg:space-y-6">
+          <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+            <label htmlFor="config-class" className="mb-2 block text-sm font-medium text-gray-700">รายวิชา</label>
+            <select
+              id="config-class"
+              value={selectedClassId}
+              disabled={classesLoading || saving}
+              className="min-h-11 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-blue-500"
+              onChange={(event) => {
+                const id = event.target.value;
+                if (isDirty && configReady) {
+                  showConfirm("เปลี่ยนรายวิชา?", () => setSelectedClassId(id), "warning", "การแก้ไขที่ยังไม่ได้บันทึกจะถูกยกเลิก");
+                } else setSelectedClassId(id);
+              }}
+            >
+              <option value="" disabled>{classesLoading ? "กำลังโหลดรายวิชา..." : "เลือกรายวิชาที่ต้องการตั้งค่า"}</option>
+              {classes.map((subject) => (
+                <option key={subject._id} value={subject._id}>{subject.classCodes.join(", ")} — {subject.className}</option>
+              ))}
+            </select>
+            {configReady && <p className="mt-2 text-xs leading-relaxed text-slate-500">{usesDefault ? "วิชานี้ยังใช้ค่าเริ่มต้น กดบันทึกเพื่อกำหนดค่าเฉพาะรายวิชา" : "กำลังแก้ไขการตั้งค่าเฉพาะรายวิชานี้ ไม่กระทบวิชาอื่น"}</p>}
+            {!classesLoading && !classes.length && !loadError && <p className="mt-2 text-sm text-slate-500">ยังไม่มีรายวิชา กรุณาเพิ่มรายวิชาก่อนตั้งค่า</p>}
+          </div>
+          {loadError && <p role="alert" className="mb-4 text-sm text-red-600">{loadError} <button type="button" onClick={() => setRetry((value) => value + 1)} className="underline">ลองอีกครั้ง</button></p>}
+          {configLoading && <p role="status" className="mb-4 text-sm text-slate-500">กำลังโหลดการตั้งค่ารายวิชา...</p>}
+
+          <fieldset disabled={!configReady || saving} className={`min-w-0 space-y-5 lg:space-y-6 ${!configReady ? "opacity-50" : ""}`}>
             <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
               {renderField("prefix")}
               {renderField("firstname")}
@@ -250,12 +320,12 @@ export default function CheckInFormPage() {
                       "บันทึกแก้ไขข้อมูล",
                       handleSaveConfig,
                       "info",
-                      "คุณต้องการยืนยันการบันทึกแก้ไขข้อมูลใช่หรือไม่",
+                      `บันทึกการตั้งค่าสำหรับ ${classes.find((subject) => subject._id === selectedClassId)?.className || "รายวิชาที่เลือก"} ใช่หรือไม่`,
                     )
                   }
-                  disabled={saving || !isDirty}
+                  disabled={!canSave}
                   className={`w-full rounded-lg px-5 py-2.5 text-xs text-white lg:w-auto lg:px-6 lg:text-sm ${
-                    saving || !isDirty
+                    !canSave
                       ? "bg-gray-300"
                       : "bg-blue-500 hover:bg-blue-600 cursor-pointer"
                   }`}
@@ -278,7 +348,7 @@ export default function CheckInFormPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </fieldset>
         </div>
       </div>
     </div>

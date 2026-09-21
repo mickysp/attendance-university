@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import CheckInContent from "../../check-in/CheckInStudent";
+import CheckInContent from "./CheckInStudent";
 
 export default async function Page({
   searchParams,
