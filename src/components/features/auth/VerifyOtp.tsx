@@ -1,5 +1,6 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
 import { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
@@ -21,15 +22,9 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
       setLoading(true);
       setError("");
 
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          identifier: email,
-          otp,
-        }),
+      const res = await authApi.verifyOtp({
+        identifier: email,
+        otp,
       });
 
       const data = await res.json();

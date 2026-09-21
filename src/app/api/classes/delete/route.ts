@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+
 import type { ClassDocument } from "@/types/classes";
 
 export async function DELETE(req: Request) {
@@ -15,7 +16,9 @@ export async function DELETE(req: Request) {
           success: false,
           message: "กรุณาระบุ id",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -25,7 +28,9 @@ export async function DELETE(req: Request) {
           success: false,
           message: "รูปแบบ id ไม่ถูกต้อง",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -45,9 +50,11 @@ export async function DELETE(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "ไม่พบข้อมูลที่ต้องการลบ",
+          message: "ไม่พบรายวิชาที่ต้องการลบ",
         },
-        { status: 404 },
+        {
+          status: 404,
+        },
       );
     }
 
@@ -55,27 +62,43 @@ export async function DELETE(req: Request) {
       _id: objectId,
     });
 
-    if (result.deletedCount === 0) {
+    if (result.deletedCount !== 1) {
       return NextResponse.json(
         {
           success: false,
           message: "ไม่สามารถลบรายวิชาได้",
         },
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "ลบรายวิชาสำเร็จ",
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: `ลบรายวิชา "${existing.className}" สำเร็จ`,
+        data: {
+          _id: id,
+        },
+      },
+      {
+        status: 200,
+      },
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
+
+        message:
+          error instanceof Error
+            ? error.message
+            : "เกิดข้อผิดพลาดในการลบรายวิชา",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }

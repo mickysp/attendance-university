@@ -30,21 +30,36 @@ const iconMap = {
 
 export const useAlert = () => {
   const context = useContext(AlertContext);
-  if (!context) throw new Error("useAlert must be used within AlertProvider");
+
+  if (!context) {
+    throw new Error("useAlert must be used within AlertProvider");
+  }
+
   return context;
 };
 
-export const AlertProvider = ({ children }: { children: ReactNode }) => {
+export const AlertProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const [alert, setAlert] = useState<Alert | null>(null);
   const [visible, setVisible] = useState(false);
 
-  const showAlert = (message: string, type: AlertType = "info") => {
+  const showAlert = (
+    message: string,
+    type: AlertType = "info",
+  ) => {
     setAlert({ message, type });
     setVisible(true);
 
-    setTimeout(() => setVisible(false), 2500);
+    setTimeout(() => {
+      setVisible(false);
+    }, 2500);
 
-    setTimeout(() => setAlert(null), 3000);
+    setTimeout(() => {
+      setAlert(null);
+    }, 3000);
   };
 
   return (
@@ -53,22 +68,62 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
       {alert && (
         <div
-          className={`
-    fixed top-5 right-5 px-4 py-3 rounded shadow text-white z-50 font-noto text-sm
-    flex items-center gap-2 min-w-[220px]
-    transition-all duration-300 ease-in-out
-    ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
-
-    ${alert.type === "success" && "bg-green-500"}
-    ${alert.type === "error" && "bg-red-500"}
-    ${alert.type === "warning" && "bg-yellow-500"}
-    ${alert.type === "info" && "bg-blue-500"}
-  `}
+          className="
+            pointer-events-none
+            fixed
+            top-5
+            right-5
+            z-50
+            font-noto
+          "
         >
-          <span className="flex-shrink-0">{iconMap[alert.type]}</span>
-          <span>{alert.message}</span>
+          <div
+            className={`
+              pointer-events-auto
+              relative
+              flex
+              min-w-[220px]
+              items-center
+              gap-2
+              rounded
+              px-4
+              py-3
+              text-sm
+              text-white
+              shadow
+              transition-all
+              duration-300
+              ease-in-out
 
-          <div className="absolute bottom-0 left-0 h-[3px] bg-white/70 animate-progress" />
+              ${
+                visible
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-2 opacity-0"
+              }
+
+              ${alert.type === "success" && "bg-green-500"}
+              ${alert.type === "error" && "bg-red-500"}
+              ${alert.type === "warning" && "bg-yellow-500"}
+              ${alert.type === "info" && "bg-blue-500"}
+            `}
+          >
+            <span className="flex-shrink-0">
+              {iconMap[alert.type]}
+            </span>
+
+            <span>{alert.message}</span>
+
+            <div
+              className="
+                absolute
+                bottom-0
+                left-0
+                h-[3px]
+                bg-white/70
+                animate-progress
+              "
+            />
+          </div>
         </div>
       )}
     </AlertContext.Provider>

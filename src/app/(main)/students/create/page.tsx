@@ -1,5 +1,8 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
+import { majorsApi } from "@/services/api/majors";
+import { studentsApi } from "@/services/api/students";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -8,7 +11,7 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { useAlert } from "@/context/AlertContext";
-import { useConfirm } from "@/context/ConfirmContext";
+import { useConfirm } from "@/context/swal";
 
 type StudentItem = {
   studentId: string;
@@ -68,8 +71,8 @@ export default function CreateStudentPage() {
     const fetchData = async () => {
       try {
         const [classRes, majorRes] = await Promise.all([
-          fetch("/api/classes"),
-          fetch("/api/majors"),
+          classesApi.list(),
+          majorsApi.list(),
         ]);
 
         const classData = await classRes.json();
@@ -154,13 +157,7 @@ export default function CreateStudentPage() {
         })),
       };
 
-      const res = await fetch("/api/students/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await studentsApi.upload(payload);
 
       const data = await res.json();
 
@@ -185,7 +182,7 @@ export default function CreateStudentPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 overflow-y-auto p-6 font-noto relative">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
             <div className="flex flex-col items-center gap-4">

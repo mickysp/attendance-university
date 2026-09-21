@@ -1,5 +1,7 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
+import type { RegisterBody } from "@/types/auth";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -35,7 +37,7 @@ export default function RegisterPage() {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterBody & { confirmPassword: string }>({
     prefix: "",
     fullname: "",
     username: "",
@@ -54,19 +56,13 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prefix: form.prefix,
-          fullname: form.fullname,
-          username: form.username,
-          email: form.email,
-          password: form.password,
-          role: form.role,
-        }),
+      const res = await authApi.register({
+        prefix: form.prefix,
+        fullname: form.fullname,
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        role: form.role,
       });
 
       const data = await res.json();
@@ -104,7 +100,7 @@ export default function RegisterPage() {
                 name="role"
                 value="Teacher"
                 checked={form.role === "Teacher"}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                onChange={() => setForm({ ...form, role: "Teacher" })}
               />
               คุณครู / อาจารย์
             </label>
@@ -113,11 +109,11 @@ export default function RegisterPage() {
               <input
                 type="radio"
                 name="role"
-                value="Admin"
-                checked={form.role === "Admin"}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                value="Teaching Assistant"
+                checked={form.role === "Teaching Assistant"}
+                onChange={() => setForm({ ...form, role: "Teaching Assistant" })}
               />
-              ผู้ดูแลระบบ
+              ผู้ช่วยสอน
             </label>
           </div>
 

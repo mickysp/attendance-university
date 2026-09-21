@@ -1,5 +1,6 @@
 "use client";
 
+import { studentsApi } from "@/services/api/students";
 import { useState, useEffect, useRef } from "react";
 import {
   UserCircleIcon,
@@ -8,7 +9,7 @@ import {
   TrashIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
-import { useConfirm } from "@/context/ConfirmContext";
+import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
 
 type Student = {
@@ -143,9 +144,7 @@ export default function StudentTable({
       "ลบข้อมูล?",
       async () => {
         try {
-          const res = await fetch(`/api/students/delete?id=${id}`, {
-            method: "DELETE",
-          });
+          const res = await studentsApi.remove(id);
 
           if (!res.ok) {
             const text = await res.text();
@@ -184,13 +183,7 @@ export default function StudentTable({
           })),
       };
 
-      const res = await fetch("/api/students/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await studentsApi.update(payload);
 
       const data = await res.json();
 
@@ -218,12 +211,11 @@ export default function StudentTable({
       "ถอนวิชา?",
       async () => {
         try {
-          const res = await fetch(
-            `/api/students/withdraw-course?studentId=${student._id}&className=${encodeURIComponent(className)}&section=${section}`,
-            {
-              method: "DELETE",
-            },
-          );
+          const res = await studentsApi.withdrawCourse({
+            studentId: student._id,
+            className,
+            section,
+          });
 
           const data = await res.json();
 
@@ -272,7 +264,7 @@ export default function StudentTable({
     <div>
       <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
         <div className="overflow-x-auto overflow-y-visible">
-          <table className="w-full text-base table-fixed">
+          <table className="app-data-table w-full text-base table-fixed">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold w-[180px]">

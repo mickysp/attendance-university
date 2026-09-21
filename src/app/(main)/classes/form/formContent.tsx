@@ -1,65 +1,116 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import QRCode from "react-qr-code";
+import { classesApi } from "@/services/api/classes";
+import { scheduleApi } from "@/services/api/schedule";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  ClipboardIcon,
   ArrowLeftIcon,
   ArrowsPointingOutIcon,
+  ClipboardIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useAlert } from "@/context/AlertContext";
-import { useEffect, useState } from "react";
-import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
+import QRCode from "react-qr-code";
+import { appSwal } from "@/lib/swal";
+import type { Teacher } from "@/types/teachers";
+import type { ClassDetails } from "@/types/classes";
+import type { ScheduleFormState } from "@/types/schedule";
 
-type Teacher = {
-  _id: string;
-  name: string;
+import "react-datepicker/dist/react-datepicker.css";
+
+const THAI_MONTHS = [
+  "มกราคม",
+  "กุมภาพันธ์",
+  "มีนาคม",
+  "เมษายน",
+  "พฤษภาคม",
+  "มิถุนายน",
+  "กรกฎาคม",
+  "สิงหาคม",
+  "กันยายน",
+  "ตุลาคม",
+  "พฤศจิกายน",
+  "ธันวาคม",
+];
+
+const formatDateForApi = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
-type Branch = {
-  _id: string;
-  name: string;
-};
+function getClassCodes(classData: Record<string, unknown>): string[] {
+  const source = Array.isArray(classData.classCodes)
+    ? classData.classCodes
+    : Array.isArray(classData.classCode)
+      ? classData.classCode
+      : [];
 
-type ClassCode = {
-  code: string;
-  section: number;
-  branches: Branch[];
-};
+  return source
+    .map((item): string => {
+      if (typeof item === "string") {
+        return item.trim();
+      }
 
-type ClassInfo = {
-  _id: string;
-  className: string;
-  classCodes: ClassCode[];
-  description?: string;
-  teacher?: Teacher;
-  isOpen?: boolean;
-};
+      if (typeof item === "object" && item !== null) {
+        const code = (item as Record<string, unknown>).code;
+        return typeof code === "string" ? code.trim() : "";
+      }
 
-export default function QRPage() {
-  const searchParams = useSearchParams();
+      return "";
+    })
+    .filter(Boolean);
+}
+
+function parseTeacher(item: unknown): Teacher | null {
+  if (typeof item !== "object" || item === null) {
+    return null;
+  }
+
+  const teacher = item as Record<string, unknown>;
+  const name = typeof teacher.name === "string" ? teacher.name.trim() : "";
+
+  if (!name) {
+    return null;
+  }
+
+  return {
+    _id:
+      teacher._id !== undefined && teacher._id !== null
+        ? String(teacher._id)
+        : "",
+    name,
+  };
+}
+
+function getTeachers(classData: Record<string, unknown>): Teacher[] {
+  const source = classData.teachers ?? classData.teacher;
+
+  if (Array.isArray(source)) {
+    return source
+      .map(parseTeacher)
+      .filter((teacher): teacher is Teacher => teacher !== null);
+  }
+
+  const teacher = parseTeacher(source);
+  return teacher ? [teacher] : [];
+}
+
+export default function QRPage({ classId }: { classId: string | null }) {
   const router = useRouter();
 
-  const classId = searchParams.get("classId");
+  const qrDialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const { showAlert } = useAlert();
-
-  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
-
+  const [classInfo, setClassInfo] = useState<ClassDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [openQR, setOpenQR] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [schedule, setSchedule] = useState<{
-    date: Date;
-    startTime: string;
-    endTime: string;
-    lateAfter: number;
-    allowCheckIn: boolean;
-    isOpen: boolean;
-  }>({
+  const [schedule, setSchedule] = useState<ScheduleFormState>({
     date: new Date(),
     startTime: "",
     endTime: "",
@@ -73,6 +124,34 @@ export default function QRPage() {
       ? `${window.location.origin}/check-in?classId=${classId}`
       : "";
 
+  const bounceQRDialog = useCallback(() => {
+    const dialog = qrDialogRef.current;
+
+    if (!dialog) return;
+
+    dialog.classList.remove("app-dialog-attention");
+
+    void dialog.offsetWidth;
+
+    dialog.classList.add("app-dialog-attention");
+  }, []);
+
+  const showSuccess = useCallback((message: string) => {
+    void appSwal.success({
+      title: message,
+    });
+  }, []);
+
+  const showError = useCallback((message: string) => {
+    void appSwal.error(message);
+  }, []);
+
+  const formatThaiDate = (date: Date) => {
+    return `${date.getDate()} ${THAI_MONTHS[date.getMonth()]} ${
+      date.getFullYear() + 543
+    }`;
+  };
+
   useEffect(() => {
     const fetchClass = async () => {
       if (!classId) {
@@ -83,201 +162,185 @@ export default function QRPage() {
       try {
         setLoading(true);
 
-        const res = await fetch(`/api/classes/${classId}`);
+        const response = await classesApi.get(classId, { cache: "no-store" });
 
-        const data = await res.json();
+        const result = await response.json();
 
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || "โหลดข้อมูลวิชาไม่สำเร็จ");
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "โหลดข้อมูลรายวิชาไม่สำเร็จ");
         }
 
-        const rawClass = data.data;
+        const rawClass =
+          result?.data?.class && typeof result.data.class === "object"
+            ? result.data.class
+            : result?.data;
 
-        const teacher: Teacher | undefined =
-          rawClass.teacher &&
-          typeof rawClass.teacher === "object" &&
-          rawClass.teacher._id
-            ? {
-                _id: String(rawClass.teacher._id),
-                name:
-                  typeof rawClass.teacher.name === "string"
-                    ? rawClass.teacher.name
-                    : "",
-              }
-            : undefined;
+        if (!rawClass || typeof rawClass !== "object") {
+          throw new Error("รูปแบบข้อมูลรายวิชาไม่ถูกต้อง");
+        }
 
-        const classCodes: ClassCode[] = Array.isArray(rawClass.classCodes)
-          ? rawClass.classCodes.map(
-              (classCode: {
-                code?: unknown;
-                section?: unknown;
-                branches?: Array<{
-                  _id?: unknown;
-                  name?: unknown;
-                }>;
-              }) => ({
-                code:
-                  typeof classCode.code === "string" ? classCode.code : "",
-
-                section:
-                  typeof classCode.section === "number"
-                    ? classCode.section
-                    : Number(classCode.section) || 1,
-
-                branches: Array.isArray(classCode.branches)
-                  ? classCode.branches.map((branch) => ({
-                      _id: branch?._id ? String(branch._id) : "",
-                      name:
-                        typeof branch?.name === "string"
-                          ? branch.name
-                          : "",
-                    }))
-                  : [],
-              }),
-            )
-          : [];
+        const classData = rawClass as Record<string, unknown>;
 
         setClassInfo({
-          _id: rawClass._id ? String(rawClass._id) : classId,
+          _id:
+            classData._id !== undefined && classData._id !== null
+              ? String(classData._id)
+              : classId,
           className:
-            typeof rawClass.className === "string"
-              ? rawClass.className
-              : "",
-          classCodes,
+            typeof classData.className === "string" ? classData.className : "",
+          classCodes: getClassCodes(classData),
+          teachers: getTeachers(classData),
           description:
-            typeof rawClass.description === "string"
-              ? rawClass.description
+            typeof classData.description === "string"
+              ? classData.description
               : "",
-          teacher,
-          isOpen:
-            typeof rawClass.isOpen === "boolean"
-              ? rawClass.isOpen
-              : undefined,
+          isOpened:
+            typeof classData.isOpened === "boolean"
+              ? classData.isOpened
+              : typeof classData.isOpen === "boolean"
+                ? classData.isOpen
+                : false,
         });
       } catch (error) {
-        showAlert(
-          error instanceof Error
-            ? error.message
-            : "โหลดข้อมูลวิชาไม่สำเร็จ",
-          "error",
+        showError(
+          error instanceof Error ? error.message : "โหลดข้อมูลรายวิชาไม่สำเร็จ",
         );
+
+        setClassInfo(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClass();
-  }, [classId, showAlert]);
+    void fetchClass();
+  }, [classId, showError]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
-      if (!classId) {
-        return;
-      }
+      if (!classId) return;
 
       try {
-        const res = await fetch(`/api/schedule?classId=${classId}`);
+        const response = await scheduleApi.get(classId, { cache: "no-store" });
 
-        const data = await res.json();
+        const result = await response.json();
 
-        if (!res.ok || !data.success) {
-          return;
-        }
+        if (!response.ok || !result.success) return;
 
-        if (Array.isArray(data.data) && data.data.length > 0) {
-          const latest = data.data[data.data.length - 1];
+        const schedules: unknown[] = Array.isArray(result.data)
+          ? result.data
+          : result.data && typeof result.data === "object"
+            ? [result.data]
+            : [];
 
-          setSchedule({
-            date: latest.date
-              ? new Date(latest.date)
-              : new Date(),
+        const latest = schedules.at(-1);
 
-            startTime:
-              typeof latest.startTime === "string"
-                ? latest.startTime
+        if (!latest || typeof latest !== "object") return;
+
+        const scheduleData = latest as Record<string, unknown>;
+        const parsedDate = scheduleData.date
+          ? new Date(String(scheduleData.date))
+          : new Date();
+
+        setSchedule({
+          date: Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate,
+          startTime:
+            typeof scheduleData.startTime === "string"
+              ? scheduleData.startTime
+              : "",
+          endTime:
+            typeof scheduleData.endTime === "string"
+              ? scheduleData.endTime
+              : typeof scheduleData.startTime === "string"
+                ? scheduleData.startTime
                 : "",
-
-            endTime:
-              typeof latest.endTime === "string"
-                ? latest.endTime
-                : latest.startTime || "",
-
-            lateAfter:
-              typeof latest.lateAfter === "number"
-                ? latest.lateAfter
-                : 15,
-
-            allowCheckIn:
-              typeof latest.allowCheckIn === "boolean"
-                ? latest.allowCheckIn
-                : true,
-
-            isOpen:
-              typeof latest.isOpen === "boolean"
-                ? latest.isOpen
-                : true,
-          });
-        }
-      } catch (error) {
-        console.error("FETCH SCHEDULE ERROR:", error);
+          lateAfter:
+            typeof scheduleData.lateAfter === "number"
+              ? scheduleData.lateAfter
+              : 15,
+          allowCheckIn:
+            typeof scheduleData.allowCheckIn === "boolean"
+              ? scheduleData.allowCheckIn
+              : true,
+          isOpen:
+            typeof scheduleData.isOpen === "boolean"
+              ? scheduleData.isOpen
+              : true,
+        });
+      } catch {
+        //
       }
     };
 
-    fetchSchedule();
+    void fetchSchedule();
   }, [classId]);
+
+  useEffect(() => {
+    if (!openQR) return;
+
+    const previousOverflow = document.body.style.overflow;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        bounceQRDialog();
+      }
+
+      if (event.key === "Tab") {
+        event.preventDefault();
+        closeButtonRef.current?.focus();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+    closeButtonRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [openQR, bounceQRDialog]);
 
   const handleSaveSchedule = async () => {
     if (!classId) {
-      showAlert("ไม่พบรายวิชา", "error");
+      showError("ไม่พบรายวิชา");
       return;
     }
 
     if (!schedule.date) {
-      showAlert("กรุณาเลือกวันที่", "error");
+      showError("กรุณาเลือกวันที่");
       return;
     }
 
     if (!schedule.startTime) {
-      showAlert("กรุณาเลือกเวลาเริ่มเรียน", "error");
+      showError("กรุณาเลือกเวลาเริ่มเรียน");
       return;
     }
 
     try {
       setSaving(true);
 
-      const res = await fetch("/api/schedule", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          classId,
-          className: classInfo?.className || "",
-          date: schedule.date.toISOString().split("T")[0],
-          startTime: schedule.startTime,
-          endTime:
-            schedule.endTime || schedule.startTime,
-          lateAfter: schedule.lateAfter,
-          allowCheckIn: schedule.allowCheckIn,
-          isOpen: schedule.isOpen,
-        }),
+      const response = await scheduleApi.create({
+        classId,
+        className: classInfo?.className || "",
+        date: formatDateForApi(schedule.date),
+        startTime: schedule.startTime,
+        endTime: schedule.endTime || schedule.startTime,
+        lateAfter: schedule.lateAfter,
+        allowCheckIn: schedule.allowCheckIn,
+        isOpen: schedule.isOpen,
       });
 
-      const data = await res.json();
+      const result = await response.json();
 
-      if (!res.ok || !data.success) {
-        showAlert(
-          data.message || "บันทึกเวลาไม่สำเร็จ",
-          "error",
-        );
+      if (!response.ok || !result.success) {
+        showError(result.message || "บันทึกเวลาไม่สำเร็จ");
         return;
       }
 
-      showAlert("บันทึกเวลาเรียบร้อย", "success");
-    } catch (error) {
-      console.error("SAVE SCHEDULE ERROR:", error);
-
-      showAlert("เกิดข้อผิดพลาดในการบันทึกเวลา", "error");
+      showSuccess("บันทึกเวลาเรียบร้อย");
+    } catch {
+      showError("เกิดข้อผิดพลาดในการบันทึกเวลา");
     } finally {
       setSaving(false);
     }
@@ -285,63 +348,53 @@ export default function QRPage() {
 
   const handleCopy = async () => {
     if (!link) {
-      showAlert("ไม่พบลิงก์เช็คชื่อ", "error");
+      showError("ไม่พบลิงก์เช็กชื่อ");
       return;
     }
 
     try {
       await navigator.clipboard.writeText(link);
-
-      showAlert("คัดลอกลิงก์แล้ว", "success");
-    } catch (error) {
-      console.error("COPY LINK ERROR:", error);
-
-      showAlert("ไม่สามารถคัดลอกลิงก์ได้", "error");
+      showSuccess("คัดลอกลิงก์แล้ว");
+    } catch {
+      showError("ไม่สามารถคัดลอกลิงก์ได้");
     }
   };
 
   const handleDownloadQR = () => {
-    const svg = document.querySelector(".qr-code svg");
+    const svg = document.querySelector<SVGElement>(".qr-code svg");
 
     if (!svg) {
-      showAlert("ไม่พบ QR Code", "error");
+      showError("ไม่พบ QR Code");
       return;
     }
 
     const serializer = new XMLSerializer();
-
     const svgString = serializer.serializeToString(svg);
-
     const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
 
-    const ctx = canvas.getContext("2d");
-
-    if (!ctx) {
-      showAlert("ไม่สามารถสร้างรูป QR Code ได้", "error");
+    if (!context) {
+      showError("ไม่สามารถสร้างรูป QR Code ได้");
       return;
     }
 
-    const img = new Image();
-
+    const image = new Image();
     const svgBlob = new Blob([svgString], {
       type: "image/svg+xml;charset=utf-8",
     });
-
     const url = URL.createObjectURL(svgBlob);
 
-    img.onload = () => {
+    image.onload = () => {
       const size = 500;
       const padding = 30;
 
       canvas.width = size;
       canvas.height = size;
 
-      ctx.fillStyle = "#ffffff";
-
-      ctx.fillRect(0, 0, size, size);
-
-      ctx.drawImage(
-        img,
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, size, size);
+      context.drawImage(
+        image,
         padding,
         padding,
         size - padding * 2,
@@ -352,388 +405,365 @@ export default function QRPage() {
 
       const downloadLink = document.createElement("a");
 
-      downloadLink.download = `เช็คชื่อวิชา ${
+      downloadLink.download = `เช็กชื่อวิชา-${
         classInfo?.className || "ไม่ทราบชื่อวิชา"
       }.png`;
-
       downloadLink.href = canvas.toDataURL("image/png");
-
       downloadLink.click();
     };
 
-    img.onerror = () => {
+    image.onerror = () => {
       URL.revokeObjectURL(url);
-
-      showAlert("ไม่สามารถสร้าง QR Code ได้", "error");
+      showError("ไม่สามารถสร้างรูป QR Code ได้");
     };
 
-    img.src = url;
+    image.src = url;
   };
 
-
   const getLateTime = () => {
-    if (!schedule.startTime) {
-      return "";
-    }
+    if (!schedule.startTime) return "";
 
-    const [hours, minutes] = schedule.startTime
-      .split(":")
-      .map(Number);
+    const [hours, minutes] = schedule.startTime.split(":").map(Number);
 
-    if (
-      Number.isNaN(hours) ||
-      Number.isNaN(minutes)
-    ) {
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
       return "";
     }
 
     const date = new Date();
 
     date.setHours(hours);
-
-    date.setMinutes(
-      minutes + schedule.lateAfter,
-    );
+    date.setMinutes(minutes + schedule.lateAfter);
 
     return date.toTimeString().slice(0, 5);
   };
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 overflow-y-auto p-6 font-noto relative">
+      <main className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-300/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-500 border-t-transparent" />
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
 
-              <p className="text-gray-600 text-sm">
-                กำลังโหลด...
-              </p>
+              <p className="text-base font-medium text-white">กำลังโหลด...</p>
             </div>
           </div>
         )}
 
         {!loading && (
-          <div className="flex flex-col bg-white rounded-2xl px-6 pt-6 pb-8">
-            <div className="mb-6 flex items-center gap-3">
+          <div className="flex flex-col rounded-2xl bg-white px-6 pb-8 pt-6">
+            <header className="mb-6 flex items-center gap-3">
               <button
                 type="button"
+                aria-label="ย้อนกลับ"
                 onClick={() => router.back()}
-                className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100 transition cursor-pointer"
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 transition hover:bg-gray-100"
               >
-                <ArrowLeftIcon className="w-3 h-3 text-gray-700" />
+                <ArrowLeftIcon className="h-3 w-3 text-gray-700" />
               </button>
 
               <div>
                 <h1 className="text-[26px] font-semibold text-gray-800">
-                  ข้อมูลแบบฟอร์มเช็คชื่อ
+                  ข้อมูลแบบฟอร์มเช็กชื่อ
                 </h1>
 
                 <p className="text-sm text-gray-500">
                   สำหรับให้นักศึกษาสแกนเข้าเรียน
                 </p>
               </div>
-            </div>
+            </header>
 
             {!classId ? (
-              <p className="text-gray-500 text-sm">
-                ไม่พบรายวิชา
-              </p>
+              <p className="text-sm text-gray-500">ไม่พบรายวิชา</p>
             ) : !classInfo ? (
-              <p className="text-gray-500 text-sm">
-                ไม่พบข้อมูลรายวิชา
-              </p>
+              <p className="text-sm text-gray-500">ไม่พบข้อมูลรายวิชา</p>
             ) : (
               <>
-                <div className="bg-blue-50 border border-gray-200 rounded-xl p-4 mb-4">
-                  <p className="text-sm text-gray-500 mb-1">
-                    วิชา
-                  </p>
+                <section className="mb-4 rounded-xl border border-gray-200 bg-blue-50 p-4">
+                  <p className="mb-1 text-sm text-gray-500">วิชา</p>
 
                   <h2 className="text-base font-semibold text-gray-800">
                     {classInfo.className || "-"}
                   </h2>
 
-                  <div className="flex flex-col gap-3 mt-3 text-sm text-gray-600">
+                  <div className="mt-3 flex flex-col gap-3 text-sm text-gray-600">
                     <div>
-                      <span className="text-gray-500">
-                        อาจารย์ประจำวิชา:
-                      </span>{" "}
+                      <span className="text-gray-500">อาจารย์ผู้สอน:</span>{" "}
                       <span className="font-medium text-gray-700">
-                        {classInfo.teacher?.name || "-"}
+                        {classInfo.teachers.length > 0
+                          ? classInfo.teachers
+                              .map((teacher) => teacher.name)
+                              .filter(Boolean)
+                              .join(", ")
+                          : "-"}
                       </span>
                     </div>
 
-                    <div>
-                      <span className="text-gray-500">
-                        รหัสวิชา / Section:
-                      </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="shrink-0 text-gray-500">รหัสวิชา:</span>
 
-                      {classInfo.classCodes.length === 0 ? (
-                        <span className="ml-2">
-                          -
-                        </span>
+                      {classInfo.classCodes.length > 0 ? (
+                        classInfo.classCodes.map((code, index) => (
+                          <span
+                            key={`${code}-${index}`}
+                            className="rounded-lg border border-blue-100 bg-white px-3 py-1.5 font-medium text-gray-700"
+                          >
+                            {code || "-"}
+                          </span>
+                        ))
                       ) : (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {classInfo.classCodes.map(
-                            (classCode, index) => (
-                              <div
-                                key={`${classCode.code}-${classCode.section}-${index}`}
-                                className="bg-white border border-blue-100 rounded-lg px-3 py-2"
-                              >
-                                <div className="font-medium text-gray-700">
-                                  {classCode.code || "-"}
-                                  {" / "}
-                                  Section{" "}
-                                  {classCode.section}
-                                </div>
-
-                                {classCode.branches.length >
-                                  0 && (
-                                  <div className="mt-1 text-xs text-gray-500">
-                                    สาขา:{" "}
-                                    {classCode.branches
-                                      .map(
-                                        (branch) =>
-                                          branch.name,
-                                      )
-                                      .filter(Boolean)
-                                      .join(", ") ||
-                                      "-"}
-                                  </div>
-                                )}
-                              </div>
-                            ),
-                          )}
-                        </div>
+                        <span className="font-medium text-gray-700">-</span>
                       )}
                     </div>
-                  </div>
-                </div>
 
-                <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-5 mb-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm text-gray-800">
-                      ตั้งเวลาเช็คชื่อ
-                    </h3>
+                    {classInfo.description && (
+                      <div>
+                        <span className="text-gray-500">รายละเอียด:</span>{" "}
+                        <span className="text-gray-700">
+                          {classInfo.description}
+                        </span>
+                      </div>
+                    )}
                   </div>
+                </section>
 
-                  <div className="flex items-end gap-4 flex-wrap">
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                <section className="mb-8 mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+                  <h3 className="mb-4 text-sm text-gray-800">
+                    ตั้งเวลาเช็กชื่อ
+                  </h3>
+
+                  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         วันที่
                       </label>
 
                       <DatePicker
                         selected={schedule.date}
-                        onChange={(date: Date | null) =>
-                          setSchedule((prev) => ({
-                            ...prev,
-                            date:
-                              date || new Date(),
-                          }))
-                        }
+                        onChange={(date: Date | null) => {
+                          setSchedule((previous) => ({
+                            ...previous,
+                            date: date || new Date(),
+                          }));
+                        }}
                         dateFormat="dd/MM/yyyy"
-                        className="w-full h-[46px] rounded-xl border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                        calendarClassName="rounded-2xl border border-gray-200 shadow-2xl overflow-hidden"
+                        value={formatThaiDate(schedule.date)}
+                        className="h-[46px] w-full rounded-xl border border-gray-200 bg-white px-4 text-left text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-[250px]"
+                        calendarClassName="rounded-2xl border border-gray-200 overflow-hidden"
                         popperClassName="z-50"
                       />
                     </div>
 
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         เวลาเริ่มเรียน
                       </label>
 
                       <input
                         type="time"
                         value={schedule.startTime}
-                        onChange={(e) =>
-                          setSchedule((prev) => ({
-                            ...prev,
-                            startTime:
-                              e.target.value,
-                          }))
-                        }
-                        className="border border-gray-200 rounded-lg px-3 py-2 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        onChange={(event) => {
+                          setSchedule((previous) => ({
+                            ...previous,
+                            startTime: event.target.value,
+                          }));
+                        }}
+                        className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-[250px]"
                       />
                     </div>
 
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         เวลาเลิกเรียน
                       </label>
 
                       <input
                         type="time"
                         value={schedule.endTime}
-                        onChange={(e) =>
-                          setSchedule((prev) => ({
-                            ...prev,
-                            endTime:
-                              e.target.value,
-                          }))
-                        }
-                        className="border border-gray-200 rounded-lg px-3 py-2 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        onChange={(event) => {
+                          setSchedule((previous) => ({
+                            ...previous,
+                            endTime: event.target.value,
+                          }));
+                        }}
+                        className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-[250px]"
                       />
                     </div>
 
-                    <div className="flex flex-col">
-                      <label className="text-xs text-gray-500 mb-1">
+                    <div className="flex w-full flex-col sm:w-auto">
+                      <label className="mb-1 text-xs text-gray-500">
                         มาสายได้ภายใน
                       </label>
 
-                      <div className="relative">
+                      <div className="relative w-full sm:w-[250px]">
                         <input
                           type="number"
                           min={0}
                           max={120}
                           value={schedule.lateAfter}
-                          onChange={(e) =>
-                            setSchedule((prev) => ({
-                              ...prev,
-                              lateAfter: Math.max(
-                                0,
-                                Math.min(
-                                  120,
-                                  Number(
-                                    e.target.value,
-                                  ),
-                                ),
-                              ),
-                            }))
-                          }
-                          className="border border-gray-200 rounded-lg px-3 py-2 pr-10 w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          onChange={(event) => {
+                            const value = Number(event.target.value);
+
+                            setSchedule((previous) => ({
+                              ...previous,
+                              lateAfter: Number.isNaN(value)
+                                ? 0
+                                : Math.max(0, Math.min(120, value)),
+                            }));
+                          }}
+                          className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 pr-14 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
 
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                           นาที
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-end">
-                      <button
-                        type="button"
-                        disabled={saving}
-                        onClick={handleSaveSchedule}
-                        className="px-6 py-2.5 bg-blue-500 text-white rounded-lg text-sm shadow hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        {saving
-                          ? "กำลังบันทึก..."
-                          : "บันทึก"}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={handleSaveSchedule}
+                      className="h-[46px] w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-2.5 text-sm text-white shadow transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                      {saving ? "กำลังบันทึก..." : "บันทึก"}
+                    </button>
                   </div>
 
                   {schedule.startTime && (
                     <div className="mt-4 text-xs text-gray-500">
-                      เริ่ม:{" "}
-                      <b>
-                        {schedule.startTime}
-                      </b>{" "}
-                      | มาสายถึง:{" "}
-                      <b className="text-yellow-600">
-                        {getLateTime()}
-                      </b>
+                      เริ่ม: <b>{schedule.startTime}</b>
+                      {" | "}
+                      มาสายถึง:{" "}
+                      <b className="text-yellow-600">{getLateTime()}</b>
                     </div>
                   )}
-                </div>
+                </section>
 
-                <div className="flex flex-col h-full">
+                <section className="flex h-full flex-col">
                   <div className="mb-6">
                     <label className="text-sm text-gray-700">
-                      ลิงก์เช็คชื่อ
+                      ลิงก์เช็กชื่อ
                     </label>
 
-                    <div className="flex gap-2 mt-1">
+                    <div className="mt-1 flex gap-2">
                       <input
                         value={link}
                         readOnly
-                        className="form-input-card flex-1 text-sm"
+                        className="form-input-card min-w-0 flex-1 text-sm"
                       />
 
                       <button
                         type="button"
+                        aria-label="คัดลอกลิงก์"
                         onClick={handleCopy}
-                        className="px-3 border rounded-md hover:bg-gray-100 cursor-pointer"
+                        className="cursor-pointer rounded-md border border-gray-200 px-3 transition hover:bg-gray-100"
                       >
-                        <ClipboardIcon className="w-4 h-4" />
+                        <ClipboardIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                    <div className="qr-code relative p-5 border border-gray-300 rounded-2xl bg-white">
+                  <div className="flex flex-1 flex-col items-center justify-center gap-3">
+                    <div className="qr-code relative w-full max-w-[390px] rounded-2xl border border-gray-300 bg-white p-3 sm:p-5">
                       <QRCode
                         value={link || "loading"}
                         size={350}
+                        className="h-auto w-full"
                       />
 
                       <button
                         type="button"
                         aria-label="ขยาย QR Code"
                         onClick={() => setOpenQR(true)}
-                        className="absolute top-2 right-2 bg-white border border-gray-300 rounded-md p-1 hover:bg-gray-100 cursor-pointer"
+                        className="absolute right-2 top-2 cursor-pointer rounded-md border border-gray-300 bg-white p-1 transition hover:bg-gray-100"
                       >
-                        <ArrowsPointingOutIcon className="w-4 h-4 text-gray-600" />
+                        <ArrowsPointingOutIcon className="h-4 w-4 text-gray-600" />
                       </button>
                     </div>
 
-                    <p className="text-sm text-gray-500 text-center">
-                      QR Code เช็คชื่อ
+                    <p className="text-center text-sm text-gray-500">
+                      QR Code เช็กชื่อ
                     </p>
 
                     <button
                       type="button"
                       onClick={() => setOpenQR(true)}
-                      className="text-sm text-blue-500 hover:underline cursor-pointer"
+                      className="cursor-pointer text-sm text-blue-500 hover:underline"
                     >
                       คลิกเพื่อขยาย QR Code
                     </button>
                   </div>
-                </div>
+                </section>
               </>
             )}
           </div>
         )}
-      </div>
+      </main>
 
       {openQR && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 font-noto"
-          onClick={() => setOpenQR(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="qr-dialog-title"
+          className="app-dialog-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-3 font-noto backdrop-blur-[2px] sm:p-6"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              bounceQRDialog();
+            }
+          }}
         >
           <div
-            className="bg-white rounded-3xl shadow-xl w-full max-w-[800px] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            ref={qrDialogRef}
+            className="app-dialog-panel max-h-[95vh] w-full max-w-[800px] overflow-y-auto rounded-2xl bg-white shadow-2xl sm:rounded-3xl"
+            onAnimationEnd={(event) => {
+              if (event.animationName === "app-dialog-attention") {
+                event.currentTarget.classList.remove("app-dialog-attention");
+              }
+            }}
           >
-            <div className="flex items-center justify-between px-6 pt-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                QR Code เช็คชื่อ
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
+              <h2
+                id="qr-dialog-title"
+                className="text-base font-semibold text-gray-800 sm:text-lg"
+              >
+                QR Code เช็กชื่อ
               </h2>
 
               <button
+                ref={closeButtonRef}
                 type="button"
+                aria-label="ปิดหน้าต่าง QR Code"
                 onClick={() => setOpenQR(false)}
-                className="p-1 rounded-md hover:bg-gray-100 transition cursor-pointer"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                <XMarkIcon className="w-6 h-6 text-gray-600" />
+                <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
-            <div className="p-8 flex flex-col items-center gap-6">
-              <div className="border border-gray-300 p-4 rounded-xl">
+            <div className="flex flex-col items-center gap-5 p-4 sm:gap-6 sm:p-8">
+              <div className="w-full max-w-[480px] rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
                 <QRCode
                   value={link || "loading"}
                   size={480}
+                  className="h-auto w-full"
                 />
+              </div>
+
+              <div className="flex flex-col items-center gap-2 text-center">
+                <p className="text-sm font-medium text-gray-700">
+                  {classInfo?.className || "QR Code เช็กชื่อ"}
+                </p>
+
+                <p className="text-xs text-gray-400">
+                  สแกน QR Code เพื่อเข้าสู่หน้าเช็กชื่อ
+                </p>
               </div>
 
               <button
                 type="button"
                 onClick={handleDownloadQR}
-                className="px-6 py-2 rounded-xl border border-blue-400 text-blue-400 font-semibold hover:bg-blue-50 transition cursor-pointer"
+                className="cursor-pointer rounded-xl border border-blue-500 px-6 py-2.5 text-sm font-semibold text-blue-500 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
               >
                 บันทึก QR Code
               </button>

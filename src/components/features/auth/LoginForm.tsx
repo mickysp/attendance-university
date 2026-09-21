@@ -1,13 +1,23 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+} from "@heroicons/react/24/solid";
 import { useAlert } from "@/context/AlertContext";
 import { useAuthStore } from "@/stores/auth";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  onLoading: () => void;
+}
+
+export default function LoginForm({
+  onLoading,
+}: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -39,23 +49,38 @@ export default function LoginForm() {
     setUsernameError("");
     setPasswordError("");
 
+    if (!username.trim() || !password.trim()) {
+      if (!username.trim()) setUsernameError("กรุณากรอกชื่อผู้ใช้");
+      if (!password.trim()) setPasswordError("กรุณากรอกรหัสผ่าน");
+      return;
+    }
+
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          username,
-          password,
-          remember,
-        }),
+      const res = await authApi.login({
+        username,
+        password,
+        remember,
+      }).catch(() => {
+        throw new Error("เชื่อมต่อระบบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง");
       });
 
-      const data = await res.json();
+      if (res.status === 404) {
+        throw new Error("ระบบยังไม่ได้ตรวจสอบชื่อผู้ใช้และรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ");
+      }
 
-      if (data.success) {
+      if (res.status >= 500) {
+        throw new Error("ระบบเข้าสู่ระบบขัดข้อง กรุณาลองใหม่ภายหลัง ยังไม่สามารถยืนยันได้ว่าชื่อผู้ใช้หรือรหัสผ่านถูกต้อง");
+      }
+
+      const data = await res.json().catch(() => {
+        throw new Error("ระบบตอบกลับไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ");
+      });
+
+      if (!data || typeof data.success !== "boolean") {
+        throw new Error("ระบบตอบกลับไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ");
+      }
+
+      if (res.ok && data.success) {
         if (remember) {
           saveRememberUser();
         } else {
@@ -71,18 +96,29 @@ export default function LoginForm() {
           return;
         }
 
-        if (role === "admin") {
+        if (role === "admin" || role === "teacher") {
+          onLoading();
           router.push("/dashboard");
-        } else if (role === "teacher") {
-          router.push("/dashboard");
-        } else {
-          showAlert("role ไม่ถูกต้อง", "error");
+
+          return;
         }
+
+        showAlert("role ไม่ถูกต้อง", "error");
       } else {
-        showAlert(data.message || "เข้าสู่ระบบไม่สำเร็จ", "error");
+        showAlert(
+          typeof data.message === "string" && data.message
+            ? data.message
+            : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองอีกครั้ง",
+          "error"
+        );
       }
     } catch (error) {
-      showAlert("เกิดข้อผิดพลาด", "error");
+      showAlert(
+        error instanceof Error
+          ? error.message
+          : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองอีกครั้ง",
+        "error"
+      );
     }
   };
 
@@ -95,19 +131,14 @@ export default function LoginForm() {
         min-w-0
         shrink-0
         mx-auto
-
         rounded-xl
         bg-white
         shadow-xl
-
         p-5
-
         sm:w-[380px]
         sm:p-6
-
         md:w-[420px]
         md:p-8
-
         lg:w-[448px]
       "
     >
@@ -119,11 +150,8 @@ export default function LoginForm() {
           flex-col
           gap-4
           font-noto
-
           mt-2
-
           sm:mt-3
-
           md:mt-4
         "
       >
@@ -153,7 +181,9 @@ export default function LoginForm() {
           />
 
           {usernameError && (
-            <p className="mt-1 text-xs text-red-500">{usernameError}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {usernameError}
+            </p>
           )}
         </div>
 
@@ -180,8 +210,14 @@ export default function LoginForm() {
 
           <button
             type="button"
-            aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
-            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={
+              showPassword
+                ? "ซ่อนรหัสผ่าน"
+                : "แสดงรหัสผ่าน"
+            }
+            onClick={() =>
+              setShowPassword((prev) => !prev)
+            }
             className="
               absolute
               right-3
@@ -204,7 +240,9 @@ export default function LoginForm() {
           </button>
 
           {passwordError && (
-            <p className="mt-1 text-xs text-red-500">{passwordError}</p>
+            <p className="mt-1 text-xs text-red-500">
+              {passwordError}
+            </p>
           )}
         </div>
 
@@ -221,7 +259,9 @@ export default function LoginForm() {
           <input
             type="checkbox"
             checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
+            onChange={(e) =>
+              setRemember(e.target.checked)
+            }
             className="h-4 w-4 shrink-0"
           />
 
