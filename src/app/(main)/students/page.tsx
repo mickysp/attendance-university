@@ -1,5 +1,8 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
+import { majorsApi } from "@/services/api/majors";
+import { studentsApi } from "@/services/api/students";
 import { useEffect, useState, useRef } from "react";
 import {
   DocumentArrowUpIcon,
@@ -143,7 +146,7 @@ export default function StudentsPage() {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const res = await fetch("/api/classes");
+        const res = await classesApi.list();
         const data: { success: boolean; data: ClassDoc[] } = await res.json();
 
         if (data.success) {
@@ -162,7 +165,7 @@ export default function StudentsPage() {
 
     const fetchMajors = async () => {
       try {
-        const res = await fetch("/api/majors");
+        const res = await majorsApi.list();
         const data: { success: boolean; data: MajorDoc[] } = await res.json();
 
         if (data.success) {
@@ -182,11 +185,7 @@ export default function StudentsPage() {
     try {
       setLoading(true);
 
-      const query = year ? `?year=${year}` : "";
-
-      const url = `/api/students${query}`;
-
-      const res = await fetch(url);
+      const res = await studentsApi.list({ year: year || undefined });
 
       if (!res.ok) {
         const text = await res.text();
@@ -219,7 +218,7 @@ export default function StudentsPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 p-6 font-noto relative">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
             <div className="flex flex-col items-center gap-4">
@@ -606,10 +605,7 @@ export default function StudentsPage() {
                     formData.append("major", selectedMajor);
                     formData.append("section", section);
 
-                    const res = await fetch("/api/students/upload-file", {
-                      method: "POST",
-                      body: formData,
-                    });
+                    const res = await studentsApi.uploadFile(formData);
 
                     const result = await res.json();
 

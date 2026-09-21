@@ -1,14 +1,23 @@
 @import "tailwindcss";
 
+/* =========================================================
+   Theme variables
+========================================================= */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
   --primary: #3085fe;
   --primary-hover: #227bf8;
+
   --input-border: #d4d4d8;
   --input-border-hover: #c1c1c5;
+
   --navbar-font: #0e69e9;
   --card: #f9fbfc;
+
+  --table-header-padding-y: 16px;
 }
 
 @theme inline {
@@ -18,42 +27,30 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* =========================================================
+   Base
+========================================================= */
 
-@keyframes progressBar {
-  0% {
-    width: 100%;
-  }
-  100% {
-    width: 0%;
-  }
-}
-
-.animate-progress {
-  animation: progressBar 3s linear forwards;
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+html {
+  background: var(--background);
 }
 
 body {
-  background: #ffffff !important;
+  background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* =========================================================
+   Fonts
+========================================================= */
 
 .font-prompt {
   font-family: var(--font-prompt);
@@ -67,103 +64,178 @@ body {
   font-family: var(--font-noto);
 }
 
-/* ---------- form global style ---------- */
+/* =========================================================
+   Forms
+========================================================= */
 
-.form-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--input-border);
-  border-radius: 8px;
-  outline: none;
-}
-
+.form-input,
 .form-input-card {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--input-border);
   border-radius: 8px;
   outline: none;
-  background-color: white;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.form-input-card {
+  background-color: #ffffff;
+}
+
+.form-input:hover,
+.form-input-card:hover {
+  border-color: var(--input-border-hover);
+}
+
+.form-input:focus,
+.form-input-card:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgb(48 133 254 / 15%);
 }
 
 .form-button {
   width: 100%;
   padding: 8px;
-  background: var(--primary);
-  color: white;
   border-radius: 8px;
-  transition: 0.2s;
+  background: var(--primary);
+  color: #ffffff;
   cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    opacity 160ms ease,
+    transform 120ms ease;
 }
 
-.form-button:hover {
+.form-button:hover:not(:disabled) {
   background: var(--primary-hover);
 }
 
-/* =========================
-   React Datepicker Premium
-========================= */
-
-.react-datepicker {
-  border: none !important;
-  border-radius: 24px !important;
-  overflow: hidden !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  backdrop-filter: blur(12px) !important;
-  font-family: inherit !important;
-  padding: 10px !important;
-
-  box-shadow:
-    0 20px 40px rgba(15, 23, 42, 0.12),
-    0 8px 18px rgba(15, 23, 42, 0.08) !important;
+.form-button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
-/* Header */
+.form-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* =========================================================
+   Data tables
+========================================================= */
+
+.app-data-table > thead > tr > th {
+  padding-block: var(--table-header-padding-y);
+  vertical-align: middle;
+}
+
+/* =========================================================
+  Dialog
+========================================================= */
+
+.app-dialog-backdrop {
+  opacity: 1;
+}
+
+.app-dialog-panel {
+  opacity: 1;
+  transform: none;
+}
+
+.app-dialog-attention {
+  animation: app-dialog-shake 220ms ease-in-out !important;
+}
+
+@keyframes app-dialog-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-3px);
+  }
+
+  50% {
+    transform: translateX(3px);
+  }
+
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+/* =========================================================
+   Progress
+========================================================= */
+
+.animate-progress {
+  animation: progress-bar 3s linear forwards;
+}
+
+@keyframes progress-bar {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
+
+/* =========================================================
+   React Datepicker
+========================================================= */
+
+.react-datepicker {
+  overflow: hidden !important;
+  padding: 10px !important;
+  border: none !important;
+  border-radius: 24px !important;
+  background: rgb(255 255 255 / 96%) !important;
+  box-shadow:
+    0 20px 40px rgb(15 23 42 / 12%),
+    0 8px 18px rgb(15 23 42 / 8%) !important;
+  backdrop-filter: blur(12px) !important;
+  font-family: inherit !important;
+}
 
 .react-datepicker__header {
-  background: transparent !important;
-  border-bottom: none !important;
   padding-top: 6px !important;
   padding-bottom: 12px !important;
+  border-bottom: none !important;
+  background: transparent !important;
 }
 
 .react-datepicker__current-month {
+  margin-bottom: 12px !important;
+  color: #111827 !important;
   font-size: 16px !important;
   font-weight: 700 !important;
-  color: #111827 !important;
-  margin-bottom: 12px !important;
 }
-
-/* Weekday */
 
 .react-datepicker__day-name {
   width: 2.4rem !important;
-  line-height: 2.4rem !important;
-
   color: #94a3b8 !important;
   font-size: 12px !important;
   font-weight: 600 !important;
+  line-height: 2.4rem !important;
 }
-
-/* Day */
 
 .react-datepicker__day {
   width: 2.4rem !important;
-  line-height: 2.4rem !important;
   margin: 0.2rem !important;
-
   border-radius: 14px !important;
-
+  color: #1e293b !important;
   font-size: 14px !important;
   font-weight: 500 !important;
-  color: #1e293b !important;
-
+  line-height: 2.4rem !important;
   transition:
-    all 0.18s ease,
-    transform 0.12s ease !important;
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 120ms ease !important;
 }
-
-/* Hover */
 
 .react-datepicker__day:hover {
   background: #eff6ff !important;
@@ -171,58 +243,39 @@ body {
   transform: scale(1.08);
 }
 
-/* Selected */
-
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background: linear-gradient(
-    135deg,
-    #3b82f6,
-    #2563eb
-  ) !important;
-
-  color: white !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  box-shadow: 0 6px 14px rgb(37 99 235 / 35%) !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
-
-  box-shadow:
-    0 6px 14px rgba(37, 99, 235, 0.35) !important;
 }
-
-/* Today */
 
 .react-datepicker__day--today {
-  background: #f8fafc !important;
   border: 1px solid #dbeafe !important;
-  font-weight: 700 !important;
+  background: #f8fafc !important;
   color: #2563eb !important;
+  font-weight: 700 !important;
 }
-
-/* Outside month */
 
 .react-datepicker__day--outside-month {
   color: #cbd5e1 !important;
 }
-
-/* Navigation */
 
 .react-datepicker__navigation {
   top: 16px !important;
 }
 
 .react-datepicker__navigation-icon::before {
+  width: 8px !important;
+  height: 8px !important;
   border-color: #64748b !important;
   border-width: 2px 2px 0 0 !important;
-  height: 8px !important;
-  width: 8px !important;
 }
-
-/* Triangle */
 
 .react-datepicker__triangle {
   display: none !important;
 }
-
-/* Popper */
 
 .react-datepicker-popper {
   z-index: 9999 !important;
@@ -230,4 +283,20 @@ body {
 
 .react-datepicker__month-container {
   padding: 8px !important;
+}
+
+/* =========================================================
+   Accessibility
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .app-dialog-backdrop,
+  .app-dialog-panel,
+  .animate-progress {
+    animation: none !important;
+  }
+
+  .react-datepicker__day {
+    transition: none !important;
+  }
 }

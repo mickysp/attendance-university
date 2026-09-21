@@ -1,5 +1,8 @@
 "use client";
 
+import { checkInApi } from "@/services/api/check-in";
+import { classesApi } from "@/services/api/classes";
+import { attendanceApi } from "@/services/api/attendance";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -9,43 +12,15 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { useRef } from "react";
-import { useConfirm } from "@/context/ConfirmContext";
+import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
+import type {
+  CheckInClassInfo,
+  CheckInConfigFields,
+  CheckInFormData,
+} from "@/types/check-in";
 
-type FormConfig = {
-  prefix: boolean;
-  firstname: boolean;
-  lastname: boolean;
-  studentId: boolean;
-  section: boolean;
-  email: boolean;
-  photo: boolean;
-  note: boolean;
-  location: boolean;
-};
-
-type FormData = {
-  prefix?: string;
-  firstname?: string;
-  lastname?: string;
-  studentId?: string;
-  section?: string;
-  email?: string;
-  note?: string;
-  photo?: string;
-  location?: {
-    lat: number;
-    lng: number;
-  };
-};
-
-type ClassInfo = {
-  className: string;
-  classCode?: string;
-  teacher?: string;
-};
-
-const DEFAULT_CONFIG: FormConfig = {
+const DEFAULT_CONFIG: CheckInConfigFields = {
   prefix: true,
   firstname: true,
   lastname: true,
@@ -61,8 +36,8 @@ export default function CheckInStudentPage() {
   const searchParams = useSearchParams();
   const classId = searchParams.get("classId");
 
-  const [config, setConfig] = useState<FormConfig | null>(null);
-  const [form, setForm] = useState<FormData>({});
+  const [config, setConfig] = useState<CheckInConfigFields | null>(null);
+  const [form, setForm] = useState<CheckInFormData>({});
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState(false);
@@ -78,7 +53,7 @@ export default function CheckInStudentPage() {
   const [openPrefix, setOpenPrefix] = useState(false);
   const prefixRef = useRef<HTMLDivElement>(null);
 
-  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
+  const [classInfo, setClassInfo] = useState<CheckInClassInfo | null>(null);
 
   const isEmailValid = (email?: string) =>
     !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -127,7 +102,7 @@ export default function CheckInStudentPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const res = await fetch(`/api/check-in?classId=${classId}`);
+        const res = await checkInApi.getConfig(classId);
         const data = await res.json();
 
         if (data.success && data.config) {
@@ -154,7 +129,7 @@ export default function CheckInStudentPage() {
       if (!classId) return;
 
       try {
-        const res = await fetch(`/api/classes/${classId}`);
+        const res = await classesApi.get(classId);
         const data = await res.json();
 
         if (data.success) {
@@ -220,6 +195,11 @@ export default function CheckInStudentPage() {
   };
 
   const handleSubmit = async () => {
+    if (!classId) {
+      showAlert("ไม่พบข้อมูลรายวิชา", "error");
+      return;
+    }
+
     if (!isFormValid()) {
       showConfirm("กรุณากรอกข้อมูลให้ครบ", () => {});
       return;
@@ -239,15 +219,9 @@ export default function CheckInStudentPage() {
           name: fullName,
         };
 
-        const res = await fetch("/api/attendance", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            classId,
-            ...payload,
-          }),
+        const res = await attendanceApi.submit({
+          classId,
+          ...payload,
         });
 
         const data = await res.json();
