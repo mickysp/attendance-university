@@ -6,14 +6,10 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-
-type Subject = {
-  id: string;
-  name: string;
-};
+import type { AttendanceSubject } from "@/types/attendance";
 
 type Props = {
-  subjects: Subject[];
+  subjects: AttendanceSubject[];
   value: string | null;
   onChange: (id: string | null) => void;
 

@@ -1,5 +1,8 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
+import { majorsApi } from "@/services/api/majors";
+import { studentsApi } from "@/services/api/students";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -68,8 +71,8 @@ export default function CreateStudentPage() {
     const fetchData = async () => {
       try {
         const [classRes, majorRes] = await Promise.all([
-          fetch("/api/classes"),
-          fetch("/api/majors"),
+          classesApi.list(),
+          majorsApi.list(),
         ]);
 
         const classData = await classRes.json();
@@ -154,13 +157,7 @@ export default function CreateStudentPage() {
         })),
       };
 
-      const res = await fetch("/api/students/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await studentsApi.upload(payload);
 
       const data = await res.json();
 

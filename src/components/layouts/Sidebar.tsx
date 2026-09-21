@@ -1,5 +1,6 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
 import {
   HomeIcon,
   UserGroupIcon,
@@ -59,9 +60,7 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("/api/auth/user", {
-          credentials: "include",
-        });
+        const res = await authApi.getUser();
 
         const data = await res.json();
 
@@ -103,10 +102,7 @@ export default function Sidebar() {
     setMobileOpen(false);
 
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await authApi.logout();
     } catch (err) {
       console.error("Logout error:", err);
     } finally {

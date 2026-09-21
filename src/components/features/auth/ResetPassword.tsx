@@ -1,5 +1,6 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
 import { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
@@ -29,16 +30,10 @@ export default function ResetPassword({ email, otp, onBack }: Props) {
       setLoading(true);
       setError("");
 
-      const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          identifier: email,
-          otp,
-          newPassword: password,
-        }),
+      const res = await authApi.resetPassword({
+        identifier: email,
+        otp,
+        newPassword: password,
       });
 
       const data = await res.json();

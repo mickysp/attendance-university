@@ -1,5 +1,6 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/context/AlertContext";
 import {
@@ -95,9 +96,7 @@ export default function Table({
       "ลบข้อมูลรายวิชา?",
       async () => {
         try {
-          const res = await fetch(`/api/classes/delete?id=${id}`, {
-            method: "DELETE",
-          });
+          const res = await classesApi.remove(id);
 
           const result = await res.json();
 
@@ -121,7 +120,7 @@ export default function Table({
   };
 
   const handleCheckIn = (id: string) => {
-    router.push(`/classes/form?classId=${id}`);
+    router.push(`/classes/form/${encodeURIComponent(id)}`);
   };
 
   const renderClassCodes = (classCodes: string[]) => {

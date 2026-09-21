@@ -61,3 +61,31 @@ export interface AttendanceResponse {
     score: number;
   };
 }
+
+export interface AttendanceLog {
+  date?: string;
+  timeText: string;
+  status?: string;
+  score?: number;
+  photo?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface AttendanceSubject {
+  id: string;
+  name: string;
+}
+
+export interface AttendanceClassOption {
+  _id: string;
+  className?: string;
+  classCode?: string;
+  name?: string;
+  title?: string;
+  isOpen?: boolean;
+  hasStudents?: boolean;
+  academicYear?: number;
+}

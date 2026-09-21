@@ -1,7 +1,9 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
+import { scheduleApi } from "@/services/api/schedule";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeftIcon,
   ArrowsPointingOutIcon,
@@ -11,31 +13,11 @@ import {
 import DatePicker from "react-datepicker";
 import QRCode from "react-qr-code";
 import { appSwal } from "@/lib/swal";
+import type { Teacher } from "@/types/teachers";
+import type { ClassDetails } from "@/types/classes";
+import type { ScheduleFormState } from "@/types/schedule";
 
 import "react-datepicker/dist/react-datepicker.css";
-
-type Teacher = {
-  _id: string;
-  name: string;
-};
-
-type ClassInfo = {
-  _id: string;
-  className: string;
-  classCodes: string[];
-  teachers: Teacher[];
-  description?: string;
-  isOpened: boolean;
-};
-
-type Schedule = {
-  date: Date;
-  startTime: string;
-  endTime: string;
-  lateAfter: number;
-  allowCheckIn: boolean;
-  isOpen: boolean;
-};
 
 const THAI_MONTHS = [
   "มกราคม",
@@ -117,20 +99,18 @@ function getTeachers(classData: Record<string, unknown>): Teacher[] {
   return teacher ? [teacher] : [];
 }
 
-export default function QRPage() {
+export default function QRPage({ classId }: { classId: string | null }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const classId = searchParams.get("classId");
 
   const qrDialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
+  const [classInfo, setClassInfo] = useState<ClassDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [openQR, setOpenQR] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [schedule, setSchedule] = useState<Schedule>({
+  const [schedule, setSchedule] = useState<ScheduleFormState>({
     date: new Date(),
     startTime: "",
     endTime: "",
@@ -182,10 +162,7 @@ export default function QRPage() {
       try {
         setLoading(true);
 
-        const response = await fetch(`/api/classes/${classId}`, {
-          method: "GET",
-          cache: "no-store",
-        });
+        const response = await classesApi.get(classId, { cache: "no-store" });
 
         const result = await response.json();
 
@@ -243,13 +220,7 @@ export default function QRPage() {
       if (!classId) return;
 
       try {
-        const response = await fetch(
-          `/api/schedule?classId=${encodeURIComponent(classId)}`,
-          {
-            method: "GET",
-            cache: "no-store",
-          },
-        );
+        const response = await scheduleApi.get(classId, { cache: "no-store" });
 
         const result = await response.json();
 
@@ -296,7 +267,7 @@ export default function QRPage() {
               : true,
         });
       } catch {
-        // Schedule เป็นข้อมูลเสริม จึงไม่จำเป็นต้องแจ้งเตือน
+        //
       }
     };
 
@@ -314,7 +285,6 @@ export default function QRPage() {
         bounceQRDialog();
       }
 
-      // ป้องกัน focus ออกจาก dialog ด้วย Tab
       if (event.key === "Tab") {
         event.preventDefault();
         closeButtonRef.current?.focus();
@@ -350,21 +320,15 @@ export default function QRPage() {
     try {
       setSaving(true);
 
-      const response = await fetch("/api/schedule", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          classId,
-          className: classInfo?.className || "",
-          date: formatDateForApi(schedule.date),
-          startTime: schedule.startTime,
-          endTime: schedule.endTime || schedule.startTime,
-          lateAfter: schedule.lateAfter,
-          allowCheckIn: schedule.allowCheckIn,
-          isOpen: schedule.isOpen,
-        }),
+      const response = await scheduleApi.create({
+        classId,
+        className: classInfo?.className || "",
+        date: formatDateForApi(schedule.date),
+        startTime: schedule.startTime,
+        endTime: schedule.endTime || schedule.startTime,
+        lateAfter: schedule.lateAfter,
+        allowCheckIn: schedule.allowCheckIn,
+        isOpen: schedule.isOpen,
       });
 
       const result = await response.json();
@@ -535,7 +499,6 @@ export default function QRPage() {
                       </span>
                     </div>
 
-                    {/* รหัสวิชาและ badge อยู่บรรทัดเดียวกัน */}
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="shrink-0 text-gray-500">รหัสวิชา:</span>
 

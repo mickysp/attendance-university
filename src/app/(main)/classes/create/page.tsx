@@ -1,5 +1,7 @@
 "use client";
 
+import { teachersApi } from "@/services/api/teachers";
+import { classesApi } from "@/services/api/classes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -11,18 +13,8 @@ import {
 
 import { useAlert } from "@/context/AlertContext";
 import { useConfirm } from "@/context/swal";
-
-type Teacher = {
-  _id: string;
-  name: string;
-};
-
-type ClassItem = {
-  className: string;
-  classCodes: string[];
-  teachers: Teacher[];
-  description: string;
-};
+import type { Teacher } from "@/types/teachers";
+import type { ClassFormValue } from "@/types/classes";
 
 export default function CreateClassPage() {
   const router = useRouter();
@@ -41,7 +33,7 @@ export default function CreateClassPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loadingTeachers, setLoadingTeachers] = useState(true);
 
-  const [classes, setClasses] = useState<ClassItem[]>([
+  const [classes, setClasses] = useState<ClassFormValue[]>([
     {
       className: "",
       classCodes: [""],
@@ -90,7 +82,7 @@ export default function CreateClassPage() {
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const res = await fetch("/api/teachers");
+        const res = await teachersApi.list();
 
         const data = await res.json();
 
@@ -328,13 +320,7 @@ export default function CreateClassPage() {
           : {}),
       }));
 
-      const res = await fetch("/api/classes/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await classesApi.create(payload);
 
       const data = await res.json();
 

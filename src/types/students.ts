@@ -62,3 +62,26 @@ export interface StudentImportErrorItem {
   student?: IncomingStudent;
   message: string;
 }
+
+/** Payloads used by the current student API routes. */
+export interface UploadStudentsRequest {
+  classId: string;
+  major: string;
+  section: string;
+  students: IncomingStudent[];
+}
+
+export interface UpdateStudentRequest extends UpdateStudentBody {
+  section?: string;
+  classes?: {
+    className: string;
+    section: string;
+    academicYear: number;
+  }[];
+}
+
+export interface WithdrawCourseRequest {
+  studentId: string;
+  className: string;
+  section: string;
+}

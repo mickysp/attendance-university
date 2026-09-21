@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { getTeacherNames } from "@/lib/teacher-names";
-import { getClassStatus } from "@/lib/class-status";
+import { getClassStatusForSessions } from "@/lib/class-status";
 import type { ObjectId } from "mongodb";
 
 import type {
@@ -108,14 +108,16 @@ export async function GET() {
       .sort({ date: -1, startTime: -1, updatedAt: -1 })
       .toArray();
 
-    const latestSessionMap = new Map<
+    const classSessionMap = new Map<
       string,
-      (typeof classSessions)[number]
+      (typeof classSessions)
     >();
 
     classSessions.forEach((session) => {
       const key = String(session.classId);
-      if (!latestSessionMap.has(key)) latestSessionMap.set(key, session);
+      const sessions = classSessionMap.get(key) ?? [];
+      sessions.push(session);
+      classSessionMap.set(key, sessions);
     });
 
     const data: ClassResponse[] = classes.map((item) => {
@@ -136,7 +138,9 @@ export async function GET() {
 
       const studentCount = studentCountMap.get(String(item._id)) ?? 0;
 
-      const status = getClassStatus(latestSessionMap.get(String(item._id)));
+      const status = getClassStatusForSessions(
+        classSessionMap.get(String(item._id)) ?? [],
+      );
       const isOpened = status === "active";
 
       return {

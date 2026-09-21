@@ -1,5 +1,6 @@
 "use client";
 
+import { attendanceApi } from "@/services/api/attendance";
 import { useState, useRef, useEffect } from "react";
 import {
   ChevronDownIcon,
@@ -9,35 +10,7 @@ import {
   PhotoIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
-
-type StudentAttendance = {
-  studentId: string;
-  name: string;
-  email: string;
-  attendanceDate?: string | null;
-  section: string;
-  major: string;
-  status: string;
-  score: number;
-  checkInTime: string | null;
-  totalScore: number;
-  days: number;
-  absentDays: number;
-  lateDays: number;
-  averageScore: number;
-};
-
-type AttendanceLog = {
-  date?: string;
-  timeText: string;
-  status?: string;
-  score?: number;
-  photo?: string;
-  location?: {
-    lat: number;
-    lng: number;
-  };
-};
+import type { AttendanceLog, StudentAttendance } from "@/types/attendance";
 
 type Props = {
   data: StudentAttendance[];
@@ -318,9 +291,10 @@ export default function AttendanceTable({ data, classId }: Props) {
                                 return;
                               }
 
-                              const res = await fetch(
-                                `/api/attendance/logs?classId=${classId}&studentId=${s.studentId}`,
-                              );
+                              const res = await attendanceApi.logs({
+                                classId,
+                                studentId: s.studentId,
+                              });
 
                               const text = await res.text();
 

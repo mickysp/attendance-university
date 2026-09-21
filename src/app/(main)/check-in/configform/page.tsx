@@ -1,35 +1,16 @@
 "use client";
 
+import { checkInApi } from "@/services/api/check-in";
 import { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
+import {
+  defaultCheckInConfig,
+  type CheckInConfigFields,
+} from "@/types/check-in";
 
-type FormConfig = {
-  prefix: boolean;
-  firstname: boolean;
-  lastname: boolean;
-  studentId: boolean;
-  email: boolean;
-  section: boolean;
-  photo: boolean;
-  note: boolean;
-  location: boolean;
-};
-
-const defaultConfig: FormConfig = {
-  prefix: true,
-  firstname: true,
-  lastname: true,
-  studentId: true,
-  email: true,
-  section: true,
-  photo: true,
-  note: true,
-  location: true,
-};
-
-const fieldLabels: Record<keyof FormConfig, string> = {
+const fieldLabels: Record<keyof CheckInConfigFields, string> = {
   prefix: "คำนำหน้า / Prefix",
   firstname: "ชื่อ / First name",
   lastname: "นามสกุล / Last name",
@@ -41,7 +22,7 @@ const fieldLabels: Record<keyof FormConfig, string> = {
   location: "สถานที่ / Location",
 };
 
-const fieldPlaceholders: Record<keyof FormConfig, string> = {
+const fieldPlaceholders: Record<keyof CheckInConfigFields, string> = {
   prefix: "นาย / นางสาว",
   firstname: "กรอกชื่อ",
   lastname: "กรอกนามสกุล",
@@ -54,21 +35,25 @@ const fieldPlaceholders: Record<keyof FormConfig, string> = {
 };
 
 export default function CheckInFormPage() {
-  const [config, setConfig] = useState<FormConfig>(defaultConfig);
+  const [config, setConfig] = useState<CheckInConfigFields>({
+    ...defaultCheckInConfig,
+  });
   const [saving, setSaving] = useState(false);
-  const [initialConfig, setInitialConfig] = useState<FormConfig>(defaultConfig);
+  const [initialConfig, setInitialConfig] = useState<CheckInConfigFields>({
+    ...defaultCheckInConfig,
+  });
   const isDirty = JSON.stringify(config) !== JSON.stringify(initialConfig);
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
 
-  const toggleField = (key: keyof FormConfig) => {
+  const toggleField = (key: keyof CheckInConfigFields) => {
     setConfig((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
 
-  const renderField = (key: keyof FormConfig) => {
+  const renderField = (key: keyof CheckInConfigFields) => {
     if (key === "note") {
       return (
         <div className="w-full">
@@ -186,7 +171,7 @@ export default function CheckInFormPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const res = await fetch("/api/check-in");
+        const res = await checkInApi.getConfig();
 
         if (!res.ok) throw new Error("โหลดไม่สำเร็จ");
 
@@ -208,13 +193,7 @@ export default function CheckInFormPage() {
     try {
       setSaving(true);
 
-      const res = await fetch("/api/check-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ config }),
-      });
+      const res = await checkInApi.updateConfig({ config });
 
       const data = await res.json();
 

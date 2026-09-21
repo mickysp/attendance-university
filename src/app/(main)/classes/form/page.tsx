@@ -1,14 +1,17 @@
-"use client";
-
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import QRContent from "./formContent";
 
-export const dynamic = "force-dynamic";
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ classId?: string | string[] }>;
+}) {
+  const { classId } = await searchParams;
+  const id = Array.isArray(classId) ? classId[0] : classId;
 
-export default function Page() {
-  return (
-    <Suspense fallback={<div>กำลังโหลด...</div>}>
-      <QRContent />
-    </Suspense>
-  );
+  if (id) {
+    redirect(`/classes/form/${encodeURIComponent(id)}`);
+  }
+
+  return <QRContent classId={null} />;
 }

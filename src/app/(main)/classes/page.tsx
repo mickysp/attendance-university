@@ -1,5 +1,6 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,9 +24,7 @@ export default function ClassesPage() {
     try {
       setLoading(true);
 
-      const res = await fetch("/api/classes", {
-        cache: "no-store",
-      });
+      const res = await classesApi.list({}, { cache: "no-store" });
 
       const data = await res.json();
 

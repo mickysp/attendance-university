@@ -1,5 +1,7 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
+import { teachersApi } from "@/services/api/teachers";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -11,25 +13,8 @@ import {
 
 import { useAlert } from "@/context/AlertContext";
 import { useConfirm } from "@/context/swal";
-
-type Teacher = {
-  _id: string;
-  name: string;
-};
-
-type ClassItem = {
-  className: string;
-  classCodes: string[];
-  teachers: Teacher[];
-  description: string;
-};
-
-type ApiClassData = {
-  className?: string;
-  classCodes?: string[];
-  teachers?: Teacher[];
-  description?: string;
-};
+import type { Teacher } from "@/types/teachers";
+import type { ClassApiData, ClassFormValue } from "@/types/classes";
 
 export default function EditClassPage() {
   const router = useRouter();
@@ -40,8 +25,8 @@ export default function EditClassPage() {
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
 
-  const [item, setItem] = useState<ClassItem | null>(null);
-  const [initialItem, setInitialItem] = useState<ClassItem | null>(null);
+  const [item, setItem] = useState<ClassFormValue | null>(null);
+  const [initialItem, setInitialItem] = useState<ClassFormValue | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,11 +48,11 @@ export default function EditClassPage() {
       try {
         setLoading(true);
 
-        const res = await fetch(`/api/classes/${id}`);
+        const res = await classesApi.get(id);
 
         const data: {
           success: boolean;
-          data?: ApiClassData;
+          data?: ClassApiData;
           message?: string;
         } = await res.json();
 
@@ -96,7 +81,7 @@ export default function EditClassPage() {
                 .map((code) => code.trim())
             : [""];
 
-        const mapped: ClassItem = {
+        const mapped: ClassFormValue = {
           className: data.data.className || "",
           classCodes: normalizedClassCodes,
           teachers: normalizedTeachers,
@@ -124,7 +109,7 @@ export default function EditClassPage() {
       try {
         setLoadingTeachers(true);
 
-        const res = await fetch("/api/teachers");
+        const res = await teachersApi.list();
 
         const data: {
           success: boolean;
@@ -341,14 +326,7 @@ export default function EditClassPage() {
               : {}),
           };
 
-          const res = await fetch(`/api/classes/update?id=${id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify(payload),
-          });
+          const res = await classesApi.update(id, payload);
 
           const data = await res.json();
 

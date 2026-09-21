@@ -1,5 +1,6 @@
 "use client";
 
+import { studentsApi } from "@/services/api/students";
 import { useState, useEffect, useRef } from "react";
 import {
   UserCircleIcon,
@@ -143,9 +144,7 @@ export default function StudentTable({
       "ลบข้อมูล?",
       async () => {
         try {
-          const res = await fetch(`/api/students/delete?id=${id}`, {
-            method: "DELETE",
-          });
+          const res = await studentsApi.remove(id);
 
           if (!res.ok) {
             const text = await res.text();
@@ -184,13 +183,7 @@ export default function StudentTable({
           })),
       };
 
-      const res = await fetch("/api/students/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await studentsApi.update(payload);
 
       const data = await res.json();
 
@@ -218,12 +211,11 @@ export default function StudentTable({
       "ถอนวิชา?",
       async () => {
         try {
-          const res = await fetch(
-            `/api/students/withdraw-course?studentId=${student._id}&className=${encodeURIComponent(className)}&section=${section}`,
-            {
-              method: "DELETE",
-            },
-          );
+          const res = await studentsApi.withdrawCourse({
+            studentId: student._id,
+            className,
+            section,
+          });
 
           const data = await res.json();
 

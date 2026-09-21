@@ -1,23 +1,18 @@
 "use client";
 
+import { classesApi } from "@/services/api/classes";
+import { attendanceApi } from "@/services/api/attendance";
 import { useState, useEffect, useRef } from "react";
-import type { AttendanceStatus, StudentAttendance } from "@/types/attendance";
+import type {
+  AttendanceClassOption,
+  AttendanceStatus,
+  StudentAttendance,
+} from "@/types/attendance";
 
 import SubjectSelect from "@/components/attendance/Select";
 import AttendanceTable from "@/components/attendance/Table";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import StudentSummaryCard from "@/components/attendance/Card";
-
-type ClassItem = {
-  _id: string;
-  className?: string;
-  classCode?: string;
-  name?: string;
-  title?: string;
-  isOpen?: boolean;
-  hasStudents?: boolean;
-  academicYear?: number;
-};
 
 export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
@@ -25,7 +20,7 @@ export default function AttendancePage() {
 
   const [students, setStudents] = useState<StudentAttendance[]>([]);
   const [openYear, setOpenYear] = useState(false);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [classes, setClasses] = useState<AttendanceClassOption[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
   const [majors, setMajors] = useState<{ id: string; name: string }[]>([]);
@@ -92,11 +87,7 @@ export default function AttendancePage() {
       try {
         setLoading(true);
 
-        const url = selectedYear
-          ? `/api/classes?year=${selectedYear}`
-          : "/api/classes";
-
-        const res = await fetch(url);
+        const res = await classesApi.list({ year: selectedYear || undefined });
 
         if (!res.ok) {
           throw new Error("Failed to fetch classes");
@@ -106,7 +97,7 @@ export default function AttendancePage() {
 
         console.log("classes api:", json);
 
-        const allClasses: ClassItem[] = json?.data || [];
+        const allClasses: AttendanceClassOption[] = json?.data || [];
 
         const years: number[] = json?.years || [];
 
@@ -137,9 +128,7 @@ export default function AttendancePage() {
       try {
         setLoadingMajors(true);
 
-        const res = await fetch(
-          `/api/attendance/summary?classId=${selectedClass}&year=${selectedYear}`,
-        );
+        const res = await attendanceApi.summary({ classId: selectedClass, year: selectedYear });
 
         const json = await res.json();
 

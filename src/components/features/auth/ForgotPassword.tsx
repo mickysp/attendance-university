@@ -1,5 +1,6 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -27,13 +28,7 @@ export default function ForgotPassword({ onNext }: Props) {
       setLoading(true);
       setError("");
 
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ identifier: email }),
-      });
+      const res = await authApi.sendOtp({ identifier: email });
 
       const data = await res.json();
 

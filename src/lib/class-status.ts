@@ -48,3 +48,15 @@ export const getClassStatus = (
 
   return "active";
 };
+
+export const getClassStatusForSessions = (
+  sessions: ClassSessionStatusSource[],
+): ClassStatus => {
+  if (sessions.length === 0) return "unused";
+
+  const statuses = sessions.map(getClassStatus);
+  if (statuses.includes("active")) return "active";
+  if (statuses.includes("scheduled")) return "scheduled";
+
+  return "ended";
+};

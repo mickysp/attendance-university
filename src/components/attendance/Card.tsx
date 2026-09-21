@@ -8,28 +8,18 @@ import {
   DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 import type { ComponentType } from "react";
+import type {
+  AttendanceStatus,
+  StudentAttendance,
+} from "@/types/attendance";
 
-type StudentAttendance = {
-  studentId: string;
-  name: string;
-  section: string;
-  major: string;
-  status: "มาเรียน" | "มาสาย" | "ลา" | "ขาด";
-  score: number;
-  checkInTime: string | null;
-  totalScore: number;
-  days: number;
-  lateDays: number;
-  averageScore: number;
-};
-
-type AttendanceStatus = "มาเรียน" | "มาสาย" | "ลา" | "ขาด" | null;
+type SelectedAttendanceStatus = AttendanceStatus | null;
 
 type IconType = ComponentType<{ className?: string }>;
 
 type CardItem = {
   title: string;
-  status: AttendanceStatus;
+  status: SelectedAttendanceStatus;
   value: number;
   icon: IconType;
   iconBg: string;
@@ -44,8 +34,8 @@ type CardItem = {
 
 type Props = {
   students: StudentAttendance[];
-  selectedStatus: AttendanceStatus;
-  onSelectStatus: (status: AttendanceStatus) => void;
+  selectedStatus: SelectedAttendanceStatus;
+  onSelectStatus: (status: SelectedAttendanceStatus) => void;
 };
 
 export default function StudentSummaryCard({

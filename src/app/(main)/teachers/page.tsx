@@ -1,5 +1,6 @@
 "use client";
 
+import { teachersApi } from "@/services/api/teachers";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { appSwal } from "@/lib/swal";
 import { PlusIcon } from "@heroicons/react/24/outline";
@@ -34,7 +35,7 @@ export default function TeachersPage() {
     setError("");
     try {
       const result = await readResponse(
-        await fetch("/api/teachers", { cache: "no-store" }),
+        await teachersApi.list({ cache: "no-store" }),
       );
       if (!Array.isArray(result.data))
         throw new Error("รูปแบบรายชื่ออาจารย์ไม่ถูกต้อง");
@@ -66,13 +67,9 @@ export default function TeachersPage() {
         initialValue: teacher?.name,
         onSave: async (name) => {
           await readResponse(
-            await fetch("/api/teachers", {
-              method: teacher ? "PATCH" : "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ...(teacher ? { id: teacher._id } : {}),
-                name,
-              }),
+            await teachersApi.save({
+              ...(teacher ? { id: teacher._id } : {}),
+              name,
             }),
           );
         },
@@ -100,9 +97,7 @@ export default function TeachersPage() {
         setDeleting(teacher._id);
         try {
           const result = await readResponse(
-            await fetch(`/api/teachers?id=${encodeURIComponent(teacher._id)}`, {
-              method: "DELETE",
-            }),
+            await teachersApi.remove(teacher._id),
           );
           setTeachers((items) =>
             items.filter((item) => item._id !== teacher._id),

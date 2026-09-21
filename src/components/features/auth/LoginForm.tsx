@@ -1,5 +1,6 @@
 "use client";
 
+import { authApi } from "@/services/api/auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -55,17 +56,10 @@ export default function LoginForm({
     }
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          username,
-          password,
-          remember,
-        }),
+      const res = await authApi.login({
+        username,
+        password,
+        remember,
       }).catch(() => {
         throw new Error("เชื่อมต่อระบบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง");
       });

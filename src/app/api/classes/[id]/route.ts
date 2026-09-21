@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { getTeacherNames } from "@/lib/teacher-names";
-import { getClassStatus } from "@/lib/class-status";
+import { getClassStatusForSessions } from "@/lib/class-status";
 import { ObjectId } from "mongodb";
 
 import type { ClassDocument, ClassResponse, Teacher } from "@/types/classes";
@@ -82,15 +82,13 @@ export async function GET(
       classId: classObjectId,
     });
 
-    const latestSession = await sessions.findOne({
+    const classSessions = await sessions.find({
       classId: {
         $in: [classObjectId, id],
       },
-    }, {
-      sort: { date: -1, startTime: -1, updatedAt: -1 },
-    });
+    }).toArray();
 
-    const status = getClassStatus(latestSession);
+    const status = getClassStatusForSessions(classSessions);
     const isOpened = status === "active";
 
     const teacherNames = await getTeacherNames(db,

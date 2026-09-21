@@ -31,3 +31,12 @@ export interface CreateScheduleBody {
   allowCheckIn?: boolean;
   isOpen?: boolean;
 }
+
+export interface ScheduleFormState {
+  date: Date;
+  startTime: string;
+  endTime: string;
+  lateAfter: number;
+  allowCheckIn: boolean;
+  isOpen: boolean;
+}
