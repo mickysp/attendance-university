@@ -594,7 +594,7 @@ export default function EditClassPage() {
               disabled={!isDirty || saving}
               className={`rounded-md px-6 py-2.5 text-sm text-white transition ${
                 !isDirty || saving
-                  ? "cursor-not-allowed bg-gray-400"
+                  ? "bg-gray-400"
                   : "cursor-pointer bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
               }`}
             >

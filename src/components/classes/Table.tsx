@@ -1,6 +1,7 @@
 "use client";
 
 import { classesApi } from "@/services/api/classes";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/context/AlertContext";
 import {
@@ -117,10 +118,6 @@ export default function Table({
       "delete",
       "คุณต้องการลบข้อมูลใช่หรือไม่",
     );
-  };
-
-  const handleCheckIn = (id: string) => {
-    router.push(`/classes/form/${encodeURIComponent(id)}`);
   };
 
   const renderClassCodes = (classCodes: string[]) => {
@@ -255,19 +252,18 @@ export default function Table({
               <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
 
               <div className="@container/actions flex min-w-0 flex-1 flex-nowrap justify-end gap-2 whitespace-nowrap [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0 [&>button]:justify-center">
-                <button
-                  type="button"
+                <Link
+                  href={`/classes/form/${encodeURIComponent(item._id)}`}
                   aria-label="เช็คชื่อ"
                   title="เช็คชื่อ"
-                  onClick={() => handleCheckIn(item._id)}
-                  className="flex cursor-pointer items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
+                  className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
                 >
                   <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
                   <span className="hidden @[260px]/actions:inline">
                     เช็คชื่อ
                   </span>
-                </button>
+                </Link>
 
                 <button
                   type="button"
@@ -300,7 +296,7 @@ export default function Table({
 
       {/* ==================== DESKTOP ==================== */}
       <div className="hidden w-full overflow-hidden rounded-xl border border-gray-200 md:block">
-        <div className="w-full overflow-x-auto">
+        <div className="max-h-[510px] w-full overflow-auto">
           <table className="app-data-table min-w-[900px] w-full table-fixed text-sm">
             <colgroup>
               <col className="w-[calc((100%-280px)*0.25)]" />
@@ -310,28 +306,28 @@ export default function Table({
               <col className="w-[280px]" />
             </colgroup>
 
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="text-gray-600">
               <tr>
-                <th className="px-3 py-3 text-left font-semibold">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   รหัสวิชา / Section
                 </th>
 
-                <th className="px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
 
-                <th className="px-3 py-3 text-left font-semibold">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   อาจารย์ผู้สอน
                 </th>
 
-                <th className="px-3 py-3 text-left font-semibold">สถานะ</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">สถานะ</th>
 
                 <th
                   className="
-                    sticky right-0 z-20
+                    sticky right-0 top-0 z-30
                     bg-gray-50
                     px-3 py-3
                     text-left
                     font-semibold
-                    shadow-[-4px_0_8px_rgba(0,0,0,0.06)]
+                    app-table-sticky-end
                   "
                 >
                   จัดการ
@@ -343,7 +339,7 @@ export default function Table({
               {paginatedData.map((item) => (
                 <tr
                   key={item._id}
-                  className="border-t border-gray-200 hover:bg-gray-50"
+                  className="group/row border-t border-gray-200 hover:bg-gray-50"
                 >
                   <td className="px-3 py-3 align-top text-left text-sm">
                     {renderClassCodes(item.classCodes)}
@@ -366,20 +362,19 @@ export default function Table({
                   <td
                     className="
                       sticky right-0 z-10
-                      bg-white
+                      bg-white group-hover/row:bg-gray-50
                       px-3 py-3
                       align-top
                       text-left
                       text-sm
-                      shadow-[-4px_0_8px_rgba(0,0,0,0.06)]
+                      app-table-sticky-end
                     "
                   >
                     <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap [&>button]:shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleCheckIn(item._id)}
+                      <Link
+                        href={`/classes/form/${encodeURIComponent(item._id)}`}
                         className="
-                          flex cursor-pointer items-center gap-1
+                          flex shrink-0 cursor-pointer items-center gap-1
                           rounded-md
                           border border-blue-200
                           px-2.5 py-1.5
@@ -390,7 +385,7 @@ export default function Table({
                         <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
                         <span>เช็คชื่อ</span>
-                      </button>
+                      </Link>
 
                       <button
                         type="button"
@@ -482,7 +477,7 @@ export default function Table({
               type="button"
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
             >
               ก่อนหน้า
             </button>
@@ -506,7 +501,7 @@ export default function Table({
               type="button"
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
             >
               ถัดไป
             </button>

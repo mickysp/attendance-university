@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getBangkokDateKey, getScheduleDateError } from "@/lib/schedule-date";
 
 import type {
   ScheduleDocument,
@@ -9,7 +10,7 @@ import type {
 } from "@/types/schedule";
 
 const getAcademicYear = (): number => {
-  return new Date().getFullYear() + 543;
+  return Number(getBangkokDateKey().slice(0, 4)) + 543;
 };
 
 export async function GET(req: Request) {
@@ -51,7 +52,7 @@ export async function GET(req: Request) {
 
     const query: ScheduleQuery = {
       classId: classFilter,
-      academicYear,
+      ...(yearParam ? { academicYear } : {}),
     };
 
     if (date) {
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      academicYear,
+      academicYear: yearParam ? academicYear : null,
       data: sessions,
     });
   } catch (error: unknown) {
@@ -116,6 +117,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const dateError = getScheduleDateError(date);
+    if (dateError) {
+      return NextResponse.json(
+        { success: false, message: dateError },
+        { status: 400 },
+      );
+    }
+
     if (startTime >= endTime) {
       return NextResponse.json(
         {
@@ -149,7 +158,7 @@ export async function POST(req: Request) {
 
     const sessionsCol = db.collection<ScheduleDocument>("sessions");
 
-    const academicYear = getAcademicYear();
+    const academicYear = Number(date.slice(0, 4)) + 543;
 
     const classFilter = ObjectId.isValid(classId)
       ? new ObjectId(classId)

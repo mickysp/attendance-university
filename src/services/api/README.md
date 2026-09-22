@@ -33,4 +33,4 @@ if (!response.ok || !result.success) {
 - เพิ่ม endpoint ใหม่ในหมวดที่เกี่ยวข้อง แล้ว import มาใช้ หลีกเลี่ยง `fetch` และ URL `/api/...` ใน component
 - ชนิดข้อมูลนักศึกษารวมอยู่ใน `src/types/students.ts` โดย request ของ service อิง payload ของ route ปัจจุบัน ซึ่งยังต่างจาก types บางส่วนที่ใช้ `offeringId`
 
-ตรวจสอบด้วย `npm run test:api` (mock fetch ไม่เขียนข้อมูลจริง) และ `npm run lint`
+ตรวจสอบด้วย `npm run lint`

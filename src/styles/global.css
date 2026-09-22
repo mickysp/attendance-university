@@ -20,6 +20,50 @@
   --table-header-padding-y: 16px;
 }
 
+html.dark {
+  color-scheme: dark;
+  --background: #0b1220;
+  --foreground: #e5e7eb;
+  --card: #172235;
+  --input-border: #475569;
+  --input-border-hover: #64748b;
+}
+
+html.dark .bg-white { background-color: #172235; }
+html.dark .bg-blue-50 { background-color: #0f1b2e; }
+html.dark .bg-blue-100 { background-color: #193455; }
+html.dark .bg-gray-50,
+html.dark .bg-slate-50 { background-color: #1c2a3d; }
+html.dark .bg-gray-100,
+html.dark .bg-slate-100 { background-color: #26364a; }
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-slate-900,
+html.dark .text-slate-800 { color: #f1f5f9; }
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-slate-700,
+html.dark .text-slate-600 { color: #cbd5e1; }
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .text-slate-500,
+html.dark .text-slate-400 { color: #94a3b8; }
+html.dark .text-blue-600,
+html.dark .text-blue-700 { color: #93c5fd; }
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .border-slate-200 { border-color: #334155; }
+html.dark .form-input,
+html.dark .form-input-card,
+html.dark input,
+html.dark select,
+html.dark textarea { background-color: #172235; color: #e5e7eb; }
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #94a3b8; }
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-gray-50:hover { background-color: #26364a; }
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -41,11 +85,13 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }
 
 /* =========================================================
@@ -125,9 +171,39 @@ textarea {
    Data tables
 ========================================================= */
 
+.student-checkin-form .form-input-card {
+  min-height: 48px;
+  border-color: #e2e8f0;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 14px;
+}
+
+.student-checkin-form .form-input-card::placeholder {
+  color: #94a3b8;
+}
+
+.student-checkin-form .form-input-card:focus-visible {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 10%);
+}
+
 .app-data-table > thead > tr > th {
   padding-block: var(--table-header-padding-y);
   vertical-align: middle;
+}
+
+.app-table-sticky-end::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 4px;
+  pointer-events: none;
+  background: linear-gradient(to left, rgb(15 23 42 / 3%), transparent);
+  border-right: 1px solid rgb(15 23 42 / 2%);
 }
 
 /* =========================================================
@@ -237,7 +313,7 @@ textarea {
     transform 120ms ease !important;
 }
 
-.react-datepicker__day:hover {
+.react-datepicker__day:not(.react-datepicker__day--disabled):hover {
   background: #eff6ff !important;
   color: #2563eb !important;
   transform: scale(1.08);
@@ -260,6 +336,17 @@ textarea {
 
 .react-datepicker__day--outside-month {
   color: #cbd5e1 !important;
+}
+
+.react-datepicker__day.react-datepicker__day--disabled,
+.react-datepicker__day.react-datepicker__day--disabled:hover {
+  color: #cbd5e1 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: 400 !important;
+  cursor: default !important;
+  transform: none !important;
 }
 
 .react-datepicker__navigation {

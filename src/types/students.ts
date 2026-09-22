@@ -3,9 +3,13 @@ export interface IncomingStudent {
   studentId?: string;
   fullName?: string;
   email?: string;
+  section?: string;
 }
 export interface UploadStudentsBody {
   offeringId?: string;
+  classId?: string;
+  section?: string;
+  major?: string;
   students?: IncomingStudent[];
 }
 export interface StudentDocument {
@@ -13,6 +17,9 @@ export interface StudentDocument {
   studentId: string;
   fullName: string;
   email?: string;
+  section?: string;
+  major?: string;
+  academicYear?: number;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -28,7 +35,10 @@ export interface StudentClassDocument {
   _id?: ObjectId;
   studentId: ObjectId | string;
   classId: ObjectId | string;
-  offeringId: ObjectId | string;
+  offeringId?: ObjectId | string;
+  className?: string;
+  section?: string;
+  academicYear?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -36,8 +46,15 @@ export interface StudentResultItem {
   studentId: string;
   fullName: string;
   email?: string;
+  section?: string;
+  major?: string;
+  className?: string;
   status: "created" | "duplicate";
   relation: "added" | "exists";
+}
+export interface MajorDocument {
+  _id?: ObjectId;
+  name: string;
 }
 export interface StudentErrorItem {
   student?: IncomingStudent;
@@ -52,6 +69,11 @@ export interface UpdateStudentBody {
   studentId: string;
   fullName: string;
   email?: string;
+  classes?: {
+    className: string;
+    section: string;
+    academicYear: number;
+  }[];
 }
 
 export type ExcelRow = Record<
@@ -67,7 +89,7 @@ export interface StudentImportErrorItem {
 export interface UploadStudentsRequest {
   classId: string;
   major: string;
-  section: string;
+  section?: string;
   students: IncomingStudent[];
 }
 

@@ -62,8 +62,8 @@
 ========================================================= */
 
 .app-swal-icon {
-  width: 76px !important;
-  height: 76px !important;
+  width: 96px !important;
+  height: 96px !important;
   margin: 0 auto 18px !important;
   border: 0 !important;
   border-radius: 9999px !important;
@@ -73,8 +73,8 @@
 }
 
 .swal-icon-svg {
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
 }
 
 /* Delete */
@@ -347,13 +347,13 @@
   }
 
   .app-swal-icon {
-    width: 84px !important;
-    height: 84px !important;
+    width: 88px !important;
+    height: 88px !important;
   }
 
   .swal-icon-svg {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 
   .app-swal-confirm-btn,

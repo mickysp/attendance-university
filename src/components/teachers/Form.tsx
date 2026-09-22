@@ -188,7 +188,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                     !name.trim() ||
                     Boolean(id && name.trim() === originalName)
                   }
-                  className="min-h-11 cursor-pointer rounded-md bg-[var(--primary)] px-6 py-2 text-sm text-white hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 cursor-pointer rounded-md bg-[var(--primary)] px-6 py-2 text-sm text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
                 >
                   {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
                 </button>

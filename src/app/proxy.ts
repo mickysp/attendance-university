@@ -8,6 +8,11 @@ export async function proxy(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
   const pathname = req.nextUrl.pathname;
 
+  // Student check-in is public, including for visitors with an expired token.
+  if (pathname === "/check-in" || /^\/checkin\/[^/]+\/?$/.test(pathname)) {
+    return NextResponse.next();
+  }
+
   const publicPaths = [
     "/login",
     "/register",

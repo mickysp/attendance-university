@@ -708,7 +708,6 @@ function UserSection({
               transition
               hover:bg-red-100
               hover:text-red-600
-              disabled:cursor-not-allowed
               disabled:opacity-50
             "
             title={logoutLoading ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}

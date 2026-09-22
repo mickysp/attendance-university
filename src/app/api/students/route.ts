@@ -216,6 +216,7 @@ export async function GET(req: Request) {
     const classMap = new Map<
       string,
       {
+        classId: string;
         className: string;
         section: string;
         academicYear: number;
@@ -248,6 +249,7 @@ export async function GET(req: Request) {
       }
 
       classMap.get(key)!.push({
+        classId: r.classId?.toString() || "",
         className: finalClassName,
 
         section: r.section || "-",
