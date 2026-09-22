@@ -79,7 +79,6 @@ export default function CreateStudentPage() {
         if (classData.success) setClasses(classData.data);
         if (majorData.success) setMajors(majorData.data);
       } catch (err) {
-        console.error(err);
       }
     };
 

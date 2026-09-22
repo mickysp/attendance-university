@@ -96,10 +96,16 @@ export default function LoginForm({
           return;
         }
 
-        if (role === "admin" || role === "teacher") {
+        if (role === "teacher") {
           onLoading();
           router.push("/dashboard");
 
+          return;
+        }
+
+        if (role === "teaching assistant") {
+          onLoading();
+          router.push("/attendance");
           return;
         }
 

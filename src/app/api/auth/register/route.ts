@@ -27,6 +27,15 @@ export async function POST(req: Request) {
     const db = client.db("attendance");
     const users = db.collection("users");
 
+    // The first account bootstraps the system. Further Teacher accounts are
+    // created by an existing Teacher through the administrators API.
+    if (role === "Teacher" && (await users.estimatedDocumentCount()) > 0) {
+      return NextResponse.json(
+        { success: false, message: "บัญชี Teacher ต้องเพิ่มโดยผู้ใช้ Teacher ในระบบ" },
+        { status: 403 },
+      );
+    }
+
     const existingUser = await users.findOne({ username });
     if (existingUser) {
       return NextResponse.json(

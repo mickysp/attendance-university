@@ -73,8 +73,6 @@ export async function GET(req: Request) {
       data: sessions,
     });
   } catch (error: unknown) {
-    console.error("GET SCHEDULE ERROR:", error);
-
     const message = error instanceof Error ? error.message : "unknown error";
 
     return NextResponse.json(
@@ -219,8 +217,6 @@ export async function POST(req: Request) {
       },
     );
   } catch (error: unknown) {
-    console.error("POST SCHEDULE ERROR:", error);
-
     const message = error instanceof Error ? error.message : "unknown error";
 
     return NextResponse.json(

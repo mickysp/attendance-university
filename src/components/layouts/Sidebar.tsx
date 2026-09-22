@@ -13,6 +13,8 @@ import {
   CalendarDaysIcon,
   BellIcon,
   AcademicCapIcon,
+  UserCircleIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -70,7 +72,6 @@ export default function Sidebar() {
           router.replace("/login");
         }
       } catch (err) {
-        console.error("Fetch user error:", err);
       } finally {
         setLoading(false);
       }
@@ -104,7 +105,6 @@ export default function Sidebar() {
     try {
       await authApi.logout();
     } catch (err) {
-      console.error("Logout error:", err);
     } finally {
       router.replace("/login");
     }
@@ -526,7 +526,25 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
       </div>
 
       {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">Other</p>
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
+          Management
+        </p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <SidebarItem
+          icon={<UserCircleIcon />}
+          label="Administrators"
+          collapsed={collapsed}
+          active={pathname.startsWith("/administrators")}
+          onClick={() => onNavigate("/administrators")}
+        />
+      </div>
+
+      {!collapsed && (
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
+          Other
+        </p>
       )}
 
       <div className="flex flex-col gap-2">

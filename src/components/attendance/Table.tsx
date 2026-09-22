@@ -298,8 +298,6 @@ export default function AttendanceTable({ data, classId }: Props) {
 
                               const text = await res.text();
 
-                              console.log(text);
-
                               const json = text
                                 ? JSON.parse(text)
                                 : {
@@ -317,8 +315,6 @@ export default function AttendanceTable({ data, classId }: Props) {
 
                               setOpenModal(true);
                             } catch (error) {
-                              console.error(error);
-
                               setLogs([]);
                             } finally {
                               setLoadingLogs(false);

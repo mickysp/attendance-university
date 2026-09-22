@@ -341,8 +341,6 @@ export async function POST(req: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("UPLOAD STUDENTS ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,

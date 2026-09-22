@@ -64,8 +64,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("AUTH ME ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,
