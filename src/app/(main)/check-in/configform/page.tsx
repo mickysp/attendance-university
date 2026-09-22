@@ -3,8 +3,9 @@
 import { checkInApi } from "@/services/api/check-in";
 import { classesApi } from "@/services/api/classes";
 import type { ClassResponse } from "@/types/classes";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Upload } from "lucide-react";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
 import {
@@ -41,6 +42,8 @@ export default function CheckInFormPage() {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [loadedClassId, setLoadedClassId] = useState("");
   const [classesLoading, setClassesLoading] = useState(true);
+  const [classDropdownOpen, setClassDropdownOpen] = useState(false);
+  const classDropdownRef = useRef<HTMLDivElement>(null);
   const [configLoading, setConfigLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -52,11 +55,31 @@ export default function CheckInFormPage() {
   const [initialConfig, setInitialConfig] = useState<CheckInConfigFields>({
     ...defaultCheckInConfig,
   });
+  const selectedClass = classes.find((subject) => subject._id === selectedClassId);
   const isDirty = JSON.stringify(config) !== JSON.stringify(initialConfig);
   const configReady = Boolean(selectedClassId) && loadedClassId === selectedClassId && !configLoading && !loadError;
   const canSave = configReady && !saving && (isDirty || usesDefault);
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
+
+  useEffect(() => {
+    if (!classDropdownOpen) return;
+    const handleMouseDown = (event: MouseEvent) => {
+      if (!classDropdownRef.current?.contains(event.target as Node)) {
+        setClassDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [classDropdownOpen]);
+
+  const selectClass = (id: string) => {
+    setClassDropdownOpen(false);
+    if (id === selectedClassId) return;
+    if (isDirty && configReady) {
+      showConfirm("เปลี่ยนรายวิชา?", () => setSelectedClassId(id), "warning", "การแก้ไขที่ยังไม่ได้บันทึกจะถูกยกเลิก");
+    } else setSelectedClassId(id);
+  };
 
   const toggleField = (key: keyof CheckInConfigFields) => {
     setConfig((prev) => ({
@@ -256,54 +279,88 @@ export default function CheckInFormPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
-        <div className="w-full rounded-2xl bg-white p-6 lg:p-8">
-          <h1 className="text-[20px] font-semibold text-gray-800 lg:text-[26px]">
-            ตั้งค่าแบบฟอร์มเช็คชื่อ
-          </h1>
+      <main className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
+        <div className="w-full space-y-5 rounded-2xl bg-white p-6 lg:p-8">
+          <header className="mb-7">
+            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">
+              ตั้งค่าแบบฟอร์มเช็คชื่อ
+            </h1>
 
-          <p className="mb-7 text-xs text-gray-500 lg:mb-9 lg:text-sm">
-            เลือกรายวิชา แล้วเปิด–ปิดช่องข้อมูลที่ต้องการให้นักศึกษากรอก การตั้งค่าจะมีผลเฉพาะวิชาที่เลือก
-          </p>
+            <p className="mt-2 text-sm text-slate-500">
+              เลือกรายวิชา แล้วเปิด–ปิดช่องข้อมูลที่ต้องการให้นักศึกษากรอก การตั้งค่าจะมีผลเฉพาะวิชาที่เลือก
+            </p>
+          </header>
 
-          <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-            <label htmlFor="config-class" className="mb-2 block text-sm font-medium text-gray-700">รายวิชา</label>
-            <select
-              id="config-class"
-              value={selectedClassId}
-              disabled={classesLoading || saving}
-              className="min-h-11 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-blue-500"
-              onChange={(event) => {
-                const id = event.target.value;
-                if (isDirty && configReady) {
-                  showConfirm("เปลี่ยนรายวิชา?", () => setSelectedClassId(id), "warning", "การแก้ไขที่ยังไม่ได้บันทึกจะถูกยกเลิก");
-                } else setSelectedClassId(id);
-              }}
-            >
-              <option value="" disabled>{classesLoading ? "กำลังโหลดรายวิชา..." : "เลือกรายวิชาที่ต้องการตั้งค่า"}</option>
-              {classes.map((subject) => (
-                <option key={subject._id} value={subject._id}>{subject.classCodes.join(", ")} — {subject.className}</option>
-              ))}
-            </select>
-            {configReady && <p className="mt-2 text-xs leading-relaxed text-slate-500">{usesDefault ? "วิชานี้ยังใช้ค่าเริ่มต้น กดบันทึกเพื่อกำหนดค่าเฉพาะรายวิชา" : "กำลังแก้ไขการตั้งค่าเฉพาะรายวิชานี้ ไม่กระทบวิชาอื่น"}</p>}
-            {!classesLoading && !classes.length && !loadError && <p className="mt-2 text-sm text-slate-500">ยังไม่มีรายวิชา กรุณาเพิ่มรายวิชาก่อนตั้งค่า</p>}
-          </div>
-          {loadError && <p role="alert" className="mb-4 text-sm text-red-600">{loadError} <button type="button" onClick={() => setRetry((value) => value + 1)} className="underline">ลองอีกครั้ง</button></p>}
-          {configLoading && <p role="status" className="mb-4 text-sm text-slate-500">กำลังโหลดการตั้งค่ารายวิชา...</p>}
+          <section aria-labelledby="class-section-heading" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4">
+              <h2 id="class-section-heading" className="text-base font-semibold text-slate-800">เลือกรายวิชา</h2>
+              <p className="mt-1 text-sm text-slate-500">การตั้งค่าจะบันทึกแยกตามรายวิชา</p>
+            </div>
+            <label id="config-class-label" className="mb-2 block text-sm font-medium text-slate-700">รายวิชา</label>
+            <div ref={classDropdownRef} className="relative">
+              <button
+                id="config-class"
+                type="button"
+                aria-labelledby="config-class-label config-class"
+                aria-expanded={classDropdownOpen}
+                aria-haspopup="listbox"
+                disabled={classesLoading || saving || classes.length === 0}
+                onClick={() => setClassDropdownOpen((open) => !open)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setClassDropdownOpen(false);
+                }}
+                className="form-input-card flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="truncate">
+                  {selectedClass
+                    ? `${selectedClass.classCodes.join(", ")} — ${selectedClass.className}`
+                    : classesLoading ? "กำลังโหลดรายวิชา..." : "เลือกรายวิชาที่ต้องการตั้งค่า"}
+                </span>
+                <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
+              </button>
+              {classDropdownOpen && (
+                <div role="listbox" aria-labelledby="config-class-label" className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                  {classes.map((subject) => (
+                    <button
+                      key={subject._id}
+                      type="button"
+                      role="option"
+                      aria-selected={subject._id === selectedClassId}
+                      onClick={() => selectClass(subject._id)}
+                      className={`block w-full cursor-pointer px-4 py-2 text-left text-sm ${subject._id === selectedClassId ? "bg-blue-50 font-medium text-blue-600" : "hover:bg-gray-100"}`}
+                    >
+                      {subject.classCodes.join(", ")} — {subject.className}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {!classesLoading && !classes.length && !loadError && <p className="mt-3 text-sm text-slate-500">ยังไม่มีรายวิชา กรุณาเพิ่มรายวิชาก่อนตั้งค่า</p>}
+          </section>
 
-          <fieldset disabled={!configReady || saving} className={`min-w-0 space-y-5 lg:space-y-6 ${!configReady ? "opacity-50" : ""}`}>
-            <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
+          <section aria-labelledby="fields-section-heading" className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+              <h2 id="fields-section-heading" className="text-base font-semibold text-slate-800">ช่องข้อมูลในแบบฟอร์ม</h2>
+              <p className="mt-1 text-sm text-slate-500">เลือกช่องที่ต้องการให้นักศึกษากรอกเมื่อเช็คชื่อ</p>
+              {configReady && <p className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">{usesDefault ? "ใช้ค่าเริ่มต้น · บันทึกเพื่อกำหนดค่าเฉพาะวิชา" : "กำลังใช้การตั้งค่าเฉพาะวิชา"}</p>}
+              {!selectedClassId && !classesLoading && <p className="mt-3 text-sm text-slate-500">เลือกรายวิชาเพื่อเริ่มตั้งค่า</p>}
+              {loadError && <p role="alert" className="mt-3 text-sm text-red-600">{loadError} <button type="button" onClick={() => setRetry((value) => value + 1)} className="underline">ลองอีกครั้ง</button></p>}
+              {configLoading && <p role="status" className="mt-3 text-sm text-slate-500">กำลังโหลดการตั้งค่ารายวิชา...</p>}
+            </div>
+
+          <fieldset disabled={!configReady || saving} className={`min-w-0 space-y-5 p-5 sm:p-6 lg:space-y-6 ${!configReady ? "opacity-50" : ""}`}>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 lg:gap-4">
               {renderField("prefix")}
               {renderField("firstname")}
               {renderField("lastname")}
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 lg:gap-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-4">
               {renderField("studentId")}
               {renderField("section")}
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 lg:gap-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-4">
               {renderField("email")}
               {renderField("location")}
             </div>
@@ -349,8 +406,9 @@ export default function CheckInFormPage() {
               </div>
             </div>
           </fieldset>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

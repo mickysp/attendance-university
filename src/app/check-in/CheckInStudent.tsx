@@ -96,10 +96,14 @@ export default function CheckInStudentPage({
       setLoading(true);
       setConfigError(false);
       try {
-        const res = await checkInApi.getConfig(classId, { signal: controller.signal, cache: "no-store" });
+        const res = await checkInApi.getConfig(classId, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
         const data = await res.json();
 
-        if (!res.ok || !data.success || !data.config) throw new Error("Config unavailable");
+        if (!res.ok || !data.success || !data.config)
+          throw new Error("Config unavailable");
         if (!controller.signal.aborted) {
           setConfig(data.config);
         }
@@ -268,9 +272,20 @@ export default function CheckInStudentPage({
   if (configError) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6 font-noto">
-        <div role="alert" className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center">
-          <p className="text-slate-700">โหลดแบบฟอร์มของรายวิชาไม่สำเร็จ กรุณาลองอีกครั้ง</p>
-          <button type="button" onClick={() => setConfigRetry((value) => value + 1)} className="mt-4 rounded-lg bg-blue-600 px-5 py-2 text-sm text-white">ลองอีกครั้ง</button>
+        <div
+          role="alert"
+          className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center"
+        >
+          <p className="text-slate-700">
+            โหลดแบบฟอร์มของรายวิชาไม่สำเร็จ กรุณาลองอีกครั้ง
+          </p>
+          <button
+            type="button"
+            onClick={() => setConfigRetry((value) => value + 1)}
+            className="mt-4 rounded-lg bg-blue-600 px-5 py-2 text-sm text-white"
+          >
+            ลองอีกครั้ง
+          </button>
         </div>
       </main>
     );
@@ -360,11 +375,12 @@ export default function CheckInStudentPage({
               )}
               <li>กด “ยืนยันเช็กชื่อ” และรอจนระบบแสดงข้อความเช็กชื่อสำเร็จ</li>
             </ol>
+            
             {config?.photo && (
               <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
                 <p className="text-sm text-blue-800 leading-relaxed">
                   <span className="font-semibold block mb-1">
-                    เงื่อนไขการเช็กชื่อด้วยรูปถ่าย
+                    เงื่อนไขการเช็คชื่อด้วยรูปถ่าย
                   </span>
                   กรุณาถ่ายภาพตัวเองตามตัวอย่าง
                   โดยให้เห็นใบหน้าชัดเจนและมีหน้าจอประกอบอยู่ในภาพ
