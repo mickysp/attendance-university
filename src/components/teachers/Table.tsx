@@ -105,7 +105,45 @@ export default function TeacherTable({
 
   return (
     <div className="w-full min-w-0">
-      <div className="overflow-hidden rounded-xl border border-gray-200">
+      <div className="space-y-3 md:hidden">
+        {pageTeachers.map((teacher) => (
+          <div key={teacher._id} className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-4">
+              <span className="shrink-0 text-sm text-gray-500">ชื่อ-นามสกุล</span>
+              <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">{teacher.name}</span>
+            </div>
+            <div className="my-4 border-t border-gray-100" />
+            <div className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
+              <div className="@container/actions flex min-w-0 flex-1 justify-end gap-2 [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0">
+                <button
+                  type="button"
+                  aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
+                  title="แก้ไขอาจารย์"
+                  disabled={deletingId !== null}
+                  onClick={() => onEditTeacher(teacher)}
+                  className="flex cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <PencilSquareIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`ลบอาจารย์ ${teacher.name}`}
+                  title="ลบอาจารย์"
+                  disabled={deletingId !== null}
+                  onClick={() => onDeleteTeacher(teacher)}
+                  className="flex cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <TrashIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">ลบ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block">
         <table className="app-data-table w-full table-fixed text-sm">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
