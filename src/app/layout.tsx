@@ -5,6 +5,7 @@ import { ConfirmProvider } from "@/context/swal";
 import "@/styles/global.css";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "@/styles/swal.css";
+import { ThemeProvider } from "next-themes";
 
 const prompt = Prompt({
   subsets: ["thai", "latin"],
@@ -39,12 +40,15 @@ export default function RootLayout({
   return (
     <html
       lang="th"
+      suppressHydrationWarning
       className={`${prompt.variable} ${sarabun.variable} ${notoSansThai.variable}`}
     >
       <body className="antialiased">
-        <AlertProvider>
-          <ConfirmProvider>{children}</ConfirmProvider>
-        </AlertProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="attendy-theme">
+          <AlertProvider>
+            <ConfirmProvider>{children}</ConfirmProvider>
+          </AlertProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

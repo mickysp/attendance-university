@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ChevronDownIcon,
   MagnifyingGlassIcon,
@@ -21,6 +21,8 @@ type ClassItem = {
 type Props = {
   data: ClassItem[];
   selectedClassId: string;
+  selectedBranch: string;
+  keyword: string;
   onChange: (value: {
     keyword: string;
     classId: string;
@@ -29,9 +31,7 @@ type Props = {
   }) => void;
 };
 
-export default function StudentFilter({ data, selectedClassId, onChange }: Props) {
-  const [keyword, setKeyword] = useState("");
-  const [branch, setBranch] = useState("");
+export default function StudentFilter({ data, selectedClassId, selectedBranch, keyword, onChange }: Props) {
   const section = "";
 
   const [openClass, setOpenClass] = useState(false);
@@ -52,12 +52,14 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const classOptions = useMemo(() => data, [data]);
-
-  const branchOptions = useMemo(() => {
-    const all = data.flatMap((c) => (c.branches || []).map((b) => b.name));
-    return [...new Set(all)];
-  }, [data]);
+  const classOptions = data;
+  const branchOptions = [...new Set(
+    (selectedClassId
+      ? data.find((course) => course._id === selectedClassId)?.branches || []
+      : data.flatMap((course) => course.branches || [])
+    ).map((item) => item.name),
+  )];
+  const branchLocked = Boolean(selectedClassId) && branchOptions.length <= 1;
 
   const handleChange = (k: string, c: string, b: string, s: string) => {
     onChange({ keyword: k, classId: c, branch: b, section: s });
@@ -78,8 +80,7 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
           placeholder="ค้นหาจากชื่อ หรือรหัสนักศึกษา"
           value={keyword}
           onChange={(e) => {
-            setKeyword(e.target.value);
-            handleChange(e.target.value, selectedClassId, branch, section);
+            handleChange(e.target.value, selectedClassId, selectedBranch, section);
           }}
           className="w-full pl-9 pr-9 py-[9px] text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-200"
         />
@@ -87,8 +88,7 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
         {keyword && (
           <button
             onClick={() => {
-              setKeyword("");
-              handleChange("", selectedClassId, branch, section);
+              handleChange("", selectedClassId, selectedBranch, section);
             }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
           >
@@ -116,8 +116,9 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
           <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto">
             <button
               onClick={() => {
-                handleChange(keyword, "", branch, section);
+                handleChange(keyword, "", "", section);
                 setOpenClass(false);
+                setOpenBranch(false);
               }}
               className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
             >
@@ -131,8 +132,9 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
                 <button
                   key={c._id}
                   onClick={() => {
-                    handleChange(keyword, c._id, branch, section);
+                    handleChange(keyword, c._id, "", section);
                     setOpenClass(false);
+                    setOpenBranch(false);
                   }}
                   className={`block w-full px-3 py-2 text-left text-sm flex items-center justify-between
                   ${
@@ -151,40 +153,40 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
 
       <div ref={branchRef} className="relative min-w-0 w-full sm:flex-[1_1_180px]">
         <button
+          type="button"
+          disabled={branchLocked}
           onClick={() => setOpenBranch(!openBranch)}
-          className="w-full px-3 py-[9px] text-sm border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer"
+          className="w-full px-3 py-[9px] text-sm border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer disabled:cursor-default"
         >
           <span
             className={`truncate block max-w-[180px] ${
-              branch ? "text-gray-800" : "text-gray-400"
+              selectedBranch ? "text-gray-800" : "text-gray-400"
             }`}
           >
-            {branch ? truncate(branch) : "เลือกสาขา"}
+            {selectedBranch ? truncate(selectedBranch) : branchLocked ? "ยังไม่มีสาขา" : "ทุกสาขา"}
           </span>
-          <ChevronDownIcon className="w-4 h-4 text-blue-500" />
+          {!branchLocked && <ChevronDownIcon className="w-4 h-4 text-blue-500" />}
         </button>
 
         {openBranch && (
           <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto">
             <button
               onClick={() => {
-                setBranch("");
                 handleChange(keyword, selectedClassId, "", section);
                 setOpenBranch(false);
               }}
               className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
             >
-              ทั้งหมด
+              ทุกสาขา
             </button>
 
             {branchOptions.map((b) => {
-              const isSelected = branch === b;
+              const isSelected = selectedBranch === b;
 
               return (
                 <button
                   key={b}
                   onClick={() => {
-                    setBranch(b);
                     handleChange(keyword, selectedClassId, b, section);
                     setOpenBranch(false);
                   }}
@@ -205,8 +207,6 @@ export default function StudentFilter({ data, selectedClassId, onChange }: Props
 
       <button
         onClick={() => {
-          setKeyword("");
-          setBranch("");
           handleChange("", "", "", "");
         }}
         className="self-center whitespace-nowrap text-sm text-blue-500 hover:underline cursor-pointer"

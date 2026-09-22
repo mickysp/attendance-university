@@ -179,6 +179,23 @@ export default function StudentsPage() {
     section: "",
   });
 
+  const branchesByClass = new Map<string, Set<string>>();
+  for (const student of data) {
+    const major = student.major?.trim();
+    if (!major) continue;
+    for (const course of student.classes || []) {
+      if (!course.classId) continue;
+      if (!branchesByClass.has(course.classId)) branchesByClass.set(course.classId, new Set());
+      branchesByClass.get(course.classId)!.add(major);
+    }
+  }
+  const selectedBranches = filters.classId
+    ? [...(branchesByClass.get(filters.classId) || [])]
+    : [...new Set(data.map((student) => student.major?.trim()).filter((major): major is string => Boolean(major)))];
+  const effectiveBranch = filters.classId && selectedBranches.length === 1
+    ? selectedBranches[0]
+    : selectedBranches.includes(filters.branch) ? filters.branch : "";
+
   const filteredData = data.filter((s) => {
     const keyword = filters.keyword.toLowerCase();
 
@@ -192,8 +209,8 @@ export default function StudentsPage() {
         )
       : true;
 
-    const matchBranch = filters.branch
-      ? (s.major || "").toLowerCase().includes(filters.branch.toLowerCase())
+    const matchBranch = effectiveBranch
+      ? (s.major || "").trim().toLocaleLowerCase() === effectiveBranch.toLocaleLowerCase()
       : true;
 
     const matchSection = filters.section ? s.section === filters.section : true;
@@ -470,10 +487,12 @@ export default function StudentsPage() {
                 <div className="mb-4 min-w-0 w-full">
                   <StudentFilter
                     selectedClassId={filters.classId}
+                    selectedBranch={effectiveBranch}
+                    keyword={filters.keyword}
                     data={classes.map((c) => ({
                       _id: c._id,
                       className: c.name,
-                      branches: majors.map((m) => ({
+                      branches: [...(branchesByClass.get(c._id) || [])].map((m) => ({
                         _id: m,
                         name: m,
                       })),
