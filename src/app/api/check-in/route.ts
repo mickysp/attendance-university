@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import type {
   CheckInConfigFields,
   CheckInConfigDocument,
@@ -44,7 +45,12 @@ export async function POST(req: Request) {
   try {
     const body: UpdateCheckInConfigBody = await req.json();
 
-    const { config } = body;
+    const { config, classId } = body;
+
+    if (typeof classId !== "string" || !ObjectId.isValid(classId)) {
+      return NextResponse.json({ success: false, message: "กรุณาเลือกรายวิชาให้ถูกต้อง" }, { status: 400 });
+    }
+    const normalizedClassId = new ObjectId(classId).toHexString();
 
     if (!validateConfig(config)) {
       return NextResponse.json(
@@ -62,6 +68,11 @@ export async function POST(req: Request) {
 
     const db = client.db("attendance");
 
+    const subject = await db.collection("classes").findOne({ _id: new ObjectId(classId) });
+    if (!subject) {
+      return NextResponse.json({ success: false, message: "ไม่พบรายวิชา" }, { status: 404 });
+    }
+
     const checkIn = db.collection<CheckInConfigDocument>("checkIn");
 
     const safeConfig = {
@@ -72,11 +83,13 @@ export async function POST(req: Request) {
 
     await checkIn.updateOne(
       {
-        type: "global_config",
+        type: "class_config",
+        classId: normalizedClassId,
       },
       {
         $set: {
-          type: "global_config",
+          type: "class_config",
+          classId: normalizedClassId,
           config: safeConfig,
           updatedAt: new Date(),
         },
@@ -90,6 +103,8 @@ export async function POST(req: Request) {
       success: true,
 
       config: safeConfig,
+      classId: normalizedClassId,
+      source: "class",
     });
   } catch (err) {
     return NextResponse.json(
@@ -104,17 +119,22 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const classId = new URL(req.url).searchParams.get("classId");
+    if (classId !== null && !ObjectId.isValid(classId)) {
+      return NextResponse.json({ success: false, message: "รหัสรายวิชาไม่ถูกต้อง" }, { status: 400 });
+    }
     const client = await clientPromise;
 
     const db = client.db("attendance");
 
     const checkIn = db.collection<CheckInConfigDocument>("checkIn");
 
-    const result = await checkIn.findOne({
-      type: "global_config",
-    });
+    const classConfig = classId
+      ? await checkIn.findOne({ type: "class_config", classId: new ObjectId(classId).toHexString() })
+      : null;
+    const result = classConfig ?? await checkIn.findOne({ type: "global_config" });
 
     const config = result?.config
       ? {
@@ -127,6 +147,8 @@ export async function GET() {
       success: true,
 
       config,
+      source: classConfig ? "class" : "default",
+      classId,
     });
   } catch (err) {
     return NextResponse.json(

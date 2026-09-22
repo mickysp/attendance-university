@@ -124,9 +124,9 @@ export default function TeachersPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <main className="min-h-0 min-w-0 flex-1 p-4 pt-20 sm:p-6 sm:pt-20 lg:pt-6">
-        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white">
-          <div className="flex shrink-0 flex-col gap-4 px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+        <div className="flex min-w-0 flex-col rounded-2xl bg-white">
+          <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-[26px] font-semibold text-gray-800">
                 Teachers
@@ -138,14 +138,14 @@ export default function TeachersPage() {
             <button
               type="button"
               onClick={() => void openTeacherForm()}
-              className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-(--primary) px-6 py-2 text-white hover:bg-(--primary-hover) disabled:opacity-50"
+              className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-base text-white transition hover:bg-[var(--primary-hover)] disabled:opacity-50 md:mt-0 md:w-auto"
             >
               <PlusIcon className="h-4 w-4" />
               เพิ่มอาจารย์
             </button>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-w-0 flex-col">
             <div className="shrink-0 px-6">
               <TeacherSelect keyword={keyword} onKeywordChange={setKeyword} />
 
@@ -155,7 +155,7 @@ export default function TeachersPage() {
               </p>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            <div className="px-6 pb-6">
               {filtered.length === 0 && !loading && !error ? (
                 <div className="flex flex-col items-center gap-4 py-16 text-center text-sm text-gray-400">
                   <p>

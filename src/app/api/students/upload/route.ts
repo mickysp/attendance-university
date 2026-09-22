@@ -19,7 +19,12 @@ type ClassDocumentWithId = ClassDocument & {
 
 const isValidStudentId = (id: string) => /^\d{9}-\d$/.test(id);
 
-const isValidName = (name: string) => /^(นาย|นาง|นางสาว)/.test(name);
+const isValidName = (name: string) =>
+  name.trim().length >= 2 && /\p{L}/u.test(name) &&
+  !/[\uFFFD\u0000-\u001F\u007F-\u009F]/u.test(name) &&
+  !/(?:à¸|à¹)/u.test(name) &&
+  (name.match(/(?:เธ|เน)/gu) || []).length < 3 &&
+  !/[^\p{Script=Thai}\p{Script=Latin}\s.'’-]/u.test(name);
 
 const isValidEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -42,7 +47,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!section) {
+    if (!section && !students?.every((student) => student.section)) {
       return NextResponse.json(
         {
           success: false,
@@ -129,6 +134,7 @@ export async function POST(req: Request) {
       const fullName = student.fullName?.trim();
 
       const email = student.email?.trim();
+      const studentSection = student.section?.trim() || section?.trim();
 
       if (!studentId || !fullName) {
         errors.push({
@@ -136,6 +142,11 @@ export async function POST(req: Request) {
           message: "ข้อมูลไม่ครบ",
         });
 
+        continue;
+      }
+
+      if (!studentSection || !/^[1-9]\d*$/.test(studentSection)) {
+        errors.push({ student, message: "Section ต้องเป็นจำนวนเต็มมากกว่า 0" });
         continue;
       }
 
@@ -169,7 +180,7 @@ export async function POST(req: Request) {
       const studentData: StudentDocument = {
         studentId,
         fullName,
-        section,
+        section: studentSection,
         major,
         academicYear,
         createdAt: new Date(),
@@ -218,6 +229,7 @@ export async function POST(req: Request) {
 
     for (const student of parsed) {
       const studentObjectId = idMap.get(student.studentId);
+      const studentSection = student.section!;
 
       if (!studentObjectId) {
         continue;
@@ -229,11 +241,11 @@ export async function POST(req: Request) {
         $or: [
           {
             classId: classObjectId,
-            section,
+            section: studentSection,
           },
           {
             className,
-            section,
+            section: studentSection,
           },
         ],
       });
@@ -257,7 +269,7 @@ export async function POST(req: Request) {
         studentId: studentObjectId,
         classId: classObjectId,
         className,
-        section,
+        section: studentSection,
         academicYear,
         createdAt: new Date(),
       });
@@ -286,11 +298,11 @@ export async function POST(req: Request) {
           $or: [
             {
               classId: classObjectId,
-              section,
+              section: studentSection,
             },
             {
               className,
-              section,
+              section: studentSection,
             },
           ],
         });

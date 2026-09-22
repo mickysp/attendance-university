@@ -1,3 +1,5 @@
+import type { Teacher } from "@/types/teachers";
+
 export interface CheckInConfigFields {
   prefix: boolean;
   firstname: boolean;
@@ -11,12 +13,14 @@ export interface CheckInConfigFields {
 }
 
 export interface CheckInConfigDocument {
-  type: "global_config";
+  type: "global_config" | "class_config";
+  classId?: string;
   config: CheckInConfigFields;
   updatedAt: Date;
 }
 
 export interface UpdateCheckInConfigBody {
+  classId: string;
   config: CheckInConfigFields;
 }
 
@@ -37,7 +41,9 @@ export interface CheckInFormData {
 
 export interface CheckInClassInfo {
   className: string;
-  classCode?: string;
+  classCodes: string[];
+  teachers?: Teacher[];
+  description?: string;
   teacher?: string;
 }
 

@@ -120,7 +120,7 @@ export default function ResetPassword({ email, otp, onBack }: Props) {
             className={`px-8 py-2.5 rounded-lg transition cursor-pointer mt-2 ${
               isValid
                 ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-gray-300 text-gray-500"
             }`}
           >
             {loading ? "กำลังบันทึก..." : "ยืนยัน"}

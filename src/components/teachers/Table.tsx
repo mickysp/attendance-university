@@ -105,14 +105,53 @@ export default function TeacherTable({
 
   return (
     <div className="w-full min-w-0">
-      <div className="overflow-hidden rounded-xl border border-gray-200">
+      <div className="space-y-3 md:hidden">
+        {pageTeachers.map((teacher) => (
+          <div key={teacher._id} className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-4">
+              <span className="shrink-0 text-sm text-gray-500">ชื่อ-นามสกุล</span>
+              <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">{teacher.name}</span>
+            </div>
+            <div className="my-4 border-t border-gray-100" />
+            <div className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
+              <div className="@container/actions flex min-w-0 flex-1 justify-end gap-2 [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0">
+                <button
+                  type="button"
+                  aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
+                  title="แก้ไขอาจารย์"
+                  disabled={deletingId !== null}
+                  onClick={() => onEditTeacher(teacher)}
+                  className="flex cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <PencilSquareIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`ลบอาจารย์ ${teacher.name}`}
+                  title="ลบอาจารย์"
+                  disabled={deletingId !== null}
+                  onClick={() => onDeleteTeacher(teacher)}
+                  className="flex cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <TrashIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">ลบ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block">
+        <div className="max-h-[510px] overflow-auto">
         <table className="app-data-table w-full table-fixed text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="text-gray-600">
             <tr>
-              <th className="px-3 py-3 text-left font-semibold">
+              <th className="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left font-semibold">
                 ชื่อ-นามสกุล
               </th>
-              <th className="w-[120px] px-3 py-3 text-left font-semibold sm:w-[190px]">
+              <th className="sticky top-0 z-10 w-[120px] bg-gray-50 px-3 py-3 text-left font-semibold sm:w-[190px]">
                 จัดการ
               </th>
             </tr>
@@ -145,7 +184,7 @@ export default function TeacherTable({
                       title="ลบอาจารย์"
                       disabled={deletingId !== null}
                       onClick={() => onDeleteTeacher(teacher)}
-                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:opacity-50"
                     >
                       <TrashIcon className="h-4 w-4 shrink-0" />
                       <span className="hidden sm:inline">ลบ</span>
@@ -156,6 +195,7 @@ export default function TeacherTable({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       {teachers.length > 10 && (
         <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
@@ -207,7 +247,7 @@ export default function TeacherTable({
               type="button"
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
             >
               ก่อนหน้า
             </button>
@@ -232,7 +272,7 @@ export default function TeacherTable({
               type="button"
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
             >
               ถัดไป
             </button>

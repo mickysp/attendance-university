@@ -13,6 +13,15 @@ import {
 import DatePicker from "react-datepicker";
 import QRCode from "react-qr-code";
 import { appSwal } from "@/lib/swal";
+import { useAlert } from "@/context/AlertContext";
+import {
+  formatCalendarDate,
+  getBangkokDateKey,
+  getScheduleDateError,
+  getScheduleFormDate,
+  parseCalendarDate,
+  selectScheduleForForm,
+} from "@/lib/schedule-date";
 import type { Teacher } from "@/types/teachers";
 import type { ClassDetails } from "@/types/classes";
 import type { ScheduleFormState } from "@/types/schedule";
@@ -33,14 +42,6 @@ const THAI_MONTHS = [
   "พฤศจิกายน",
   "ธันวาคม",
 ];
-
-const formatDateForApi = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
 
 function getClassCodes(classData: Record<string, unknown>): string[] {
   const source = Array.isArray(classData.classCodes)
@@ -101,6 +102,7 @@ function getTeachers(classData: Record<string, unknown>): Teacher[] {
 
 export default function QRPage({ classId }: { classId: string | null }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const qrDialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -109,9 +111,12 @@ export default function QRPage({ classId }: { classId: string | null }) {
   const [loading, setLoading] = useState(true);
   const [openQR, setOpenQR] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [today, setToday] = useState(() => getBangkokDateKey());
+  const [dateReset, setDateReset] = useState(false);
 
   const [schedule, setSchedule] = useState<ScheduleFormState>({
-    date: new Date(),
+    date: getScheduleFormDate(undefined).date,
     startTime: "",
     endTime: "",
     lateAfter: 15,
@@ -121,7 +126,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
   const link =
     typeof window !== "undefined" && classId
-      ? `${window.location.origin}/check-in?classId=${classId}`
+      ? `${window.location.origin}/checkin/${encodeURIComponent(classId)}`
       : "";
 
   const bounceQRDialog = useCallback(() => {
@@ -216,11 +221,50 @@ export default function QRPage({ classId }: { classId: string | null }) {
   }, [classId, showError]);
 
   useEffect(() => {
+    let midnightTimer: ReturnType<typeof setTimeout>;
+    const updateToday = () => {
+      setToday(getBangkokDateKey());
+      clearTimeout(midnightTimer);
+      const nextMidnight = Date.parse(`${getBangkokDateKey()}T00:00:00+07:00`) + 86_400_000;
+      midnightTimer = setTimeout(updateToday, Math.max(1, nextMidnight - Date.now() + 100));
+    };
+    updateToday();
+    window.addEventListener("focus", updateToday);
+    document.addEventListener("visibilitychange", updateToday);
+    return () => {
+      clearTimeout(midnightTimer);
+      window.removeEventListener("focus", updateToday);
+      document.removeEventListener("visibilitychange", updateToday);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (formatCalendarDate(schedule.date) < today) {
+      setSchedule((previous) => ({
+        ...previous,
+        date: parseCalendarDate(today)!,
+        allowCheckIn: true,
+        isOpen: true,
+      }));
+      setDateReset(true);
+    }
+  }, [today, schedule.date]);
+
+  useEffect(() => {
+    const controller = new AbortController();
     const fetchSchedule = async () => {
-      if (!classId) return;
+      if (!classId) {
+        setScheduleLoading(false);
+        return;
+      }
 
       try {
-        const response = await scheduleApi.get(classId, { cache: "no-store" });
+        setScheduleLoading(true);
+        setDateReset(false);
+        const response = await scheduleApi.get(classId, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
 
         const result = await response.json();
 
@@ -232,17 +276,15 @@ export default function QRPage({ classId }: { classId: string | null }) {
             ? [result.data]
             : [];
 
-        const latest = schedules.at(-1);
+        if (controller.signal.aborted) return;
+        const scheduleData = selectScheduleForForm(schedules);
 
-        if (!latest || typeof latest !== "object") return;
-
-        const scheduleData = latest as Record<string, unknown>;
-        const parsedDate = scheduleData.date
-          ? new Date(String(scheduleData.date))
-          : new Date();
+        if (!scheduleData) return;
+        const formDate = getScheduleFormDate(scheduleData.date);
+        setDateReset(formDate.reset);
 
         setSchedule({
-          date: Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate,
+          date: formDate.date,
           startTime:
             typeof scheduleData.startTime === "string"
               ? scheduleData.startTime
@@ -258,20 +300,23 @@ export default function QRPage({ classId }: { classId: string | null }) {
               ? scheduleData.lateAfter
               : 15,
           allowCheckIn:
-            typeof scheduleData.allowCheckIn === "boolean"
+            !formDate.reset && typeof scheduleData.allowCheckIn === "boolean"
               ? scheduleData.allowCheckIn
               : true,
           isOpen:
-            typeof scheduleData.isOpen === "boolean"
+            !formDate.reset && typeof scheduleData.isOpen === "boolean"
               ? scheduleData.isOpen
               : true,
         });
       } catch {
         //
+      } finally {
+        if (!controller.signal.aborted) setScheduleLoading(false);
       }
     };
 
     void fetchSchedule();
+    return () => controller.abort();
   }, [classId]);
 
   useEffect(() => {
@@ -312,6 +357,13 @@ export default function QRPage({ classId }: { classId: string | null }) {
       return;
     }
 
+    const dateError = getScheduleDateError(formatCalendarDate(schedule.date));
+    if (dateError) {
+      setToday(getBangkokDateKey());
+      showError(dateError);
+      return;
+    }
+
     if (!schedule.startTime) {
       showError("กรุณาเลือกเวลาเริ่มเรียน");
       return;
@@ -323,7 +375,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
       const response = await scheduleApi.create({
         classId,
         className: classInfo?.className || "",
-        date: formatDateForApi(schedule.date),
+        date: formatCalendarDate(schedule.date),
         startTime: schedule.startTime,
         endTime: schedule.endTime || schedule.startTime,
         lateAfter: schedule.lateAfter,
@@ -338,6 +390,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
         return;
       }
 
+      setDateReset(false);
       showSuccess("บันทึกเวลาเรียบร้อย");
     } catch {
       showError("เกิดข้อผิดพลาดในการบันทึกเวลา");
@@ -354,7 +407,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
     try {
       await navigator.clipboard.writeText(link);
-      showSuccess("คัดลอกลิงก์แล้ว");
+      showAlert("คัดลอกลิงก์แล้ว", "success");
     } catch {
       showError("ไม่สามารถคัดลอกลิงก์ได้");
     }
@@ -440,7 +493,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
       <main className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
-        {loading && (
+        {(loading || scheduleLoading) && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-300/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4">
               <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
@@ -450,7 +503,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
           </div>
         )}
 
-        {!loading && (
+        {!loading && !scheduleLoading && (
           <div className="flex flex-col rounded-2xl bg-white px-6 pb-8 pt-6">
             <header className="mb-6 flex items-center gap-3">
               <button
@@ -488,7 +541,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                   <div className="mt-3 flex flex-col gap-3 text-sm text-gray-600">
                     <div>
-                      <span className="text-gray-500">อาจารย์ผู้สอน:</span>{" "}
+                      <span className="text-gray-500">อาจารย์ผู้สอน:</span>
                       <span className="font-medium text-gray-700">
                         {classInfo.teachers.length > 0
                           ? classInfo.teachers
@@ -532,6 +585,13 @@ export default function QRPage({ classId }: { classId: string | null }) {
                     ตั้งเวลาเช็กชื่อ
                   </h3>
 
+                  {dateReset && (
+                    <p role="status" className="mb-4 text-sm text-blue-600">
+                      ระบบใช้เวลาเดิมเป็นค่าเริ่มต้น
+                      กรุณาตรวจสอบวันที่และเวลา แล้วกดบันทึกเพื่อสร้างรอบเช็กชื่อใหม่
+                    </p>
+                  )}
+
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
                     <div className="flex w-full flex-col sm:w-auto">
                       <label className="mb-1 text-xs text-gray-500">
@@ -540,10 +600,13 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                       <DatePicker
                         selected={schedule.date}
+                        minDate={parseCalendarDate(today)!}
                         onChange={(date: Date | null) => {
+                          const selected = date || getScheduleFormDate(undefined).date;
+                          if (getScheduleDateError(formatCalendarDate(selected))) return;
                           setSchedule((previous) => ({
                             ...previous,
-                            date: date || new Date(),
+                            date: selected,
                           }));
                         }}
                         dateFormat="dd/MM/yyyy"
@@ -624,7 +687,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
                       type="button"
                       disabled={saving}
                       onClick={handleSaveSchedule}
-                      className="h-[46px] w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-2.5 text-sm text-white shadow transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                      className="h-[46px] w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-2.5 text-sm text-white shadow transition hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
                     >
                       {saving ? "กำลังบันทึก..." : "บันทึก"}
                     </button>
