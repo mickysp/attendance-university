@@ -117,7 +117,7 @@ export default function ClassFilter({ onChange }: Props) {
               py-[9px]
               pl-9
               pr-9
-              text-[16px]
+              text-[14px]
               text-gray-700
               outline-none
               focus:ring-1

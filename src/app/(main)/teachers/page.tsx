@@ -138,7 +138,7 @@ export default function TeachersPage() {
             <button
               type="button"
               onClick={() => void openTeacherForm()}
-              className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-base text-white transition hover:bg-[var(--primary-hover)] disabled:opacity-50 md:mt-0 md:w-auto"
+              className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-[14px] text-white transition hover:bg-[var(--primary-hover)] disabled:opacity-50 md:mt-0 md:w-auto"
             >
               <PlusIcon className="h-4 w-4" />
               เพิ่มอาจารย์

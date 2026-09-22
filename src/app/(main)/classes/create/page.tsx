@@ -354,26 +354,51 @@ export default function CreateClassPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
       <div className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
-        <div className="rounded-2xl bg-white px-6 pb-6 pt-6">
+        <div className="rounded-2xl bg-white px-6 pb-6 pt-6 max-[376px]:px-4">
           <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 max-[376px]:gap-2">
               <button
                 type="button"
                 onClick={() => router.push("/classes")}
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 transition hover:bg-gray-100"
+                className="
+                flex h-8 w-8 shrink-0 cursor-pointer
+                items-center justify-center
+                rounded-full border border-gray-300
+                transition hover:bg-gray-100
+                "
               >
                 <ArrowLeftIcon className="h-3 w-3 text-gray-700" />
               </button>
 
-              <h1 className="text-[26px] font-semibold text-gray-800">
+              <h1
+                className="
+                whitespace-nowrap
+                text-[20px]
+                font-semibold
+                text-gray-800
+                max-[376px]:text-[18px]
+                md:text-[26px]
+                "
+              >
                 เพิ่มรายวิชา
               </h1>
             </div>
 
-            <div className="flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2">
-              <span className="text-sm text-gray-500">จำนวนวิชาที่เพิ่ม</span>
+            <div
+              className="
+              flex shrink-0 items-center gap-2
+              rounded-full border border-blue-100 bg-blue-50
+              px-4 py-2
+              max-[376px]:gap-1.5
+              max-[376px]:px-3
+              max-[376px]:py-1.5
+              "
+            >
+              <span className="text-sm text-gray-500 max-[375px]:text-xs">
+                จำนวนวิชาที่เพิ่ม
+              </span>
 
-              <span className="text-sm font-semibold text-blue-600">
+              <span className="text-sm font-semibold text-blue-600 max-[375px]:text-xs">
                 {completedCount}
               </span>
             </div>
@@ -616,20 +641,20 @@ export default function CreateClassPage() {
             ))}
           </div>
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <button
               type="button"
               onClick={handleAddClass}
-              className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="w-fit cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
               + เพิ่มวิชา
             </button>
 
-            <div className="flex gap-2">
+            <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
               <button
                 type="button"
                 onClick={() => router.push("/classes")}
-                className="cursor-pointer rounded-md border border-gray-300 px-6 py-2.5 text-sm text-gray-600 hover:bg-gray-100"
+                className="order-2 w-full cursor-pointer rounded-md border border-gray-300 px-6 py-2.5 text-sm text-gray-600 hover:bg-gray-100 md:order-1 md:w-auto"
               >
                 ยกเลิก
               </button>
@@ -638,11 +663,13 @@ export default function CreateClassPage() {
                 type="button"
                 onClick={() => showConfirm("เพิ่มข้อมูลรายวิชา", handleSubmit)}
                 disabled={loading || !isFormValid}
-                className={`rounded-md px-6 py-2.5 text-sm text-white transition ${
-                  loading || !isFormValid
-                    ? "bg-gray-400"
-                    : "cursor-pointer bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
-                }`}
+                className={`order-1 w-full rounded-md px-6 py-2.5 text-sm text-white transition md:order-2 md:w-auto
+                  ${
+                    loading || !isFormValid
+                      ? "bg-gray-400"
+                      : "cursor-pointer bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
+                  }
+                  `}
               >
                 {loading ? "กำลังบันทึก..." : "บันทึก"}
               </button>

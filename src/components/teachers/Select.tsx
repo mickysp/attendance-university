@@ -22,8 +22,9 @@ export default function TeacherSelect({
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-md border border-gray-200 py-[9px] pl-9 pr-9 text-base text-gray-700 outline-none focus:ring-1 focus:ring-gray-200 md:text-sm"
+          className="w-full rounded-md border border-gray-200 py-[9px] pl-9 pr-9 text-[14px] text-gray-700 outline-none focus:ring-1 focus:ring-gray-200"
         />
+
         {keyword && (
           <button
             type="button"
@@ -35,7 +36,11 @@ export default function TeacherSelect({
           </button>
         )}
       </div>
-      <button type="button" onClick={() => onKeywordChange("")} className="cursor-pointer self-center whitespace-nowrap text-[13px] text-blue-500 hover:underline md:self-auto">
+      <button
+        type="button"
+        onClick={() => onKeywordChange("")}
+        className="cursor-pointer self-center whitespace-nowrap text-[13px] text-blue-500 hover:underline md:self-auto"
+      >
         ล้างค่า
       </button>
     </div>
