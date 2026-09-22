@@ -124,8 +124,8 @@ export default function TeachersPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <main className="min-h-0 min-w-0 flex-1 p-6 pt-[80px] lg:pt-6">
-        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+        <div className="flex min-w-0 flex-col rounded-2xl bg-white">
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-[26px] font-semibold text-gray-800">
@@ -145,7 +145,7 @@ export default function TeachersPage() {
             </button>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-w-0 flex-col">
             <div className="shrink-0 px-6">
               <TeacherSelect keyword={keyword} onKeywordChange={setKeyword} />
 
@@ -155,7 +155,7 @@ export default function TeachersPage() {
               </p>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            <div className="px-6 pb-6">
               {filtered.length === 0 && !loading && !error ? (
                 <div className="flex flex-col items-center gap-4 py-16 text-center text-sm text-gray-400">
                   <p>

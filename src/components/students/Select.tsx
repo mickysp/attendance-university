@@ -20,26 +20,25 @@ type ClassItem = {
 
 type Props = {
   data: ClassItem[];
+  selectedClassId: string;
   onChange: (value: {
     keyword: string;
-    className: string;
+    classId: string;
     branch: string;
     section: string;
   }) => void;
 };
 
-export default function StudentFilter({ data, onChange }: Props) {
+export default function StudentFilter({ data, selectedClassId, onChange }: Props) {
   const [keyword, setKeyword] = useState("");
-  const [className, setClassName] = useState("");
   const [branch, setBranch] = useState("");
-  const [section, setSection] = useState("");
+  const section = "";
 
   const [openClass, setOpenClass] = useState(false);
   const [openBranch, setOpenBranch] = useState(false);
 
   const classRef = useRef<HTMLDivElement>(null);
   const branchRef = useRef<HTMLDivElement>(null);
-  const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -53,7 +52,7 @@ export default function StudentFilter({ data, onChange }: Props) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const classOptions = useMemo(() => data.map((c) => c.className), [data]);
+  const classOptions = useMemo(() => data, [data]);
 
   const branchOptions = useMemo(() => {
     const all = data.flatMap((c) => (c.branches || []).map((b) => b.name));
@@ -61,7 +60,7 @@ export default function StudentFilter({ data, onChange }: Props) {
   }, [data]);
 
   const handleChange = (k: string, c: string, b: string, s: string) => {
-    onChange({ keyword: k, className: c, branch: b, section: s });
+    onChange({ keyword: k, classId: c, branch: b, section: s });
   };
 
   const truncate = (text: string, max = 18) => {
@@ -70,8 +69,8 @@ export default function StudentFilter({ data, onChange }: Props) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-3 w-full">
-      <div className="relative w-full md:w-[380px]">
+    <div className="relative z-30 flex w-full max-w-[760px] min-w-0 flex-wrap gap-3">
+      <div className="relative min-w-0 w-full sm:flex-[2_1_260px]">
         <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
 
         <input
@@ -80,7 +79,7 @@ export default function StudentFilter({ data, onChange }: Props) {
           value={keyword}
           onChange={(e) => {
             setKeyword(e.target.value);
-            handleChange(e.target.value, className, branch, section);
+            handleChange(e.target.value, selectedClassId, branch, section);
           }}
           className="w-full pl-9 pr-9 py-[9px] text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-200"
         />
@@ -89,7 +88,7 @@ export default function StudentFilter({ data, onChange }: Props) {
           <button
             onClick={() => {
               setKeyword("");
-              handleChange("", className, branch, section);
+              handleChange("", selectedClassId, branch, section);
             }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
           >
@@ -98,17 +97,17 @@ export default function StudentFilter({ data, onChange }: Props) {
         )}
       </div>
 
-      <div ref={classRef} className="relative w-full md:w-[260px]">
+      <div ref={classRef} className="relative min-w-0 w-full sm:flex-[1_1_180px]">
         <button
           onClick={() => setOpenClass(!openClass)}
           className="w-full px-3 py-[9px] text-sm border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer"
         >
           <span
             className={`truncate block max-w-[180px] ${
-              className ? "text-gray-800" : "text-gray-400"
+              selectedClassId ? "text-gray-800" : "text-gray-400"
             }`}
           >
-            {className ? truncate(className) : "เลือกวิชา"}
+            {selectedClassId ? truncate(data.find((item) => item._id === selectedClassId)?.className || "") : "ทุกวิชา"}
           </span>
           <ChevronDownIcon className="w-4 h-4 text-blue-500" />
         </button>
@@ -117,7 +116,6 @@ export default function StudentFilter({ data, onChange }: Props) {
           <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto">
             <button
               onClick={() => {
-                setClassName("");
                 handleChange(keyword, "", branch, section);
                 setOpenClass(false);
               }}
@@ -127,14 +125,13 @@ export default function StudentFilter({ data, onChange }: Props) {
             </button>
 
             {classOptions.map((c) => {
-              const isSelected = className === c;
+              const isSelected = selectedClassId === c._id;
 
               return (
                 <button
-                  key={c}
+                  key={c._id}
                   onClick={() => {
-                    setClassName(c);
-                    handleChange(keyword, c, branch, section);
+                    handleChange(keyword, c._id, branch, section);
                     setOpenClass(false);
                   }}
                   className={`block w-full px-3 py-2 text-left text-sm flex items-center justify-between
@@ -144,7 +141,7 @@ export default function StudentFilter({ data, onChange }: Props) {
                       : "hover:bg-gray-100"
                   } cursor-pointer`}
                 >
-                  <span>{c}</span>
+                  <span>{c.className}</span>
                 </button>
               );
             })}
@@ -152,7 +149,7 @@ export default function StudentFilter({ data, onChange }: Props) {
         )}
       </div>
 
-      <div ref={branchRef} className="relative w-full md:w-[260px]">
+      <div ref={branchRef} className="relative min-w-0 w-full sm:flex-[1_1_180px]">
         <button
           onClick={() => setOpenBranch(!openBranch)}
           className="w-full px-3 py-[9px] text-sm border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer"
@@ -172,7 +169,7 @@ export default function StudentFilter({ data, onChange }: Props) {
             <button
               onClick={() => {
                 setBranch("");
-                handleChange(keyword, className, "", section);
+                handleChange(keyword, selectedClassId, "", section);
                 setOpenBranch(false);
               }}
               className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
@@ -188,7 +185,7 @@ export default function StudentFilter({ data, onChange }: Props) {
                   key={b}
                   onClick={() => {
                     setBranch(b);
-                    handleChange(keyword, className, b, section);
+                    handleChange(keyword, selectedClassId, b, section);
                     setOpenBranch(false);
                   }}
                   className={`block w-full px-3 py-2 text-left text-sm flex items-center justify-between
@@ -209,11 +206,10 @@ export default function StudentFilter({ data, onChange }: Props) {
       <button
         onClick={() => {
           setKeyword("");
-          setClassName("");
           setBranch("");
           handleChange("", "", "", "");
         }}
-        className="text-sm text-blue-500 hover:underline whitespace-nowrap cursor-pointer"
+        className="self-center whitespace-nowrap text-sm text-blue-500 hover:underline cursor-pointer"
       >
         ล้างค่า
       </button>

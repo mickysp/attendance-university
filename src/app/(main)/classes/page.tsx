@@ -89,7 +89,7 @@ export default function ClassesPage() {
           relative
           flex-1
           min-h-0
-          overflow-hidden
+          overflow-y-auto
           p-6
           pt-[80px]
           font-noto
@@ -130,10 +130,8 @@ export default function ClassesPage() {
           <div
             className="
               flex
-              h-full
-              min-h-0
+              min-w-0
               flex-col
-              overflow-hidden
               rounded-2xl
               bg-white
             "
@@ -195,7 +193,7 @@ export default function ClassesPage() {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            <div className="px-6 pb-6">
               <Table
                 data={filteredClasses}
                 onDeleteSuccess={handleDeleteSuccess}

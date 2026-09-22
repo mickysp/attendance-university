@@ -144,13 +144,14 @@ export default function TeacherTable({
         ))}
       </div>
       <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block">
+        <div className="max-h-[510px] overflow-auto">
         <table className="app-data-table w-full table-fixed text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="text-gray-600">
             <tr>
-              <th className="px-3 py-3 text-left font-semibold">
+              <th className="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left font-semibold">
                 ชื่อ-นามสกุล
               </th>
-              <th className="w-[120px] px-3 py-3 text-left font-semibold sm:w-[190px]">
+              <th className="sticky top-0 z-10 w-[120px] bg-gray-50 px-3 py-3 text-left font-semibold sm:w-[190px]">
                 จัดการ
               </th>
             </tr>
@@ -194,6 +195,7 @@ export default function TeacherTable({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       {teachers.length > 10 && (
         <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">

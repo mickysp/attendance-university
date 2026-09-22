@@ -19,6 +19,7 @@ type Student = {
   email?: string;
   section?: string;
   classes?: {
+    classId?: string;
     className: string;
     section: string;
     academicYear: number;
@@ -27,11 +28,15 @@ type Student = {
 
 export default function StudentTable({
   data,
+  selectedClassId,
+  classHasStudents,
   onDeleteSuccess,
   onUpdateSuccess,
   onWithdrawSuccess,
 }: {
   data: Student[];
+  selectedClassId: string;
+  classHasStudents: boolean;
   onDeleteSuccess: (id: string) => void;
   onUpdateSuccess: (student: Student) => void;
   onWithdrawSuccess: (
@@ -50,7 +55,8 @@ export default function StudentTable({
   const { showConfirm } = useConfirm();
   const { showAlert } = useAlert();
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage));
+  const currentPage = Math.min(page, totalPages);
 
   const [originalStudent, setOriginalStudent] = useState<Student | null>(null);
   const [openEdit, setOpenEdit] = useState(false);
@@ -68,9 +74,45 @@ export default function StudentTable({
   }));
 
   const paginatedData = data.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage,
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
   );
+
+  const getSectionLabels = (student: Student) => {
+    const enrollments = selectedClassId
+      ? (student.classes || []).filter(
+          (course) => course.classId === selectedClassId,
+        )
+      : student.classes || [];
+    const labels = enrollments.map((course) =>
+      selectedClassId
+        ? `Section ${course.section || "-"}`
+        : `${course.className || "ไม่ทราบวิชา"} · Section ${course.section || "-"}`,
+    );
+    return [
+      ...new Set(
+        labels.length
+          ? labels
+          : student.section
+            ? [`Section ${student.section}`]
+            : [],
+      ),
+    ];
+  };
+
+  const getSectionBadgeColor = (label: string) => {
+    const number = Number(label.match(/Section\s+(\d+)/)?.[1]);
+    const colors = [
+      "bg-blue-50 text-blue-700",
+      "bg-emerald-50 text-emerald-700",
+      "bg-amber-50 text-amber-700",
+      "bg-violet-50 text-violet-700",
+      "bg-rose-50 text-rose-700",
+    ];
+    return colors[
+      Number.isInteger(number) && number > 0 ? (number - 1) % colors.length : 0
+    ];
+  };
 
   const isDirty =
     selectedStudent?.studentId !== originalStudent?.studentId ||
@@ -124,7 +166,7 @@ export default function StudentTable({
 
     const maxVisible = 4;
 
-    let start = Math.max(1, page - 1);
+    let start = Math.max(1, currentPage - 1);
     let end = start + maxVisible - 1;
 
     if (end > totalPages) {
@@ -164,6 +206,18 @@ export default function StudentTable({
       "delete",
       "คุณต้องการลบข้อมูลใช่หรือไม่",
     );
+  };
+
+  const handleEdit = (student: Student) => {
+    setSelectedStudent(student);
+    setOriginalStudent(JSON.parse(JSON.stringify(student)));
+    setEditingClasses(
+      (student.classes || []).map((course) => ({
+        className: course.className,
+        section: course.section || "",
+      })),
+    );
+    setOpenEdit(true);
   };
 
   const handleUpdateStudent = async () => {
@@ -254,75 +308,197 @@ export default function StudentTable({
           <img src="/not_exist_search.svg" className="w-28 h-28" />
         </div>
         <p className="text-sm text-gray-400">
-          ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
+          {selectedClassId && !classHasStudents
+            ? "วิชานี้ยังไม่มีรายชื่อนักศึกษา"
+            : "ไม่พบรายชื่อนักศึกษาที่ตรงกับตัวกรอง"}
         </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="rounded-xl border border-gray-200 overflow-hidden max-h-[510px] flex flex-col">
-        <div className="overflow-x-auto overflow-y-visible">
-          <table className="app-data-table w-full text-base table-fixed">
-            <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10">
+    <div className="min-w-0 w-full">
+      <div className="space-y-3 md:hidden">
+        {paginatedData.map((student) => (
+          <div
+            key={student._id}
+            className="w-full rounded-xl border border-gray-200 bg-white p-4"
+          >
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">
+                  รหัสนักศึกษา
+                </span>
+                <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">
+                  {student.studentId}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">
+                  ชื่อ-นามสกุล
+                </span>
+                <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">
+                  {student.fullName}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">อีเมล</span>
+                <span className="min-w-0 max-w-[65%] break-all text-right text-sm text-gray-700">
+                  {student.email || "-"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="shrink-0 text-sm text-gray-500">Section</span>
+                <div className="flex min-w-0 max-w-[65%] flex-wrap justify-end gap-1 text-right">
+                  {getSectionLabels(student).length ? (
+                    getSectionLabels(student).map((label) => (
+                      <span
+                        key={label}
+                        className={`max-w-full break-words rounded-md px-2 py-1 text-xs ${getSectionBadgeColor(label)}`}
+                      >
+                        {label}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-gray-400">-</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="my-4 border-t border-gray-100" />
+            <div className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
+              <div className="@container/actions flex min-w-0 flex-1 flex-nowrap justify-end gap-2 whitespace-nowrap [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0 [&>button]:justify-center">
+                <button
+                  type="button"
+                  aria-label="รายละเอียด"
+                  title="รายละเอียด"
+                  onClick={() => {
+                    setSelectedStudent(student);
+                    setOpenView(true);
+                  }}
+                  className="flex cursor-pointer items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
+                >
+                  <EyeIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">
+                    รายละเอียด
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="แก้ไข"
+                  title="แก้ไข"
+                  onClick={() => handleEdit(student)}
+                  className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <PencilSquareIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="ลบ"
+                  title="ลบ"
+                  onClick={() => handleDelete(student._id)}
+                  className="flex cursor-pointer items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50"
+                >
+                  <TrashIcon className="h-4 w-4 shrink-0" />
+                  <span className="hidden @[260px]/actions:inline">ลบ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden min-w-0 max-w-full overflow-hidden rounded-xl border border-gray-200 md:block">
+        <div className="max-h-[510px] w-full overflow-auto">
+          <table className="app-data-table w-full min-w-[1130px] table-fixed text-sm">
+            <colgroup>
+              <col style={{ width: "160px" }} />
+              <col style={{ width: "240px" }} />
+              <col style={{ width: "250px" }} />
+              <col style={{ width: "200px" }} />
+              <col style={{ width: "280px" }} />
+            </colgroup>
+            <thead className="text-gray-600">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold w-[180px]">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   รหัสนักศึกษา
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[260px]">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   ชื่อ-นามสกุล
                 </th>
-                <th className="px-4 py-3 text-left font-semibold w-[300px]">
-                  อีเมล
-                </th>
-                <th className="px-4 py-3 text-left font-semibold w-[350px]">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">อีเมล</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">Section</th>
+                <th className="app-table-sticky-end sticky right-0 top-0 z-30 whitespace-nowrap bg-gray-50 px-3 py-3 text-left font-semibold">
                   จัดการ
                 </th>
               </tr>
             </thead>
 
             <tbody>
-              {paginatedData.map((s, i) => (
+              {paginatedData.map((s) => (
                 <tr
-                  key={i}
-                  className="border-t border-gray-200 hover:bg-gray-50 text-sm"
+                  key={s._id}
+                  className="group/row border-t border-gray-200 hover:bg-gray-50 text-sm"
                 >
-                  <td className="px-4 py-3 truncate">{s.studentId}</td>
+                  <td className="px-3 py-3">
+                    <div className="truncate" title={s.studentId}>
+                      {s.studentId}
+                    </div>
+                  </td>
 
-                  <td className="px-4 py-3 truncate">{s.fullName}</td>
+                  <td className="px-3 py-3">
+                    <div className="truncate" title={s.fullName}>
+                      {s.fullName}
+                    </div>
+                  </td>
 
-                  <td className="px-4 py-3 truncate">{s.email || "-"}</td>
+                  <td className="px-3 py-3">
+                    <div className="truncate" title={s.email || "-"}>
+                      {s.email || "-"}
+                    </div>
+                  </td>
 
-                  <td className="px-4 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                  <td
+                    className="px-3 py-3"
+                    title={getSectionLabels(s).join(", ")}
+                  >
+                    <div className="flex min-w-0 items-center gap-1">
+                      {getSectionLabels(s).length > 0 ? (
+                        <>
+                          <span
+                            className={`min-w-0 truncate rounded-md px-2 py-1 text-xs ${getSectionBadgeColor(getSectionLabels(s)[0])}`}
+                          >
+                            {getSectionLabels(s)[0]}
+                          </span>
+                          {getSectionLabels(s).length > 1 && (
+                            <span className="shrink-0 rounded-md bg-gray-100 px-1.5 py-1 text-xs text-gray-600">
+                              +{getSectionLabels(s).length - 1}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="app-table-sticky-end sticky right-0 z-10 whitespace-nowrap bg-white px-3 py-2 group-hover/row:bg-gray-50">
+                    <div className="flex flex-nowrap items-center gap-2 [&>button]:shrink-0">
                       <button
                         onClick={() => {
                           setSelectedStudent(s);
                           setOpenView(true);
                         }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm cursor-pointer"
                       >
                         <EyeIcon className="w-4 h-4" />
                         รายละเอียด
                       </button>
 
                       <button
-                        onClick={() => {
-                          setSelectedStudent(s);
-
-                          setOriginalStudent(JSON.parse(JSON.stringify(s)));
-
-                          setEditingClasses(
-                            (s.classes || []).map((c) => ({
-                              className: c.className,
-                              section: c.section || "",
-                            })),
-                          );
-
-                          setOpenEdit(true);
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700 text-sm cursor-pointer"
+                        onClick={() => handleEdit(s)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700 text-sm cursor-pointer"
                       >
                         <PencilSquareIcon className="w-4 h-4" />
                         แก้ไข
@@ -333,7 +509,7 @@ export default function StudentTable({
                           setOpenMenuId(null);
                           handleDelete(s._id);
                         }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-red-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-red-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
                       >
                         <TrashIcon className="w-4 h-4" />
                         ลบ
@@ -349,11 +525,11 @@ export default function StudentTable({
 
       {openEdit && selectedStudent && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 font-noto"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 font-noto"
           onClick={() => setOpenEdit(false)}
         >
           <div
-            className="w-full max-w-3xl bg-white rounded-2xl shadow-sm p-6 max-h-[85vh] flex flex-col"
+            className="w-full min-w-0 max-w-3xl bg-white rounded-2xl shadow-sm p-4 sm:p-6 max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-4">
@@ -525,11 +701,11 @@ export default function StudentTable({
 
       {openView && selectedStudent && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
           onClick={() => setOpenView(false)}
         >
           <div
-            className="w-full max-w-3xl bg-white rounded-2xl shadow-sm p-6 max-h-[85vh] flex flex-col"
+            className="w-full min-w-0 max-w-3xl bg-white rounded-2xl shadow-sm p-4 sm:p-6 max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-4">
@@ -667,7 +843,7 @@ export default function StudentTable({
       )}
 
       {data.length > 10 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+        <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
             <span>แสดง</span>
 
@@ -702,12 +878,12 @@ export default function StudentTable({
             <span>จากทั้งหมด {data.length} รายการ</span>
           </div>
 
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex max-w-full flex-wrap items-center justify-center gap-2 sm:justify-end">
             <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
+              onClick={() => setPage(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1}
               className={`px-3 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
-              ${page === 1 ? "opacity-40" : "cursor-pointer"}
+              ${currentPage === 1 ? "opacity-40" : "cursor-pointer"}
               `}
             >
               ก่อนหน้า
@@ -718,7 +894,7 @@ export default function StudentTable({
                 key={p}
                 onClick={() => setPage(p)}
                 className={`px-3.5 py-2 rounded-md border text-[13px] cursor-pointer ${
-                  page === p
+                  currentPage === p
                     ? "bg-[var(--primary)] text-white border-[var(--primary)]"
                     : "border-gray-100 hover:bg-gray-100"
                 }`}
@@ -727,10 +903,10 @@ export default function StudentTable({
               </button>
             ))}
             <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
+              onClick={() => setPage(Math.min(currentPage + 1, totalPages))}
+              disabled={currentPage === totalPages}
               className={`px-4 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
-              ${page === totalPages ? "opacity-40" : "cursor-pointer"}
+              ${currentPage === totalPages ? "opacity-40" : "cursor-pointer"}
               `}
             >
               ถัดไป

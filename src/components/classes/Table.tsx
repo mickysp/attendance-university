@@ -296,7 +296,7 @@ export default function Table({
 
       {/* ==================== DESKTOP ==================== */}
       <div className="hidden w-full overflow-hidden rounded-xl border border-gray-200 md:block">
-        <div className="w-full overflow-x-auto">
+        <div className="max-h-[510px] w-full overflow-auto">
           <table className="app-data-table min-w-[900px] w-full table-fixed text-sm">
             <colgroup>
               <col className="w-[calc((100%-280px)*0.25)]" />
@@ -306,23 +306,23 @@ export default function Table({
               <col className="w-[280px]" />
             </colgroup>
 
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="text-gray-600">
               <tr>
-                <th className="px-3 py-3 text-left font-semibold">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   รหัสวิชา / Section
                 </th>
 
-                <th className="px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
 
-                <th className="px-3 py-3 text-left font-semibold">
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   อาจารย์ผู้สอน
                 </th>
 
-                <th className="px-3 py-3 text-left font-semibold">สถานะ</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">สถานะ</th>
 
                 <th
                   className="
-                    sticky right-0 z-20
+                    sticky right-0 top-0 z-30
                     bg-gray-50
                     px-3 py-3
                     text-left

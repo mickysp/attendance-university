@@ -44,8 +44,6 @@ export default function CreateStudentPage() {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedMajor, setSelectedMajor] = useState("");
 
-  const sectionOptions = ["1", "2", "3"];
-
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -115,7 +113,11 @@ export default function CreateStudentPage() {
 
   const isValidStudentId = (id: string) => /^\d{9}-\d$/.test(id);
   const isValidName = (name: string) =>
-    /^(นาย|นาง|นางสาว)[^\s]+(\s[^\s]+)+$/.test(name);
+    name.trim().length >= 2 && /\p{L}/u.test(name) &&
+    !/[\uFFFD\u0000-\u001F\u007F-\u009F]/u.test(name) &&
+    !/(?:à¸|à¹)/u.test(name) &&
+    (name.match(/(?:เธ|เน)/gu) || []).length < 3 &&
+    !/[^\p{Script=Thai}\p{Script=Latin}\s.'’-]/u.test(name);
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -126,34 +128,27 @@ export default function CreateStudentPage() {
       (s) =>
         s.studentId.trim() &&
         s.fullName.trim() &&
-        s.section &&
+        /^[1-9]\d*$/.test(s.section) &&
         isValidStudentId(s.studentId) &&
-        isValidName(s.fullName),
+        isValidName(s.fullName.trim()) &&
+        (!s.email.trim() || isValidEmail(s.email.trim())),
     );
 
   const handleSubmit = async () => {
+    if (!isFormValid || loading) return;
     try {
       setLoading(true);
 
       const majorName = majors.find((m) => m._id === selectedMajor)?.name || "";
 
-      const validStudents = students.filter(
-        (s) => s.studentId.trim() && s.fullName.trim() && s.section,
-      );
-
-      if (!validStudents.length) {
-        showAlert("กรุณากรอกข้อมูลนักศึกษาให้ครบ", "error");
-        return;
-      }
-
       const payload = {
         classId: selectedClass,
         major: majorName,
-        section: validStudents[0].section,
-        students: validStudents.map((s) => ({
-          studentId: s.studentId,
-          fullName: s.fullName,
-          email: s.email,
+        students: students.map((s) => ({
+          studentId: s.studentId.trim(),
+          fullName: s.fullName.trim(),
+          email: s.email.trim(),
+          section: s.section.trim(),
         })),
       };
 
@@ -166,23 +161,23 @@ export default function CreateStudentPage() {
         return;
       }
 
+      if (data.errors?.length) {
+        showAlert(data.errors[0].message || "ข้อมูลนักศึกษาบางรายการไม่ถูกต้อง", "error");
+        return;
+      }
+
       showAlert("เพิ่มนักศึกษาสำเร็จ", "success");
-      router.push("/students");
-    } catch (error) {
+      router.push(`/students?classId=${encodeURIComponent(selectedClass)}`);
+    } catch {
       showAlert("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const total = students.length;
-  const valid = students.filter(
-    (s) => s.studentId && s.fullName && s.section,
-  ).length;
-
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 pt-[80px] font-noto sm:p-6 sm:pt-[80px] lg:pt-6">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
             <div className="flex flex-col items-center gap-4">
@@ -192,7 +187,7 @@ export default function CreateStudentPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm p-6" ref={dropdownRef}>
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6" ref={dropdownRef}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
@@ -372,8 +367,7 @@ export default function CreateStudentPage() {
 
                       {item.fullName && !isValidName(item.fullName) && (
                         <p className="text-xs text-red-500 mt-1">
-                          ต้องขึ้นต้นด้วย นาย / นาง / นางสาว และอยู่ในรูปแบบ
-                          เช่น นายสมชาย ใจดี
+                          กรุณากรอกชื่อ-นามสกุลภาษาไทยหรืออังกฤษให้ถูกต้อง
                         </p>
                       )}
                     </div>
@@ -403,49 +397,17 @@ export default function CreateStudentPage() {
                       )}
                     </div>
 
-                    <div className="relative">
+                    <div>
                       <label className="text-sm text-gray-800">Section</label>
-
-                      <button
-                        onClick={() =>
-                          setOpenDropdown(
-                            openDropdown === `section-${index}`
-                              ? null
-                              : `section-${index}`,
-                          )
-                        }
-                        className="form-input-card text-sm flex items-center justify-between w-full"
-                      >
-                        {item.section
-                          ? `Section ${item.section}`
-                          : "เลือก Section"}{" "}
-                        <ChevronDownIcon className="w-4 h-4 text-gray-400" />
-                      </button>
-
-                      {openDropdown === `section-${index}` && (
-                        <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
-                          {sectionOptions.map((s) => {
-                            const isSelected = item.section === s;
-
-                            return (
-                              <button
-                                key={s}
-                                onClick={() => {
-                                  handleChange(index, "section", s);
-                                  setOpenDropdown(null);
-                                }}
-                                className={`block w-full px-4 py-2 text-left text-sm cursor-pointer
-                                ${
-                                  isSelected
-                                    ? "bg-blue-50 text-blue-600 font-medium"
-                                    : "hover:bg-gray-100"
-                                }`}
-                              >
-                                Section {s}
-                              </button>
-                            );
-                          })}
-                        </div>
+                      <input
+                        inputMode="numeric"
+                        value={item.section}
+                        onChange={(e) => handleChange(index, "section", e.target.value.replace(/\D/g, ""))}
+                        className="form-input-card w-full text-sm"
+                        placeholder="เช่น 1, 4, 10"
+                      />
+                      {item.section && !/^[1-9]\d*$/.test(item.section) && (
+                        <p className="mt-1 text-xs text-red-500">Section ต้องเป็นจำนวนเต็มมากกว่า 0</p>
                       )}
                     </div>
                   </div>
