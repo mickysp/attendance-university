@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronDownIcon,
+  CheckIcon,
+  EyeIcon,
+  EyeSlashIcon,
   PlusIcon,
   UserPlusIcon,
   XMarkIcon,
@@ -12,6 +15,7 @@ import { useConfirm } from "@/context/swal";
 import AdministratorSelect from "@/components/administrators/Select";
 import AdministratorTable from "@/components/administrators/Table";
 import type { Administrator, AdministratorRole } from "@/types/administrators";
+import { USER_PREFIXES, validEmail, validPassword } from "@/lib/user-validation";
 
 const emptyForm = { 
   prefix: "",
@@ -40,8 +44,11 @@ export default function AdministratorsPage() {
   const { showConfirm } = useConfirm();
   const dialogRef = useRef<HTMLDivElement>(null);
   const formRoleRef = useRef<HTMLDivElement>(null);
+  const formPrefixRef = useRef<HTMLDivElement>(null);
   const [users, setUsers] = useState<Administrator[]>([]);
   const [currentUserId, setCurrentUserId] = useState("");
+  const [canManage, setCanManage] = useState(false);
+  const [canCreate, setCanCreate] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -49,7 +56,10 @@ export default function AdministratorsPage() {
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [openFormRole, setOpenFormRole] = useState(false);
+  const [openFormPrefix, setOpenFormPrefix] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof typeof emptyForm, string>>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -57,6 +67,8 @@ export default function AdministratorsPage() {
       const data = await request("GET");
       setUsers(data.data);
       setCurrentUserId(data.currentUserId);
+      setCanManage(data.canManage === true);
+      setCanCreate(data.canCreate === true);
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
@@ -79,7 +91,7 @@ export default function AdministratorsPage() {
   useEffect(() => {
     if (!showForm) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && openFormRole) setOpenFormRole(false);
+      if (event.key === "Escape" && (openFormRole || openFormPrefix)) { setOpenFormRole(false); setOpenFormPrefix(false); }
       else if (event.key === "Escape" && !busy) setShowForm(false);
     };
     const onMouseDown = (event: MouseEvent) => {
@@ -88,6 +100,7 @@ export default function AdministratorsPage() {
         !formRoleRef.current.contains(event.target as Node)
       )
         setOpenFormRole(false);
+      if (formPrefixRef.current && !formPrefixRef.current.contains(event.target as Node)) setOpenFormPrefix(false);
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("mousedown", onMouseDown);
@@ -95,7 +108,7 @@ export default function AdministratorsPage() {
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("mousedown", onMouseDown);
     };
-  }, [showForm, busy, openFormRole]);
+  }, [showForm, busy, openFormRole, openFormPrefix]);
 
   function bounceDialog() {
     const dialog = dialogRef.current;
@@ -107,11 +120,25 @@ export default function AdministratorsPage() {
 
   async function addUser(event: React.FormEvent) {
     event.preventDefault();
+    if (!canCreate) return;
+    const username = form.username.trim();
+    const email = form.email.trim();
+    const errors: typeof formErrors = {};
+    if (!USER_PREFIXES.some((prefix) => prefix === form.prefix)) errors.prefix = "กรุณาเลือกคำนำหน้า";
+    if (!form.fullname.trim()) errors.fullname = "กรุณากรอกชื่อ-นามสกุล";
+    if (!username) errors.username = "กรุณากรอกชื่อผู้ใช้";
+    else if (users.some((user) => user.username.toLowerCase() === username.toLowerCase())) errors.username = "ชื่อผู้ใช้นี้มีอยู่แล้ว";
+    if (!validEmail(email)) errors.email = "กรุณากรอกอีเมลที่ถูกต้อง";
+    else if (users.some((user) => user.email.toLowerCase() === email.toLowerCase())) errors.email = "อีเมลนี้มีอยู่แล้ว";
+    if (!validPassword(form.password)) errors.password = "อย่างน้อย 8 ตัวอักษร มีตัวอักษรอังกฤษและตัวเลข";
+    setFormErrors(errors);
+    if (Object.keys(errors).length) return;
     setBusy(true);
     try {
-      await request("POST", form);
+      await request("POST", { ...form, username, email, role: canManage ? form.role : "Teaching Assistant" });
       setShowForm(false);
       setForm(emptyForm);
+      setFormErrors({});
       await load();
       showAlert("เพิ่มผู้ใช้สำเร็จ", "success");
     } catch (e) {
@@ -123,8 +150,13 @@ export default function AdministratorsPage() {
       setBusy(false);
     }
   }
+
+  function updateForm(key: keyof typeof emptyForm, value: string) {
+    setForm((current) => ({ ...current, [key]: value }));
+    setFormErrors((current) => ({ ...current, [key]: "" }));
+  }
   function changeRole(user: Administrator, role: AdministratorRole) {
-    if (busy || role === user.role) return;
+    if (!canManage || busy || role === user.role) return;
     void showConfirm(
       `เปลี่ยนสิทธิ์ของ ${user.fullname}?`,
       async () => {
@@ -149,6 +181,7 @@ export default function AdministratorsPage() {
     );
   }
   function removeUser(user: Administrator) {
+    if (!canManage) return;
     void showConfirm(
       `ลบผู้ใช้ ${user.fullname}?`,
       async () => {
@@ -172,7 +205,8 @@ export default function AdministratorsPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+      <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+        {loading && <div role="status" className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300"><div className="flex flex-col items-center gap-4"><div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" /><p className="text-base text-white">กำลังโหลด...</p></div></div>}
         <div className="flex min-w-0 flex-col rounded-2xl bg-white">
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -184,7 +218,7 @@ export default function AdministratorsPage() {
               </p>
             </div>
             
-            {(loading || error || users.length > 0) && <button
+            {canCreate && (loading || error || users.length > 0) && <button
               type="button"
               onClick={() => setShowForm(true)}
               className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-[14px] text-white transition hover:bg-[var(--primary-hover)] md:mt-0 md:w-auto"
@@ -213,6 +247,8 @@ export default function AdministratorsPage() {
             <AdministratorTable
               users={filtered}
               totalCount={users.length}
+              canManage={canManage}
+              canCreate={canCreate}
               currentUserId={currentUserId}
               busy={busy}
               loading={loading}
@@ -221,7 +257,7 @@ export default function AdministratorsPage() {
               onChangeRole={(user, role) => void changeRole(user, role)}
               onDelete={removeUser}
               onRetry={() => void load()}
-              onAdd={() => setShowForm(true)}
+              onAdd={() => { if (canCreate) setShowForm(true); }}
             />
           </div>
         </div>
@@ -245,10 +281,10 @@ export default function AdministratorsPage() {
                 event.currentTarget.classList.remove("app-dialog-attention");
             }}
           >
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-5 flex items-center justify-between gap-3 border-b border-gray-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-[var(--card)] p-2">
-                  <UserPlusIcon className="h-5 w-5 text-gray-700" />
+                <div className="rounded-xl bg-blue-50 p-2.5">
+                  <UserPlusIcon className="h-5 w-5 text-blue-600" />
                 </div>
                 <h2
                   id="admin-dialog-title"
@@ -267,74 +303,57 @@ export default function AdministratorsPage() {
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={(e) => void addUser(e)}>
-              <div className="space-y-4 rounded-xl border border-gray-100 bg-[var(--card)] p-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <input
-                    required
-                    placeholder="คำนำหน้า"
-                    value={form.prefix}
-                    onChange={(e) =>
-                      setForm({ ...form, prefix: e.target.value })
-                    }
-                    className="form-input-card text-sm"
-                  />
-
-                  <input
-                    required
-                    placeholder="ชื่อ-นามสกุล"
-                    value={form.fullname}
-                    onChange={(e) =>
-                      setForm({ ...form, fullname: e.target.value })
-                    }
-                    className="form-input-card col-span-2 text-sm"
-                  />
+            <form noValidate onSubmit={(e) => void addUser(e)}>
+              <p className="mb-5 text-sm text-gray-500">กรอกข้อมูลเพื่อสร้างบัญชีให้ผู้ใช้ใหม่</p>
+              <div className="space-y-4 rounded-xl border border-gray-100 bg-[var(--card)] p-4 sm:p-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-[150px_minmax(0,1fr)]">
+                  <div ref={formPrefixRef} className="relative text-sm font-medium text-gray-700">คำนำหน้า
+                    <button type="button" aria-label="เลือกคำนำหน้า" aria-expanded={openFormPrefix} onClick={() => setOpenFormPrefix(!openFormPrefix)} className={`form-input-card mt-1 flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm font-normal text-gray-700 ${formErrors.prefix ? "!border-red-400" : ""}`}>
+                      <span className="truncate">{form.prefix || "เลือกคำนำหน้า"}</span><ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                    </button>
+                    {openFormPrefix && <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+                      {USER_PREFIXES.map((prefix) => <button key={prefix} type="button" onClick={() => { updateForm("prefix", prefix); setOpenFormPrefix(false); }} className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${form.prefix === prefix ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}>{prefix}{form.prefix === prefix && <CheckIcon className="h-4 w-4" />}</button>)}
+                    </div>}
+                    {formErrors.prefix && <span className="mt-1 block text-xs text-red-600">{formErrors.prefix}</span>}
+                  </div>
+                  <label className="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล
+                    <input required autoComplete="name" value={form.fullname} onChange={(event) => updateForm("fullname", event.target.value)} placeholder="ชื่อ-นามสกุล" className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.fullname ? "!border-red-400" : ""}`} />
+                    {formErrors.fullname && <span className="mt-1 block text-xs text-red-600">{formErrors.fullname}</span>}
+                  </label>
                 </div>
 
-                <input
-                  required
-                  placeholder="ชื่อผู้ใช้"
-                  value={form.username}
-                  onChange={(e) =>
-                    setForm({ ...form, username: e.target.value })
-                  }
-                  className="form-input-card w-full text-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700">ชื่อผู้ใช้
+                  <input required autoComplete="off" value={form.username} onChange={(event) => updateForm("username", event.target.value)} placeholder="ชื่อผู้ใช้สำหรับเข้าสู่ระบบ" className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.username ? "!border-red-400" : ""}`} />
+                  {formErrors.username && <span className="mt-1 block text-xs text-red-600">{formErrors.username}</span>}
+                </label>
 
-                <input
-                  required
-                  type="email"
-                  placeholder="อีเมล"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="form-input-card w-full text-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700">อีเมล
+                  <input required type="email" autoComplete="off" value={form.email} onChange={(event) => updateForm("email", event.target.value)} placeholder="name@example.com" className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.email ? "!border-red-400" : ""}`} />
+                  {formErrors.email && <span className="mt-1 block text-xs text-red-600">{formErrors.email}</span>}
+                </label>
 
-                <input
-                  required
-                  type="password"
-                  minLength={8}
-                  placeholder="รหัสผ่าน (อย่างน้อย 8 ตัวอักษร)"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  className="form-input-card w-full text-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700">รหัสผ่าน
+                  <span className="relative mt-1 block">
+                    <input required type={showPassword ? "text" : "password"} autoComplete="new-password" value={form.password} onChange={(event) => updateForm("password", event.target.value)} placeholder="อย่างน้อย 8 ตัวอักษร" className={`form-input-card h-11 w-full pr-11 text-sm ${formErrors.password ? "!border-red-400" : ""}`} />
+                    <button type="button" aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"} onClick={() => setShowPassword((value) => !value)} className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600">{showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}</button>
+                  </span>
+                  <span className={`mt-1 block text-xs ${formErrors.password ? "text-red-600" : "text-gray-400"}`}>{formErrors.password || "อย่างน้อย 8 ตัวอักษร มีตัวอักษรอังกฤษและตัวเลข"}</span>
+                </label>
 
-                <div ref={formRoleRef} className="relative">
+                <div ref={formRoleRef} className="relative text-sm font-medium text-gray-700">สิทธิ์
                   <button
                     type="button"
                     aria-label="สิทธิ์ผู้ใช้ใหม่"
                     aria-expanded={openFormRole}
+                    disabled={!canManage}
                     onClick={() => setOpenFormRole(!openFormRole)}
-                    className="form-input-card flex min-h-10 cursor-pointer items-center justify-between gap-2 text-left text-sm text-gray-700"
+                    className="form-input-card mt-1 flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm font-normal text-gray-700 disabled:cursor-default"
                   >
-                    <span>{form.role}</span>
-                    <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                    <span>{canManage ? form.role : "Teaching Assistant"}</span>
+                    {canManage && <ChevronDownIcon className="h-4 w-4 text-gray-400" />}
                   </button>
 
-                  {openFormRole && (
+                  {canManage && openFormRole && (
                     <div className="absolute bottom-full left-0 z-30 mb-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
                       {(
                         ["Teaching Assistant", "Teacher"] as AdministratorRole[]
@@ -346,9 +365,10 @@ export default function AdministratorsPage() {
                             setForm({ ...form, role });
                             setOpenFormRole(false);
                           }}
-                          className={`block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-gray-100 ${form.role === role ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700"}`}
+                          className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${form.role === role ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
                         >
                           {role}
+                          {form.role === role && <CheckIcon className="h-4 w-4" />}
                         </button>
                       ))}
                     </div>

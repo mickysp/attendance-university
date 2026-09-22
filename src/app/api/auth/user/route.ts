@@ -61,9 +61,10 @@ export async function GET() {
       user: {
         fullname: user.fullname,
         role: user.role,
+        avatarUrl: user.avatarUpdatedAt ? `/api/auth/avatar?v=${new Date(user.avatarUpdatedAt).getTime()}` : null,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,

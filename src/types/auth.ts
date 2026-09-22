@@ -11,15 +11,7 @@ export interface User {
   password: string;
   role: UserRole;
   createdAt: Date;
-}
-
-export interface RegisterBody {
-  prefix: string;
-  fullname: string;
-  username: string;
-  email: string;
-  password: string;
-  role: UserRole;
+  avatarUpdatedAt?: Date;
 }
 
 export interface LoginBody {

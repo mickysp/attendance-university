@@ -1,7 +1,6 @@
 import type {
   ForgotPasswordBody,
   LoginBody,
-  RegisterBody,
   ResetPasswordBody,
   VerifyOtpBody,
 } from "@/types/auth";
@@ -11,13 +10,6 @@ export const authApi = {
   login(data: LoginBody, options?: ApiRequestOptions) {
     return apiRequest("/auth/login", {
       credentials: "include",
-      ...options,
-      method: "POST",
-      json: data,
-    });
-  },
-  register(data: RegisterBody, options?: ApiRequestOptions) {
-    return apiRequest("/auth/register", {
       ...options,
       method: "POST",
       json: data,

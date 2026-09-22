@@ -296,17 +296,8 @@ export default function LoginForm({
           ลืมรหัสผ่าน?
         </Link>
 
-        <p className="text-sm leading-relaxed text-taupe-800">
-          ยังไม่มีบัญชีใช่ไหม?{" "}
-          <Link
-            href="/register"
-            className="
-              text-blue-500
-              hover:underline
-            "
-          >
-            สมัครสมาชิก
-          </Link>
+        <p className="text-sm leading-relaxed text-zinc-500">
+          หากยังไม่มีบัญชี กรุณาติดต่ออาจารย์เพื่อเพิ่มผู้ใช้ในระบบ
         </p>
       </form>
     </div>

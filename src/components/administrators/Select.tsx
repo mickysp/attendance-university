@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronDownIcon,
+  CheckIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -47,7 +48,7 @@ export default function AdministratorSelect({
 
   return (
     <div className="flex w-full flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative w-full md:w-[380px] md:shrink-0">
+      <div className="relative w-full md:w-[380px] md:shrink-0">
         <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           aria-label="ค้นหาผู้ใช้"
@@ -68,13 +69,13 @@ export default function AdministratorSelect({
         )}
       </div>
 
-        <div ref={roleRef} className="relative w-full md:w-[200px] md:shrink-0">
+      <div ref={roleRef} className="relative w-full md:w-[200px] md:shrink-0">
         <button
           type="button"
           aria-label="กรองสิทธิ์"
           aria-expanded={openRole}
           onClick={() => setOpenRole(!openRole)}
-          className="form-input-card flex min-h-10 cursor-pointer items-center justify-between gap-2 text-left text-sm text-gray-700"
+          className="form-input-card flex min-h-[42px] cursor-pointer items-center justify-between gap-2 text-left text-sm text-gray-700"
         >
           <span className="truncate">
             {roles.find((item) => item.value === role)?.label}
@@ -92,9 +93,10 @@ export default function AdministratorSelect({
                   onRoleChange(item.value);
                   setOpenRole(false);
                 }}
-                className={`block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-gray-100 ${role === item.value ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700"}`}
+                className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${role === item.value ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
               >
                 {item.label}
+                {role === item.value && <CheckIcon className="h-4 w-4" />}
               </button>
             ))}
           </div>
@@ -104,7 +106,7 @@ export default function AdministratorSelect({
       <button
         type="button"
         onClick={() => onKeywordChange("")}
-          className="cursor-pointer self-center whitespace-nowrap text-[13px] text-blue-500 hover:underline md:self-auto"
+        className="cursor-pointer self-center whitespace-nowrap text-[13px] text-blue-500 hover:underline md:self-auto"
       >
         ล้างค่า
       </button>
