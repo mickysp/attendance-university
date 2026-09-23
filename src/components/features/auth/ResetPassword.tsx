@@ -2,131 +2,125 @@
 
 import { authApi } from "@/services/api/auth";
 import { useState } from "react";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-import { useAlert } from "@/context/AlertContext";
-import { useRouter } from "next/navigation";
 
 type Props = {
   email: string;
   otp: string;
-  onBack: () => void;
+  onRestart: () => void;
 };
 
-export default function ResetPassword({ email, otp, onBack }: Props) {
+export default function ResetPassword({ email, otp, onRestart }: Props) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { showAlert } = useAlert();
-  const router = useRouter();
-
+  const [success, setSuccess] = useState(false);
+  const mismatch = confirm.length > 0 && password !== confirm;
   const isValid = password.length >= 8 && password === confirm;
 
-  const handleReset = async () => {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isValid || loading) return;
+    setLoading(true);
+    setError("");
     try {
-      setLoading(true);
-      setError("");
-
-      const res = await authApi.resetPassword({
-        identifier: email,
-        otp,
-        newPassword: password,
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        showAlert(data.message);
+      const response = await authApi.resetPassword({ identifier: email, otp, newPassword: password });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setError(data.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ กรุณาลองอีกครั้ง");
         return;
       }
-
-      showAlert("เปลี่ยนรหัสผ่านสำเร็จ", "success");
-      setTimeout(() => {
-        router.push("/login");
-      }, 1200);
+      setPassword("");
+      setConfirm("");
+      setSuccess(true);
     } catch {
-      showAlert("เกิดข้อผิดพลาด", "error");
+      setError("เชื่อมต่อระบบไม่ได้ กรุณาลองอีกครั้ง");
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  if (success) {
+    return (
+      <div className="space-y-5 text-center" role="status">
+        <CheckCircleIcon className="mx-auto h-12 w-12 text-blue-600" aria-hidden="true" />
+        <div>
+          <h1 className="text-xl font-semibold text-gray-800">ตั้งรหัสผ่านใหม่สำเร็จ</h1>
+          <p className="mt-2 text-sm text-gray-500">คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว</p>
+        </div>
+        <Link href="/login" className="form-button flex min-h-11 items-center justify-center text-sm font-medium">กลับเข้าสู่ระบบ</Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-3xl min-h-[280px] rounded-xl bg-white p-8 shadow-xl font-noto flex flex-col justify-center">
-      <div className="flex items-center gap-3 mt-4">
-        <button onClick={onBack}>
-          <ArrowLeftIcon className="h-5 w-5" />
-        </button>
-
-        <h1 className="text-xl font-semibold">ตั้งรหัสผ่านใหม่</h1>
+    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
+      <div>
+        <h1 className="text-xl font-semibold text-gray-800">ตั้งรหัสผ่านใหม่</h1>
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">เลือกรหัสผ่านใหม่สำหรับบัญชีของคุณ</p>
       </div>
-
-      <p className="mt-4 text-sm text-zinc-500">
-        กรุณากรอกรหัสผ่านใหม่เพื่อเข้าใช้งานระบบอีกครั้ง
-      </p>
-
-      <div className="mt-6 flex flex-col gap-4 text-sm">
+      <div>
+        <label htmlFor="recovery-password" className="mb-2 block text-sm font-medium text-gray-700">รหัสผ่านใหม่</label>
         <div className="relative">
           <input
+            id="recovery-password"
             type={showPassword ? "text" : "password"}
-            placeholder="รหัสผ่านใหม่"
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-input pr-10"
+            autoComplete="new-password"
+            autoFocus
+            required
+            minLength={8}
+            disabled={loading}
+            value={password}
+            onChange={(event) => { setPassword(event.target.value); setError(""); }}
+            aria-describedby="recovery-password-hint"
+            className="form-input text-sm"
+            style={{ paddingRight: "3rem" }}
+            placeholder="อย่างน้อย 8 ตัวอักษร"
           />
-
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
-          >
-            {showPassword ? (
-              <EyeSlashIcon className="h-5 w-5" />
-            ) : (
-              <EyeIcon className="h-5 w-5" />
-            )}
+          <button type="button" aria-label={showPassword ? "ซ่อนรหัสผ่านใหม่" : "แสดงรหัสผ่านใหม่"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center rounded-r-lg text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+            {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
           </button>
         </div>
-
+        <p id="recovery-password-hint" className="mt-2 text-xs text-gray-500">ใช้รหัสผ่านอย่างน้อย 8 ตัวอักษร</p>
+      </div>
+      <div>
+        <label htmlFor="recovery-confirm" className="mb-2 block text-sm font-medium text-gray-700">ยืนยันรหัสผ่านใหม่</label>
         <div className="relative">
           <input
+            id="recovery-confirm"
             type={showConfirm ? "text" : "password"}
-            placeholder="ยืนยันรหัสผ่าน"
-            onChange={(e) => setConfirm(e.target.value)}
-            className="form-input pr-10"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            disabled={loading}
+            value={confirm}
+            onChange={(event) => { setConfirm(event.target.value); setError(""); }}
+            aria-invalid={mismatch}
+            aria-describedby={mismatch ? "recovery-confirm-error" : undefined}
+            className="form-input text-sm"
+            style={{ paddingRight: "3rem" }}
+            placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
           />
-
-          <button
-            type="button"
-            onClick={() => setShowConfirm(!showConfirm)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
-          >
-            {showConfirm ? (
-              <EyeSlashIcon className="h-5 w-5" />
-            ) : (
-              <EyeIcon className="h-5 w-5" />
-            )}
+          <button type="button" aria-label={showConfirm ? "ซ่อนการยืนยันรหัสผ่าน" : "แสดงการยืนยันรหัสผ่าน"} aria-pressed={showConfirm} onClick={() => setShowConfirm(!showConfirm)} className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center rounded-r-lg text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+            {showConfirm ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
           </button>
         </div>
-
-        {error && <p className="text-red-500 text-xs">{error}</p>}
-
-        <div className="flex justify-end">
-          <button
-            disabled={!isValid || loading}
-            onClick={handleReset}
-            className={`px-8 py-2.5 rounded-lg transition cursor-pointer mt-2 ${
-              isValid
-                ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                : "bg-gray-300 text-gray-500"
-            }`}
-          >
-            {loading ? "กำลังบันทึก..." : "ยืนยัน"}
-          </button>
-        </div>
+        {mismatch && <p id="recovery-confirm-error" className="mt-2 text-xs text-red-500">รหัสผ่านทั้งสองช่องไม่ตรงกัน</p>}
       </div>
-    </div>
+      {error && (
+        <div className="space-y-2">
+          <p role="alert" className="text-sm text-red-500">{error}</p>
+          <button type="button" onClick={onRestart} disabled={loading} className="cursor-pointer rounded text-sm text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50">เริ่มใหม่เพื่อขอรหัส OTP</button>
+        </div>
+      )}
+      <button type="submit" disabled={!isValid || loading} className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+        {loading ? "กำลังบันทึก..." : "บันทึกรหัสผ่านใหม่"}
+      </button>
+    </form>
   );
 }

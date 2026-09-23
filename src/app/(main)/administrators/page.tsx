@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { administratorsApi } from "@/services/api/administrators";
 import {
   ChevronDownIcon,
   CheckIcon,
@@ -26,13 +27,7 @@ const emptyForm = {
   role: "Teaching Assistant" as AdministratorRole,
 };
 
-async function request(method: string, body?: object) {
-  const response = await fetch("/api/administrators", {
-    method,
-    cache: "no-store",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+async function readResponse(response: Response) {
   const data = await response.json();
   if (!response.ok || !data.success)
     throw new Error(data.message || "ดำเนินการไม่สำเร็จ");
@@ -64,7 +59,7 @@ export default function AdministratorsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await request("GET");
+      const data = await readResponse(await administratorsApi.list());
       setUsers(data.data);
       setCurrentUserId(data.currentUserId);
       setCanManage(data.canManage === true);
@@ -135,7 +130,7 @@ export default function AdministratorsPage() {
     if (Object.keys(errors).length) return;
     setBusy(true);
     try {
-      await request("POST", { ...form, username, email, role: canManage ? form.role : "Teaching Assistant" });
+      await readResponse(await administratorsApi.create({ ...form, username, email, role: canManage ? form.role : "Teaching Assistant" }));
       setShowForm(false);
       setForm(emptyForm);
       setFormErrors({});
@@ -162,7 +157,7 @@ export default function AdministratorsPage() {
       async () => {
         setBusy(true);
         try {
-          await request("PATCH", { id: user._id, role });
+          await readResponse(await administratorsApi.updateRole(user._id, role));
           setUsers((items) =>
             items.map((item) => (item._id === user._id ? { ...item, role } : item)),
           );
@@ -187,7 +182,7 @@ export default function AdministratorsPage() {
       async () => {
         setBusy(true);
         try {
-          await request("DELETE", { id: user._id });
+          await readResponse(await administratorsApi.remove(user._id));
           setUsers((items) => items.filter((item) => item._id !== user._id));
           showAlert("ลบผู้ใช้สำเร็จ", "success");
         } catch (e) {

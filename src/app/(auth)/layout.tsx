@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import AuthLayout from "@/components/layouts/AuthLayout";
+import Banner from "@/components/layouts/Banner";
 
-interface AuthLayoutProps {
-  children: ReactNode;
-}
-
-export default function Layout({ children }: AuthLayoutProps) {
-  return <AuthLayout>{children}</AuthLayout>;
+export default function Layout({ children }: { children: ReactNode }) {
+  return (
+    <main className="relative min-h-screen">
+      <Banner>{children}</Banner>
+    </main>
+  );
 }

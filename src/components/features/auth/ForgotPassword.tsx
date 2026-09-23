@@ -2,89 +2,72 @@
 
 import { authApi } from "@/services/api/auth";
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 type Props = {
+  initialEmail: string;
   onNext: (email: string) => void;
 };
 
-export default function ForgotPassword({ onNext }: Props) {
-  const [email, setEmail] = useState("");
+export default function ForgotPassword({ initialEmail, onNext }: Props) {
+  const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const normalizedEmail = email.trim().toLowerCase();
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+  const alreadySent = normalizedEmail !== "" && normalizedEmail === initialEmail;
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  const isValid = emailRegex.test(email);
-
-  const handleSubmit = async () => {
-    if (!isValid) {
-      setError("รูปแบบอีเมลไม่ถูกต้อง");
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isValid || loading) return;
+    if (alreadySent) {
+      onNext(normalizedEmail);
       return;
     }
-
+    setLoading(true);
+    setError("");
     try {
-      setLoading(true);
-      setError("");
-
-      const res = await authApi.sendOtp({ identifier: email });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setError(data.message);
+      const response = await authApi.sendOtp({ identifier: normalizedEmail });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setError(data.message || "ส่งรหัส OTP ไม่สำเร็จ กรุณาลองอีกครั้ง");
         return;
       }
-
-      onNext(email);
+      onNext(normalizedEmail);
     } catch {
-      setError("เกิดข้อผิดพลาด");
+      setError("เชื่อมต่อระบบไม่ได้ กรุณาลองอีกครั้ง");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="w-full max-w-3xl min-h-[280px] rounded-xl bg-white p-8 shadow-xl font-noto flex flex-col justify-center">
-      {" "}
-      <div className="flex items-center gap-3 mt-4">
-        <Link href="/login">
-          <ArrowLeftIcon className="h-5 w-5" />
-        </Link>
-        <h1 className="text-xl font-semibold">ค้นหาบัญชีของคุณ</h1>
+    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
+      <div>
+        <h1 className="text-xl font-semibold text-gray-800">ลืมรหัสผ่าน?</h1>
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">กรอกอีเมลที่ใช้ในระบบ เพื่อรับรหัส OTP สำหรับตั้งรหัสผ่านใหม่</p>
       </div>
-      <p className="mt-4 text-sm text-zinc-500">
-        โปรดป้อนอีเมลของคุณเพื่อค้นหาบัญชีของคุณ
-      </p>
-      <div className="mt-6 flex flex-col gap-4 text-sm">
+      <div>
+        <label htmlFor="recovery-email" className="mb-2 block text-sm font-medium text-gray-700">อีเมล</label>
         <input
+          id="recovery-email"
           type="email"
+          autoComplete="email"
+          autoFocus
+          required
+          disabled={loading}
           value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setError("");
-          }}
-          className={`form-input ${error ? "border-red-500" : ""}`}
-          placeholder="ระบุอีเมล"
+          onChange={(event) => { setEmail(event.target.value); setError(""); }}
+          aria-invalid={!!error}
+          aria-describedby={error ? "recovery-email-error" : undefined}
+          className="form-input text-sm"
+          placeholder="name@example.com"
         />
-
-        {error && <p className="text-red-500 text-xs">{error}</p>}
-
-        <div className="flex justify-end">
-          <button
-            disabled={!isValid || loading}
-            onClick={handleSubmit}
-            className={`px-8 py-2.5 rounded-lg transition cursor-pointer mt-2 ${
-              isValid
-                ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                : "bg-gray-300 text-gray-500"
-            }`}
-          >
-            {loading ? "กำลังส่ง..." : "ต่อไป"}
-          </button>
-        </div>
+        {error && <p id="recovery-email-error" role="alert" className="mt-2 text-xs text-red-500">{error}</p>}
       </div>
-    </div>
+      <button type="submit" disabled={!isValid || loading} className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+        {loading ? "กำลังส่งรหัส OTP..." : alreadySent ? "กลับไปกรอกรหัส OTP" : "ส่งรหัส OTP"}
+      </button>
+      <p className="text-center text-xs leading-relaxed text-gray-500">หากจำอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ</p>
+    </form>
   );
 }

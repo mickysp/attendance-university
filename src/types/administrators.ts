@@ -8,3 +8,7 @@ export interface Administrator {
   email: string;
   role: AdministratorRole;
 }
+
+export type CreateAdministratorBody = Omit<Administrator, "_id"> & {
+  password: string;
+};

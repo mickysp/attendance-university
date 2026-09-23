@@ -48,3 +48,5 @@ export interface ApiResponse {
 export interface LoginResponse extends ApiResponse {
   role?: UserRole;
 }
+
+export type UpdateProfileBody = Pick<User, "prefix" | "fullname" | "username" | "email">;

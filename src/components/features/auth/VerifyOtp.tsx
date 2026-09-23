@@ -2,7 +2,6 @@
 
 import { authApi } from "@/services/api/auth";
 import { useState } from "react";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 type Props = {
   email: string;
@@ -14,75 +13,95 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [notice, setNotice] = useState("");
+  const busy = loading || resending;
+  const isValid = /^\d{6}$/.test(otp);
 
-  const isValid = otp.length === 6;
-
-  const handleVerify = async () => {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isValid || busy) return;
+    setLoading(true);
+    setError("");
     try {
-      setLoading(true);
-      setError("");
-
-      const res = await authApi.verifyOtp({
-        identifier: email,
-        otp,
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setError(data.message);
+      const response = await authApi.verifyOtp({ identifier: email, otp });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setError(data.message || "ยืนยันรหัส OTP ไม่สำเร็จ กรุณาลองอีกครั้ง");
         return;
       }
-
       onNext(otp);
     } catch {
-      setError("เกิดข้อผิดพลาด");
+      setError("เชื่อมต่อระบบไม่ได้ กรุณาลองอีกครั้ง");
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  async function resendOtp() {
+    if (busy) return;
+    setResending(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await authApi.sendOtp({ identifier: email });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setError(data.message || "ส่งรหัส OTP ไม่สำเร็จ กรุณาลองอีกครั้ง");
+        return;
+      }
+      setOtp("");
+      setNotice("หากอีเมลนี้มีบัญชีในระบบ คุณจะได้รับรหัส OTP ใหม่");
+    } catch {
+      setError("เชื่อมต่อระบบไม่ได้ กรุณาลองอีกครั้ง");
+    } finally {
+      setResending(false);
+    }
+  }
 
   return (
-    <div className="w-full max-w-3xl min-h-[280px] rounded-xl bg-white p-8 shadow-xl font-noto flex flex-col justify-center">
-      <div className="flex items-center gap-3 mt-4">
-        <button onClick={onBack}>
-          <ArrowLeftIcon className="h-5 w-5" />
-        </button>
-
-        <h1 className="text-xl font-semibold">ยืนยัน OTP</h1>
+    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={busy}>
+      <div>
+        <h1 className="text-xl font-semibold text-gray-800">ตรวจสอบอีเมลของคุณ</h1>
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">
+          หากอีเมลนี้มีบัญชีในระบบ คุณจะได้รับรหัส OTP ที่
+          <span className="mt-1 block break-all font-medium text-gray-700">{email}</span>
+        </p>
       </div>
-
-      <p className="mt-4 text-sm text-zinc-500">
-        เราได้ส่งรหัส OTP ไปยัง <span className="font-semibold">{email}</span>
-      </p>
-
-      <div className="mt-6 flex flex-col gap-4 text-sm">
+      <div>
+        <label htmlFor="recovery-otp" className="mb-2 block text-sm font-medium text-gray-700">รหัส OTP 6 หลัก</label>
         <input
-          value={otp}
-          onChange={(e) =>
-            setOtp(e.target.value.replace(/\D/g, ""))
-          }
+          id="recovery-otp"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          autoFocus
+          required
+          pattern="[0-9]{6}"
           maxLength={6}
-          className="form-input"
-          placeholder="ระบุรหัส OTP"
+          disabled={busy}
+          value={otp}
+          onChange={(event) => { setOtp(event.target.value.replace(/\D/g, "")); setError(""); }}
+          aria-invalid={!!error}
+          aria-describedby={error ? "recovery-otp-hint recovery-otp-error" : "recovery-otp-hint"}
+          className="form-input text-center text-xl tracking-[0.35em]"
+          placeholder="000000"
         />
-
-        {error && <p className="text-red-500 text-xs">{error}</p>}
-
-        <div className="flex justify-end">
-          <button
-            disabled={!isValid || loading}
-            onClick={handleVerify}
-            className={`px-8 py-2.5 rounded-lg transition cursor-pointer mt-2 ${
-              isValid
-                ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                : "bg-gray-300 text-gray-500"
-            }`}
-          >
-            {loading ? "กำลังตรวจ..." : "ต่อไป"}
-          </button>
-        </div>
+        <p id="recovery-otp-hint" className="mt-2 text-xs text-gray-500">รหัสมีอายุ 10 นาที กรุณาตรวจสอบในอีเมลขยะด้วย</p>
+        {error && <p id="recovery-otp-error" role="alert" className="mt-2 text-xs text-red-500">{error}</p>}
       </div>
-    </div>
+      {notice && <p role="status" className="text-xs text-blue-600">{notice}</p>}
+      <button type="submit" disabled={!isValid || busy} className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+        {loading ? "กำลังตรวจสอบ..." : "ยืนยันรหัส OTP"}
+      </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onClick={onBack} disabled={busy} className="cursor-pointer rounded text-sm text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50">
+          เปลี่ยนอีเมล
+        </button>
+        <button type="button" onClick={() => void resendOtp()} disabled={busy} className="cursor-pointer rounded text-sm text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50">
+          {resending ? "กำลังส่ง..." : "ขอรหัสใหม่หลังครบ 10 นาที"}
+        </button>
+      </div>
+    </form>
   );
 }
