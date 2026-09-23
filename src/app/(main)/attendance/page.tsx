@@ -177,13 +177,13 @@ export default function AttendancePage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto sm:p-4 lg:p-6 lg:pt-6">
+      <div className="relative flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto sm:p-4 lg:p-6 lg:pt-6">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
 
-              <p className="text-gray-600 text-base text-white">กำลังโหลด...</p>
+              <p className="text-base text-white">กำลังโหลด...</p>
             </div>
           </div>
         )}

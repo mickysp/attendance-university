@@ -279,7 +279,16 @@ export default function CheckInFormPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-      <main className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
+      <main className="relative min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
+        {(classesLoading || (selectedClassId && configLoading)) && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <p className="text-base text-white">กำลังโหลด...</p>
+            </div>
+          </div>
+        )}
+
         <div className="w-full space-y-5 rounded-2xl bg-white p-6 lg:p-8">
           <header className="mb-7">
             <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">

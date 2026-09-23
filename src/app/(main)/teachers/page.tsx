@@ -124,7 +124,16 @@ export default function TeachersPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+      <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <p className="text-base text-white">กำลังโหลด...</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex min-w-0 flex-col rounded-2xl bg-white">
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
