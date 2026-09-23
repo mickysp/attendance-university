@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useEffect, useMemo, useState } from "react";
 import StudentSummaryCard from "@/components/attendance/Card";
+import AttendanceDropdown from "@/components/attendance/Dropdown";
 import AttendanceTable from "@/components/attendance/Table";
 import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { attendanceApi } from "@/services/api/attendance";
@@ -33,6 +34,7 @@ export default function AttendancePage() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [studentsReady, setStudentsReady] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -51,8 +53,14 @@ export default function AttendancePage() {
         const availableYears = Array.isArray(result.years) ? result.years : [];
         setClasses(Array.isArray(result.data) ? result.data : []);
         setYears(availableYears);
-        if (!selectedYear && availableYears.length > 0)
-          setSelectedYear(availableYears[0]);
+        if (!selectedYear) {
+          const currentAcademicYear = Number(result.currentAcademicYear);
+          setSelectedYear(
+            Number.isFinite(currentAcademicYear)
+              ? currentAcademicYear
+              : availableYears[0] || null,
+          );
+        }
       } catch (cause) {
         if (!controller.signal.aborted)
           setError(
@@ -71,11 +79,15 @@ export default function AttendancePage() {
   useEffect(() => {
     if (!selectedClass) {
       setStudents([]);
+      setStudentsReady(false);
+      setLoadingStudents(false);
       return;
     }
     const controller = new AbortController();
     async function loadStudents() {
       setLoadingStudents(true);
+      setStudentsReady(false);
+      setStudents([]);
       setError("");
       try {
         const response = await attendanceApi.summary(
@@ -85,10 +97,14 @@ export default function AttendancePage() {
         const result = await response.json();
         if (!response.ok || !result.success)
           throw new Error(result.message || "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ");
-        setStudents(Array.isArray(result.data) ? result.data : []);
+        if (!controller.signal.aborted) {
+          setStudents(Array.isArray(result.data) ? result.data : []);
+          setStudentsReady(true);
+        }
       } catch (cause) {
         if (!controller.signal.aborted) {
           setStudents([]);
+          setStudentsReady(true);
           setError(
             cause instanceof Error
               ? cause.message
@@ -151,9 +167,12 @@ export default function AttendancePage() {
   return (
     <div className="app-page" aria-busy={loading || loadingStudents}>
       {(loading || loadingStudents) && (
-        <div className="app-page-loading" role="status">
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300"
+          role="status"
+        >
           <div className="flex flex-col items-center gap-4">
-            <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent motion-reduce:animate-none" />
+            <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
             <p className="text-base text-white">กำลังโหลด...</p>
           </div>
         </div>
@@ -166,27 +185,29 @@ export default function AttendancePage() {
               ตรวจสอบการเช็กชื่อ คะแนน และประวัติการเข้าเรียนรายนักศึกษา
             </p>
           </div>
-          <label className="w-full sm:w-48">
+          <div className="w-full sm:w-48">
             <span className="mb-1.5 block text-xs font-medium text-gray-500">
               ปีการศึกษา
             </span>
-            <select
-              value={selectedYear ?? ""}
-              onChange={(event) => {
-                setSelectedYear(Number(event.target.value));
+            <AttendanceDropdown
+              value={selectedYear ? String(selectedYear) : ""}
+              options={years.map((year) => ({
+                value: String(year),
+                label: String(year),
+              }))}
+              placeholder="เลือกปี"
+              ariaLabel="เลือกปีการศึกษา"
+              allowEmpty={false}
+              onChange={(value) => {
+                setSelectedYear(value ? Number(value) : null);
                 setSelectedClass("");
+                setStudents([]);
+                setStudentsReady(false);
+                setLoadingStudents(false);
                 resetFilters();
               }}
-              className="app-field"
-            >
-              {years.length === 0 && <option value="">ไม่มีข้อมูลปี</option>}
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </label>
+            />
+          </div>
         </header>
 
         <section className="app-card" aria-labelledby="attendance-filter-title">
@@ -208,6 +229,9 @@ export default function AttendancePage() {
               label="วิชา"
               value={selectedClass}
               onChange={(value) => {
+                setStudents([]);
+                setStudentsReady(false);
+                setLoadingStudents(Boolean(value));
                 setSelectedClass(value);
                 resetFilters();
               }}
@@ -260,13 +284,13 @@ export default function AttendancePage() {
             title="เลือกวิชาเพื่อเริ่มตรวจสอบ"
             description="ระบบจะแสดงรายชื่อนักศึกษาและสรุปการเข้าเรียนของวิชาที่เลือก"
           />
-        ) : students.length === 0 && !loadingStudents ? (
+        ) : studentsReady && students.length === 0 ? (
           <EmptyAttendanceState
             kind="students"
             title="ยังไม่มีข้อมูลนักศึกษา"
             description="วิชานี้ยังไม่มีนักศึกษาหรือข้อมูลการเข้าเรียนในปีการศึกษาที่เลือก"
           />
-        ) : (
+        ) : studentsReady ? (
           <>
             <StudentSummaryCard
               students={students}
@@ -317,7 +341,7 @@ export default function AttendancePage() {
               </div>
             </section>
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -345,7 +369,7 @@ function FilterField({
   disabled = false,
 }: FilterFieldProps) {
   return (
-    <label className="min-w-0">
+    <div className="min-w-0">
       <span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-600">
           {number}
@@ -353,20 +377,15 @@ function FilterField({
         <Icon className="h-4 w-4 text-gray-400" />
         {label}
       </span>
-      <select
+      <AttendanceDropdown
         value={value}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-        className="app-field disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+        ariaLabel={`เลือก${label}`}
+      />
+    </div>
   );
 }
 

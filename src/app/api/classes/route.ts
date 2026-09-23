@@ -35,6 +35,30 @@ export async function GET() {
       isOpen?: boolean;
     }>("sessions");
 
+    const currentAcademicYear =
+      Number(
+        new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          timeZone: "Asia/Bangkok",
+        }).format(new Date()),
+      ) + 543;
+
+    const attendanceYears = await db
+      .collection<{ academicYear?: number }>("attendance")
+      .aggregate<{ _id: number }>([
+        { $match: { academicYear: { $type: "number" } } },
+        { $group: { _id: "$academicYear" } },
+        { $sort: { _id: -1 } },
+      ])
+      .toArray();
+
+    const years = [
+      ...new Set([
+        currentAcademicYear,
+        ...attendanceYears.map((item) => item._id),
+      ]),
+    ].sort((left, right) => right - left);
+
     const classes = await classesCol
       .find({})
       .project<MongoClassDocument>({
@@ -55,6 +79,8 @@ export async function GET() {
         {
           success: true,
           data: [],
+          years,
+          currentAcademicYear,
         },
         {
           status: 200,
@@ -163,6 +189,8 @@ export async function GET() {
       {
         success: true,
         data,
+        years,
+        currentAcademicYear,
       },
       {
         status: 200,
