@@ -680,7 +680,7 @@ function UserSection({
               text-gray-700
             "
           >
-            {user.avatarUrl ? <Image unoptimized src={user.avatarUrl} alt="รูปโปรไฟล์" width={36} height={36} className="h-full w-full object-cover" /> : userInitial}
+            {user.avatarUrl ? <Image unoptimized loading="eager" src={user.avatarUrl} alt="รูปโปรไฟล์" width={36} height={36} className="h-full w-full object-cover" /> : userInitial}
           </div>
 
           {!collapsed && (

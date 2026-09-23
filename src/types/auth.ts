@@ -50,3 +50,8 @@ export interface LoginResponse extends ApiResponse {
 }
 
 export type UpdateProfileBody = Pick<User, "prefix" | "fullname" | "username" | "email">;
+
+export type UserProfile = UpdateProfileBody & {
+  role: string;
+  avatarUrl: string | null;
+};

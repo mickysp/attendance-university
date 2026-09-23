@@ -61,7 +61,7 @@ export default function ProfileImageDialog({ src, onClose }: Props) {
         {failed ? (
           <p role="alert" className="px-4 text-center text-sm text-gray-500">ไม่สามารถโหลดรูปโปรไฟล์ได้ กรุณาปิดแล้วลองอีกครั้ง</p>
         ) : (
-          <Image unoptimized fill src={src} alt="รูปโปรไฟล์ขนาดเต็ม" sizes="(max-width: 768px) 100vw, 720px" className="object-contain" onError={() => setFailed(true)} />
+          <Image unoptimized loading="eager" fill src={src} alt="รูปโปรไฟล์ขนาดเต็ม" sizes="(max-width: 768px) 100vw, 720px" className="object-contain" onError={() => setFailed(true)} />
         )}
       </div>
     </dialog>
