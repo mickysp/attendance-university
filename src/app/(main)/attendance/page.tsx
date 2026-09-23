@@ -207,7 +207,7 @@ export default function AttendancePage() {
             <div className="px-4 pt-5 shrink-0 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
               <div className="min-w-0">
                 <h1 className="text-[26px] font-semibold text-gray-800">
-                  Attendance
+                  เวลาเข้าเรียน
                 </h1>
 
                 <p className="text-sm text-gray-400 mt-1">

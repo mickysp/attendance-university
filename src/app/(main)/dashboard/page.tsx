@@ -83,7 +83,7 @@ export default function DashboardPage() {
               "
             >
               <h1 className="text-[26px] font-semibold text-gray-800">
-                Dashboard
+                แดชบอร์ด
               </h1>
 
               <p className="mt-1 text-sm text-gray-400">

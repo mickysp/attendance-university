@@ -402,7 +402,7 @@ export default function StudentsPage() {
             <div className="flex flex-col gap-4 px-4 pt-5 sm:px-6 sm:pt-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <h1 className="text-[26px] font-semibold text-gray-800">
-                  Students
+                  นักศึกษา
                 </h1>
                 <p className="text-sm text-gray-400 mt-1">
                   แสดงข้อมูลนักศึกษาในระบบ
@@ -540,7 +540,7 @@ export default function StudentsPage() {
                 <>
                   <div className="mt-2 mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-base font-semibold text-gray-600">
-                      Student ทั้งหมด {filteredData.length} รายการ
+                      นักศึกษา ทั้งหมด {filteredData.length} รายการ
                     </p>
                     {selectedListClass && selectedClassHasStudents && (
                       <button

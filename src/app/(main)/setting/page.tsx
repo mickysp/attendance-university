@@ -51,9 +51,11 @@ export default function SettingPage() {
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
       <main aria-busy={loading} aria-label="ตั้งค่า" className="relative min-w-0 flex-1 overflow-y-auto p-4 pt-[80px] sm:p-6 sm:pt-[80px] lg:pt-6">
         {loading ? (
-          <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-blue-50">
-            <span aria-hidden="true" className="h-14 w-14 animate-spin rounded-full border-4 border-blue-100 border-t-blue-500 motion-reduce:animate-none" />
-            <p className="text-sm text-gray-500">กำลังโหลดการตั้งค่า...</p>
+          <div role="status" className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
+            <div className="flex flex-col items-center gap-4">
+              <div aria-hidden="true" className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent motion-reduce:animate-none" />
+              <p className="text-base text-white">กำลังโหลด...</p>
+            </div>
           </div>
         ) : error ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-4 text-center">

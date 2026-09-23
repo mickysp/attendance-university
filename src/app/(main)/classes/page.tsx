@@ -151,7 +151,7 @@ export default function ClassesPage() {
             >
               <div>
                 <h1 className="text-[26px] font-semibold text-gray-800">
-                  Classes
+                  ชั้นเรียน
                 </h1>
 
                 <p className="mt-1 text-sm text-gray-400">
@@ -189,7 +189,7 @@ export default function ClassesPage() {
               </div>
 
               <div className="mt-6 text-base font-semibold text-gray-600">
-                Classes ทั้งหมด {filteredClasses.length} รายการ
+                ชั้นเรียน ทั้งหมด {filteredClasses.length} รายการ
               </div>
             </div>
 

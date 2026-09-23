@@ -16,9 +16,13 @@ import { useConfirm } from "@/context/swal";
 import AdministratorSelect from "@/components/administrators/Select";
 import AdministratorTable from "@/components/administrators/Table";
 import type { Administrator, AdministratorRole } from "@/types/administrators";
-import { USER_PREFIXES, validEmail, validPassword } from "@/lib/user-validation";
+import {
+  USER_PREFIXES,
+  validEmail,
+  validPassword,
+} from "@/lib/user-validation";
 
-const emptyForm = { 
+const emptyForm = {
   prefix: "",
   fullname: "",
   username: "",
@@ -53,7 +57,9 @@ export default function AdministratorsPage() {
   const [openFormRole, setOpenFormRole] = useState(false);
   const [openFormPrefix, setOpenFormPrefix] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof typeof emptyForm, string>>>({});
+  const [formErrors, setFormErrors] = useState<
+    Partial<Record<keyof typeof emptyForm, string>>
+  >({});
   const [showPassword, setShowPassword] = useState(false);
 
   const load = useCallback(async () => {
@@ -86,8 +92,10 @@ export default function AdministratorsPage() {
   useEffect(() => {
     if (!showForm) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && (openFormRole || openFormPrefix)) { setOpenFormRole(false); setOpenFormPrefix(false); }
-      else if (event.key === "Escape" && !busy) setShowForm(false);
+      if (event.key === "Escape" && (openFormRole || openFormPrefix)) {
+        setOpenFormRole(false);
+        setOpenFormPrefix(false);
+      } else if (event.key === "Escape" && !busy) setShowForm(false);
     };
     const onMouseDown = (event: MouseEvent) => {
       if (
@@ -95,7 +103,11 @@ export default function AdministratorsPage() {
         !formRoleRef.current.contains(event.target as Node)
       )
         setOpenFormRole(false);
-      if (formPrefixRef.current && !formPrefixRef.current.contains(event.target as Node)) setOpenFormPrefix(false);
+      if (
+        formPrefixRef.current &&
+        !formPrefixRef.current.contains(event.target as Node)
+      )
+        setOpenFormPrefix(false);
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("mousedown", onMouseDown);
@@ -119,18 +131,35 @@ export default function AdministratorsPage() {
     const username = form.username.trim();
     const email = form.email.trim();
     const errors: typeof formErrors = {};
-    if (!USER_PREFIXES.some((prefix) => prefix === form.prefix)) errors.prefix = "กรุณาเลือกคำนำหน้า";
+    if (!USER_PREFIXES.some((prefix) => prefix === form.prefix))
+      errors.prefix = "กรุณาเลือกคำนำหน้า";
     if (!form.fullname.trim()) errors.fullname = "กรุณากรอกชื่อ-นามสกุล";
     if (!username) errors.username = "กรุณากรอกชื่อผู้ใช้";
-    else if (users.some((user) => user.username.toLowerCase() === username.toLowerCase())) errors.username = "ชื่อผู้ใช้นี้มีอยู่แล้ว";
+    else if (
+      users.some(
+        (user) => user.username.toLowerCase() === username.toLowerCase(),
+      )
+    )
+      errors.username = "ชื่อผู้ใช้นี้มีอยู่แล้ว";
     if (!validEmail(email)) errors.email = "กรุณากรอกอีเมลที่ถูกต้อง";
-    else if (users.some((user) => user.email.toLowerCase() === email.toLowerCase())) errors.email = "อีเมลนี้มีอยู่แล้ว";
-    if (!validPassword(form.password)) errors.password = "อย่างน้อย 8 ตัวอักษร มีตัวอักษรอังกฤษและตัวเลข";
+    else if (
+      users.some((user) => user.email.toLowerCase() === email.toLowerCase())
+    )
+      errors.email = "อีเมลนี้มีอยู่แล้ว";
+    if (!validPassword(form.password))
+      errors.password = "อย่างน้อย 8 ตัวอักษร มีตัวอักษรอังกฤษและตัวเลข";
     setFormErrors(errors);
     if (Object.keys(errors).length) return;
     setBusy(true);
     try {
-      await readResponse(await administratorsApi.create({ ...form, username, email, role: canManage ? form.role : "Teaching Assistant" }));
+      await readResponse(
+        await administratorsApi.create({
+          ...form,
+          username,
+          email,
+          role: canManage ? form.role : "Teaching Assistant",
+        }),
+      );
       setShowForm(false);
       setForm(emptyForm);
       setFormErrors({});
@@ -157,9 +186,13 @@ export default function AdministratorsPage() {
       async () => {
         setBusy(true);
         try {
-          await readResponse(await administratorsApi.updateRole(user._id, role));
+          await readResponse(
+            await administratorsApi.updateRole(user._id, role),
+          );
           setUsers((items) =>
-            items.map((item) => (item._id === user._id ? { ...item, role } : item)),
+            items.map((item) =>
+              item._id === user._id ? { ...item, role } : item,
+            ),
           );
           showAlert("แก้ไขสิทธิ์สำเร็จ", "success");
         } catch (e) {
@@ -201,42 +234,58 @@ export default function AdministratorsPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
       <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
-        {loading && <div role="status" className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300"><div className="flex flex-col items-center gap-4"><div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" /><p className="text-base text-white">กำลังโหลด...</p></div></div>}
+        {loading && (
+          <div
+            role="status"
+            className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <p className="text-base text-white">กำลังโหลด...</p>
+            </div>
+          </div>
+        )}
         <div className="flex min-w-0 flex-col rounded-2xl bg-white">
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-[26px] font-semibold text-gray-800">
-                Administrators
+                ผู้ดูแลระบบ
               </h1>
               <p className="mt-1 text-sm text-gray-400">
                 จัดการบัญชีผู้ใช้และสิทธิ์ในระบบ
               </p>
             </div>
-            
-            {canCreate && (loading || error || users.length > 0) && <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-[14px] text-white transition hover:bg-[var(--primary-hover)] md:mt-0 md:w-auto"
-            >
-              <PlusIcon className="h-4 w-4" />
-              เพิ่มผู้ใช้
-            </button>}
+
+            {canCreate && (loading || error || users.length > 0) && (
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-[14px] text-white transition hover:bg-[var(--primary-hover)] md:mt-0 md:w-auto"
+              >
+                <PlusIcon className="h-4 w-4" />
+                เพิ่มผู้ใช้
+              </button>
+            )}
           </div>
 
-          {(loading || error || users.length > 0) && <div className="px-6">
-            <AdministratorSelect
-              keyword={keyword}
-              role={roleFilter}
-              onKeywordChange={setKeyword}
-              onRoleChange={setRoleFilter}
-            />
-          </div>}
+          {(loading || error || users.length > 0) && (
+            <div className="px-6">
+              <AdministratorSelect
+                keyword={keyword}
+                role={roleFilter}
+                onKeywordChange={setKeyword}
+                onRoleChange={setRoleFilter}
+              />
+            </div>
+          )}
 
-          {(loading || error || users.length > 0) && <p className="mt-6 mb-4 px-6 font-semibold text-gray-600">
-            ผู้ใช้ทั้งหมด {users.length} รายการ
-            {(keyword || roleFilter !== "all") &&
-              ` · พบ ${filtered.length} รายการ`}
-          </p>}
+          {(loading || error || users.length > 0) && (
+            <p className="mt-6 mb-4 px-6 font-semibold text-gray-600">
+              ผู้ใช้ทั้งหมด {users.length} รายการ
+              {(keyword || roleFilter !== "all") &&
+                ` · พบ ${filtered.length} รายการ`}
+            </p>
+          )}
 
           <div className="px-6 pb-6">
             <AdministratorTable
@@ -252,7 +301,9 @@ export default function AdministratorsPage() {
               onChangeRole={(user, role) => void changeRole(user, role)}
               onDelete={removeUser}
               onRetry={() => void load()}
-              onAdd={() => { if (canCreate) setShowForm(true); }}
+              onAdd={() => {
+                if (canCreate) setShowForm(true);
+              }}
             />
           </div>
         </div>
@@ -299,43 +350,155 @@ export default function AdministratorsPage() {
               </button>
             </div>
             <form noValidate onSubmit={(e) => void addUser(e)}>
-              <p className="mb-5 text-sm text-gray-500">กรอกข้อมูลเพื่อสร้างบัญชีให้ผู้ใช้ใหม่</p>
+              <p className="mb-5 text-sm text-gray-500">
+                กรอกข้อมูลเพื่อสร้างบัญชีให้ผู้ใช้ใหม่
+              </p>
               <div className="space-y-4 rounded-xl border border-gray-100 bg-[var(--card)] p-4 sm:p-5">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-[150px_minmax(0,1fr)]">
-                  <div ref={formPrefixRef} className="relative text-sm font-medium text-gray-700">คำนำหน้า
-                    <button type="button" aria-label="เลือกคำนำหน้า" aria-expanded={openFormPrefix} onClick={() => setOpenFormPrefix(!openFormPrefix)} className={`form-input-card mt-1 flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm font-normal text-gray-700 ${formErrors.prefix ? "!border-red-400" : ""}`}>
-                      <span className="truncate">{form.prefix || "เลือกคำนำหน้า"}</span><ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                  <div
+                    ref={formPrefixRef}
+                    className="relative text-sm font-medium text-gray-700"
+                  >
+                    คำนำหน้า
+                    <button
+                      type="button"
+                      aria-label="เลือกคำนำหน้า"
+                      aria-expanded={openFormPrefix}
+                      onClick={() => setOpenFormPrefix(!openFormPrefix)}
+                      className={`form-input-card mt-1 flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm font-normal text-gray-700 ${formErrors.prefix ? "!border-red-400" : ""}`}
+                    >
+                      <span className="truncate">
+                        {form.prefix || "เลือกคำนำหน้า"}
+                      </span>
+                      <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
                     </button>
-                    {openFormPrefix && <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
-                      {USER_PREFIXES.map((prefix) => <button key={prefix} type="button" onClick={() => { updateForm("prefix", prefix); setOpenFormPrefix(false); }} className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${form.prefix === prefix ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}>{prefix}{form.prefix === prefix && <CheckIcon className="h-4 w-4" />}</button>)}
-                    </div>}
-                    {formErrors.prefix && <span className="mt-1 block text-xs text-red-600">{formErrors.prefix}</span>}
+                    {openFormPrefix && (
+                      <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+                        {USER_PREFIXES.map((prefix) => (
+                          <button
+                            key={prefix}
+                            type="button"
+                            onClick={() => {
+                              updateForm("prefix", prefix);
+                              setOpenFormPrefix(false);
+                            }}
+                            className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${form.prefix === prefix ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
+                          >
+                            {prefix}
+                            {form.prefix === prefix && (
+                              <CheckIcon className="h-4 w-4" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {formErrors.prefix && (
+                      <span className="mt-1 block text-xs text-red-600">
+                        {formErrors.prefix}
+                      </span>
+                    )}
                   </div>
-                  <label className="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล
-                    <input required autoComplete="name" value={form.fullname} onChange={(event) => updateForm("fullname", event.target.value)} placeholder="ชื่อ-นามสกุล" className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.fullname ? "!border-red-400" : ""}`} />
-                    {formErrors.fullname && <span className="mt-1 block text-xs text-red-600">{formErrors.fullname}</span>}
+                  <label className="block text-sm font-medium text-gray-700">
+                    ชื่อ-นามสกุล
+                    <input
+                      required
+                      autoComplete="name"
+                      value={form.fullname}
+                      onChange={(event) =>
+                        updateForm("fullname", event.target.value)
+                      }
+                      placeholder="ชื่อ-นามสกุล"
+                      className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.fullname ? "!border-red-400" : ""}`}
+                    />
+                    {formErrors.fullname && (
+                      <span className="mt-1 block text-xs text-red-600">
+                        {formErrors.fullname}
+                      </span>
+                    )}
                   </label>
                 </div>
 
-                <label className="block text-sm font-medium text-gray-700">ชื่อผู้ใช้
-                  <input required autoComplete="off" value={form.username} onChange={(event) => updateForm("username", event.target.value)} placeholder="ชื่อผู้ใช้สำหรับเข้าสู่ระบบ" className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.username ? "!border-red-400" : ""}`} />
-                  {formErrors.username && <span className="mt-1 block text-xs text-red-600">{formErrors.username}</span>}
+                <label className="block text-sm font-medium text-gray-700">
+                  ชื่อผู้ใช้
+                  <input
+                    required
+                    autoComplete="off"
+                    value={form.username}
+                    onChange={(event) =>
+                      updateForm("username", event.target.value)
+                    }
+                    placeholder="ชื่อผู้ใช้สำหรับเข้าสู่ระบบ"
+                    className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.username ? "!border-red-400" : ""}`}
+                  />
+                  {formErrors.username && (
+                    <span className="mt-1 block text-xs text-red-600">
+                      {formErrors.username}
+                    </span>
+                  )}
                 </label>
 
-                <label className="block text-sm font-medium text-gray-700">อีเมล
-                  <input required type="email" autoComplete="off" value={form.email} onChange={(event) => updateForm("email", event.target.value)} placeholder="name@example.com" className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.email ? "!border-red-400" : ""}`} />
-                  {formErrors.email && <span className="mt-1 block text-xs text-red-600">{formErrors.email}</span>}
+                <label className="block text-sm font-medium text-gray-700">
+                  อีเมล
+                  <input
+                    required
+                    type="email"
+                    autoComplete="off"
+                    value={form.email}
+                    onChange={(event) =>
+                      updateForm("email", event.target.value)
+                    }
+                    placeholder="name@example.com"
+                    className={`form-input-card mt-1 h-11 w-full text-sm ${formErrors.email ? "!border-red-400" : ""}`}
+                  />
+                  {formErrors.email && (
+                    <span className="mt-1 block text-xs text-red-600">
+                      {formErrors.email}
+                    </span>
+                  )}
                 </label>
 
-                <label className="block text-sm font-medium text-gray-700">รหัสผ่าน
+                <label className="block text-sm font-medium text-gray-700">
+                  รหัสผ่าน
                   <span className="relative mt-1 block">
-                    <input required type={showPassword ? "text" : "password"} autoComplete="new-password" value={form.password} onChange={(event) => updateForm("password", event.target.value)} placeholder="อย่างน้อย 8 ตัวอักษร" className={`form-input-card h-11 w-full pr-11 text-sm ${formErrors.password ? "!border-red-400" : ""}`} />
-                    <button type="button" aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"} onClick={() => setShowPassword((value) => !value)} className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600">{showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}</button>
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={form.password}
+                      onChange={(event) =>
+                        updateForm("password", event.target.value)
+                      }
+                      placeholder="อย่างน้อย 8 ตัวอักษร"
+                      className={`form-input-card h-11 w-full pr-11 text-sm ${formErrors.password ? "!border-red-400" : ""}`}
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"
+                      }
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
                   </span>
-                  <span className={`mt-1 block text-xs ${formErrors.password ? "text-red-600" : "text-gray-400"}`}>{formErrors.password || "อย่างน้อย 8 ตัวอักษร มีตัวอักษรอังกฤษและตัวเลข"}</span>
+                  <span
+                    className={`mt-1 block text-xs ${formErrors.password ? "text-red-600" : "text-gray-400"}`}
+                  >
+                    {formErrors.password ||
+                      "อย่างน้อย 8 ตัวอักษร มีตัวอักษรอังกฤษและตัวเลข"}
+                  </span>
                 </label>
 
-                <div ref={formRoleRef} className="relative text-sm font-medium text-gray-700">สิทธิ์
+                <div
+                  ref={formRoleRef}
+                  className="relative text-sm font-medium text-gray-700"
+                >
+                  สิทธิ์
                   <button
                     type="button"
                     aria-label="สิทธิ์ผู้ใช้ใหม่"
@@ -345,9 +508,10 @@ export default function AdministratorsPage() {
                     className="form-input-card mt-1 flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm font-normal text-gray-700 disabled:cursor-default"
                   >
                     <span>{canManage ? form.role : "Teaching Assistant"}</span>
-                    {canManage && <ChevronDownIcon className="h-4 w-4 text-gray-400" />}
+                    {canManage && (
+                      <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                    )}
                   </button>
-
                   {canManage && openFormRole && (
                     <div className="absolute bottom-full left-0 z-30 mb-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
                       {(
@@ -363,7 +527,9 @@ export default function AdministratorsPage() {
                           className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${form.role === role ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
                         >
                           {role}
-                          {form.role === role && <CheckIcon className="h-4 w-4" />}
+                          {form.role === role && (
+                            <CheckIcon className="h-4 w-4" />
+                          )}
                         </button>
                       ))}
                     </div>

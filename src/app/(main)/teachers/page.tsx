@@ -129,7 +129,7 @@ export default function TeachersPage() {
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-[26px] font-semibold text-gray-800">
-                Teachers
+                อาจารย์
               </h1>
               <p className="mt-1 text-sm text-gray-400">
                 จัดการข้อมูลอาจารย์ที่มีอยู่ในระบบ
@@ -150,7 +150,7 @@ export default function TeachersPage() {
               <TeacherSelect keyword={keyword} onKeywordChange={setKeyword} />
 
               <p className="mt-6 mb-4 font-semibold text-gray-600">
-                อาจารย์ทั้งหมด {teachers.length} รายการ
+                อาจารย์ ทั้งหมด {teachers.length} รายการ
                 {keyword.trim() && ` · พบ ${filtered.length} รายการ`}
               </p>
             </div>
