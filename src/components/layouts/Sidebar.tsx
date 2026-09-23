@@ -17,13 +17,14 @@ import {
 import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);  
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
@@ -474,13 +475,13 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
   return (
     <nav className="flex flex-col gap-6 text-sm font-medium">
       {!collapsed && (
-        <p className="px-3 text-xs uppercase text-gray-400">Menu</p>
+        <p className="px-3 text-xs uppercase text-gray-400">เมนู</p>
       )}
 
       <div className="flex flex-col gap-2">
         <SidebarItem
           icon={<HomeIcon />}
-          label="Dashboard"
+          label="แดชบอร์ด"
           collapsed={collapsed}
           active={pathname === "/dashboard"}
           onClick={() => onNavigate("/dashboard")}
@@ -488,7 +489,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<BookOpenIcon />}
-          label="Classes"
+          label="ชั้นเรียน"
           collapsed={collapsed}
           active={pathname.startsWith("/classes")}
           onClick={() => onNavigate("/classes")}
@@ -496,7 +497,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<UserGroupIcon />}
-          label="Students"
+          label="นักศึกษา"
           collapsed={collapsed}
           active={pathname.startsWith("/students")}
           onClick={() => onNavigate("/students")}
@@ -504,7 +505,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<AcademicCapIcon />}
-          label="Teachers"
+          label="อาจารย์"
           collapsed={collapsed}
           active={pathname.startsWith("/teachers")}
           onClick={() => onNavigate("/teachers")}
@@ -512,7 +513,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<IdentificationIcon />}
-          label="Attendance"
+          label="เวลาเข้าเรียน"
           collapsed={collapsed}
           active={pathname.startsWith("/attendance")}
           onClick={() => onNavigate("/attendance")}
@@ -520,7 +521,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<ClipboardDocumentCheckIcon />}
-          label="Form Attendance"
+          label="ตั้งค่าแบบฟอร์มเช็คชื่อ"
           collapsed={collapsed}
           active={pathname.startsWith("/check-in/configform")}
           onClick={() => onNavigate("/check-in/configform")}
@@ -528,31 +529,21 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
       </div>
 
       {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
-          Management
-        </p>
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">การจัดการ</p>
       )}
 
       <div className="flex flex-col gap-2">
         <SidebarItem
           icon={<UserCircleIcon />}
-          label="Administrators"
+          label="ผู้ดูแลระบบ"
           collapsed={collapsed}
           active={pathname.startsWith("/administrators")}
           onClick={() => onNavigate("/administrators")}
         />
-      </div>
 
-      {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
-          Other
-        </p>
-      )}
-
-      <div className="flex flex-col gap-2">
         <SidebarItem
           icon={<Cog6ToothIcon />}
-          label="Setting"
+          label="ตั้งค่า"
           collapsed={collapsed}
           active={pathname.startsWith("/setting")}
           onClick={() => onNavigate("/setting")}
@@ -642,10 +633,12 @@ function UserSection({
   return (
     <div
       className={`
-        pt-4
-        ${collapsed ? "" : "border-t border-gray-200"}
+        pt-1
       `}
     >
+      <div className="mb-3 border-b border-gray-200 pb-3">
+        <NotificationCenter collapsed={collapsed} />
+      </div>
       <div
         className={`
           flex
@@ -680,7 +673,19 @@ function UserSection({
               text-gray-700
             "
           >
-            {user.avatarUrl ? <Image unoptimized src={user.avatarUrl} alt="รูปโปรไฟล์" width={36} height={36} className="h-full w-full object-cover" /> : userInitial}
+            {user.avatarUrl ? (
+              <Image
+                unoptimized
+                loading="eager"
+                src={user.avatarUrl}
+                alt="รูปโปรไฟล์"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              userInitial
+            )}
           </div>
 
           {!collapsed && (

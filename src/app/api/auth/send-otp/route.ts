@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (!normalizedIdentifier) {
       return NextResponse.json(
         { success: false, message: "กรอกข้อมูลไม่ครบ" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,9 +50,7 @@ export async function POST(req: Request) {
         userId: user._id,
       });
 
-      const otp = Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
       await resets.insertOne({
         userId: user._id,
@@ -73,10 +71,10 @@ export async function POST(req: Request) {
       success: true,
       message: "หากบัญชีมีอยู่ เราได้ส่ง OTP แล้ว",
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "เกิดข้อผิดพลาด" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

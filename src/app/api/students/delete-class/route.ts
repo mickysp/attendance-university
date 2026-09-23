@@ -95,7 +95,7 @@ export async function DELETE(req: Request) {
       deletedRelations: deletedRelations.deletedCount,
       deletedStudents: deletedStudents.deletedCount,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "ลบรายชื่อไม่สำเร็จ" },
       { status: 500 },

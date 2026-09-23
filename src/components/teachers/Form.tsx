@@ -27,7 +27,10 @@ export default function TeacherForm({ id }: { id?: string }) {
       setLoading(true);
       setError("");
       try {
-        const res = await teachersApi.get(id, { cache: "no-store", signal: controller.signal });
+        const res = await teachersApi.get(id, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
         const result = await res.json();
         if (!res.ok || !result.success)
           throw new Error(result.message || "โหลดข้อมูลอาจารย์ไม่สำเร็จ");
@@ -70,7 +73,10 @@ export default function TeacherForm({ id }: { id?: string }) {
         busy.current = true;
         setSaving(true);
         try {
-          const res = await teachersApi.save({ ...(id ? { id } : {}), name: name.trim() });
+          const res = await teachersApi.save({
+            ...(id ? { id } : {}),
+            name: name.trim(),
+          });
           const result = await res.json();
           if (!res.ok || !result.success)
             throw new Error(result.message || "บันทึกข้อมูลไม่สำเร็จ");
@@ -151,7 +157,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="max-w-2xl">
                   <label
                     htmlFor="teacher-name"

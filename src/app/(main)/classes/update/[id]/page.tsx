@@ -126,7 +126,7 @@ export default function EditClassPage() {
         } else {
           showAlert("ไม่สามารถโหลดข้อมูลอาจารย์ได้", "error");
         }
-      } catch (error) {
+      } catch {
         showAlert("ไม่สามารถโหลดข้อมูลอาจารย์ได้", "error");
       } finally {
         setLoadingTeachers(false);

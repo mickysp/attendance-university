@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 
 import type { ClassDocument } from "@/types/classes";
 
@@ -72,6 +74,16 @@ export async function DELETE(req: Request) {
           status: 500,
         },
       );
+    }
+    const actor = await currentUser();
+    if (actor) {
+      await recordActivity({
+        actor,
+        category: "classes",
+        action: "delete",
+        message: `ลบชั้นเรียน “${existing.className}”`,
+        target: existing.className,
+      });
     }
 
     return NextResponse.json(

@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { useState, useRef, useEffect } from "react";
 import { useConfirm } from "@/context/swal";
 
@@ -184,18 +185,10 @@ export default function Table({
   if (data.length === 0) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
-        <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
-          <img
-            src="/not_exist_search.svg"
-            alt="ไม่พบข้อมูล"
-            className="h-28 w-28"
-          />
-        </div>
+        <EmptyStateIcon />
 
-        <p className="text-sm text-gray-400">
-          ไม่พบข้อมูลที่ค้นหา
-          <br />
-          กรุณาลองใหม่อีกครั้ง
+        <p className="whitespace-nowrap text-sm text-gray-500">
+          ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
         </p>
       </div>
     );
@@ -312,13 +305,17 @@ export default function Table({
                   รหัสวิชา / Section
                 </th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  ชื่อวิชา
+                </th>
 
                 <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   อาจารย์ผู้สอน
                 </th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">สถานะ</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  สถานะ
+                </th>
 
                 <th
                   className="

@@ -8,6 +8,7 @@ import {
   DocumentArrowUpIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import StudentFilter from "@/components/students/Select";
 import { useRouter } from "next/navigation";
 import StudentTable from "@/components/students/Table";
@@ -134,7 +135,9 @@ export default function StudentsPage() {
   const getImportValidationError = () => {
     if (!selectedClass?._id) return "กรุณาเลือกวิชาจากรายการที่ค้นหา";
     if (!selectedMajor) return "กรุณาเลือกสาขาจากรายการที่ค้นหา";
-    const incompleteIndex = importRows.findIndex((row) => !row.section || !row.file);
+    const incompleteIndex = importRows.findIndex(
+      (row) => !row.section || !row.file,
+    );
     if (incompleteIndex >= 0) {
       const row = importRows[incompleteIndex];
       return row.section
@@ -144,7 +147,10 @@ export default function StudentsPage() {
     if (importRows.some((row) => !/^[1-9]\d*$/.test(row.section))) {
       return "หมายเลข Section ต้องเป็นจำนวนเต็มมากกว่า 0";
     }
-    if (new Set(importRows.map((row) => Number(row.section))).size !== importRows.length) {
+    if (
+      new Set(importRows.map((row) => Number(row.section))).size !==
+      importRows.length
+    ) {
       return "กรุณากรอกหมายเลข Section ให้ต่างกัน";
     }
     return "";
@@ -171,7 +177,6 @@ export default function StudentsPage() {
     item.toLocaleLowerCase().includes(majorSearch.trim().toLocaleLowerCase()),
   );
 
-
   const [filters, setFilters] = useState({
     keyword: "",
     classId: "",
@@ -185,16 +190,26 @@ export default function StudentsPage() {
     if (!major) continue;
     for (const course of student.classes || []) {
       if (!course.classId) continue;
-      if (!branchesByClass.has(course.classId)) branchesByClass.set(course.classId, new Set());
+      if (!branchesByClass.has(course.classId))
+        branchesByClass.set(course.classId, new Set());
       branchesByClass.get(course.classId)!.add(major);
     }
   }
   const selectedBranches = filters.classId
     ? [...(branchesByClass.get(filters.classId) || [])]
-    : [...new Set(data.map((student) => student.major?.trim()).filter((major): major is string => Boolean(major)))];
-  const effectiveBranch = filters.classId && selectedBranches.length === 1
-    ? selectedBranches[0]
-    : selectedBranches.includes(filters.branch) ? filters.branch : "";
+    : [
+        ...new Set(
+          data
+            .map((student) => student.major?.trim())
+            .filter((major): major is string => Boolean(major)),
+        ),
+      ];
+  const effectiveBranch =
+    filters.classId && selectedBranches.length === 1
+      ? selectedBranches[0]
+      : selectedBranches.includes(filters.branch)
+        ? filters.branch
+        : "";
 
   const filteredData = data.filter((s) => {
     const keyword = filters.keyword.toLowerCase();
@@ -204,25 +219,28 @@ export default function StudentsPage() {
       (s.studentId || "").toLowerCase().includes(keyword);
 
     const matchClass = filters.classId
-      ? (s.classes || []).some((c) =>
-          c.classId === filters.classId,
-        )
+      ? (s.classes || []).some((c) => c.classId === filters.classId)
       : true;
 
     const matchBranch = effectiveBranch
-      ? (s.major || "").trim().toLocaleLowerCase() === effectiveBranch.toLocaleLowerCase()
+      ? (s.major || "").trim().toLocaleLowerCase() ===
+        effectiveBranch.toLocaleLowerCase()
       : true;
 
     const matchSection = filters.section ? s.section === filters.section : true;
 
-    const matchYear = true;
-
     return matchKeyword && matchClass && matchBranch && matchSection;
   });
-  const selectedListClass = classes.find((item) => item._id === filters.classId);
-  const selectedClassHasStudents = Boolean(filters.classId) && data.some((student) =>
-    (student.classes || []).some((course) => course.classId === filters.classId),
+  const selectedListClass = classes.find(
+    (item) => item._id === filters.classId,
   );
+  const selectedClassHasStudents =
+    Boolean(filters.classId) &&
+    data.some((student) =>
+      (student.classes || []).some(
+        (course) => course.classId === filters.classId,
+      ),
+    );
 
   const handleDeleteClassStudents = () => {
     if (!selectedListClass || !selectedYear || deletingClass) return;
@@ -231,13 +249,23 @@ export default function StudentsPage() {
       async () => {
         setDeletingClass(true);
         try {
-          const response = await studentsApi.removeClassStudents(selectedListClass._id, selectedYear);
+          const response = await studentsApi.removeClassStudents(
+            selectedListClass._id,
+            selectedYear,
+          );
           const result = await response.json();
-          if (!response.ok || !result.success) throw new Error(result.message || "ลบรายชื่อไม่สำเร็จ");
-          showAlert(`ลบรายชื่อในวิชา ${selectedListClass.name} แล้ว ${result.deletedRelations} รายการ`, "success");
+          if (!response.ok || !result.success)
+            throw new Error(result.message || "ลบรายชื่อไม่สำเร็จ");
+          showAlert(
+            `ลบรายชื่อในวิชา ${selectedListClass.name} แล้ว ${result.deletedRelations} รายการ`,
+            "success",
+          );
           await fetchStudents(selectedYear);
         } catch (error) {
-          showAlert(error instanceof Error ? error.message : "ลบรายชื่อไม่สำเร็จ", "error");
+          showAlert(
+            error instanceof Error ? error.message : "ลบรายชื่อไม่สำเร็จ",
+            "error",
+          );
         } finally {
           setDeletingClass(false);
         }
@@ -276,13 +304,12 @@ export default function StudentsPage() {
 
         if (data.success) {
           const loadedClasses = data.data.map((c) => ({
-              _id: c._id,
-              name: getClassName(c),
-            }));
+            _id: c._id,
+            name: getClassName(c),
+          }));
           setClasses(loadedClasses);
         }
-      } catch (err) {
-        //console.error(err);
+      } catch {
       } finally {
         setClassesLoaded(true);
       }
@@ -296,8 +323,7 @@ export default function StudentsPage() {
         if (data.success) {
           setMajors(data.data.map((m) => m.name));
         }
-      } catch (err) {
-        //console.error(err);
+      } catch {
       } finally {
       }
     };
@@ -307,20 +333,27 @@ export default function StudentsPage() {
   }, []);
 
   useEffect(() => {
-    if (!classesLoaded || !studentsLoaded || initialClassSelected.current) return;
+    if (!classesLoaded || !studentsLoaded || initialClassSelected.current)
+      return;
     initialClassSelected.current = true;
     const firstWithStudents = classes.find((course) =>
       data.some((student) =>
-        (student.classes || []).some((enrollment) => enrollment.classId === course._id),
+        (student.classes || []).some(
+          (enrollment) => enrollment.classId === course._id,
+        ),
       ),
     );
-    const requestedClassId = new URLSearchParams(window.location.search).get("classId");
-    const requestedClass = classes.find((course) => course._id === requestedClassId);
+    const requestedClassId = new URLSearchParams(window.location.search).get(
+      "classId",
+    );
+    const requestedClass = classes.find(
+      (course) => course._id === requestedClassId,
+    );
     const defaultClass = requestedClass || firstWithStudents || classes[0];
     if (defaultClass) {
-      setFilters((current) => current.classId
-        ? current
-        : { ...current, classId: defaultClass._id });
+      setFilters((current) =>
+        current.classId ? current : { ...current, classId: defaultClass._id },
+      );
     }
   }, [classes, data, classesLoaded, studentsLoaded]);
 
@@ -335,7 +368,6 @@ export default function StudentsPage() {
       });
 
       if (!res.ok) {
-        const text = await res.text();
         throw new Error("API error");
       }
 
@@ -366,8 +398,7 @@ export default function StudentsPage() {
       setSelectedYear(year ?? result.currentYear);
 
       setHasInitialData(allStudents.length > 0);
-    } catch (err) {
-      //console.error("FETCH ERROR:", err);
+    } catch {
     } finally {
       setLoading(false);
       setStudentsLoaded(true);
@@ -384,12 +415,12 @@ export default function StudentsPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 pt-[80px] font-noto sm:p-6 sm:pt-[80px] lg:pt-6">
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-4 pt-[80px] font-noto sm:p-6 sm:pt-[80px] lg:pt-6">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
-              <p className="text-gray-600 text-base text-white">กำลังโหลด...</p>
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <p className="text-base text-white">กำลังโหลด...</p>
             </div>
           </div>
         )}
@@ -402,7 +433,7 @@ export default function StudentsPage() {
             <div className="flex flex-col gap-4 px-4 pt-5 sm:px-6 sm:pt-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <h1 className="text-[26px] font-semibold text-gray-800">
-                  Students
+                  นักศึกษา
                 </h1>
                 <p className="text-sm text-gray-400 mt-1">
                   แสดงข้อมูลนักศึกษาในระบบ
@@ -492,10 +523,12 @@ export default function StudentsPage() {
                     data={classes.map((c) => ({
                       _id: c._id,
                       className: c.name,
-                      branches: [...(branchesByClass.get(c._id) || [])].map((m) => ({
-                        _id: m,
-                        name: m,
-                      })),
+                      branches: [...(branchesByClass.get(c._id) || [])].map(
+                        (m) => ({
+                          _id: m,
+                          name: m,
+                        }),
+                      ),
                     }))}
                     onChange={(value) => {
                       setFilters(value);
@@ -506,11 +539,9 @@ export default function StudentsPage() {
 
               {!hasInitialData && (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="students" />
 
-                  <p className="text-sm text-gray-400 mb-4">
+                  <p className="mb-4 whitespace-nowrap text-sm text-gray-500">
                     ยังไม่มีข้อมูลนักศึกษา
                   </p>
 
@@ -526,11 +557,9 @@ export default function StudentsPage() {
 
               {hasInitialData && data.length === 0 && (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="students" />
 
-                  <p className="text-sm text-gray-400">
+                  <p className="whitespace-nowrap text-sm text-gray-500">
                     ยังไม่มีข้อมูลรายนักศึกษาล่าสุด
                   </p>
                 </div>
@@ -540,7 +569,7 @@ export default function StudentsPage() {
                 <>
                   <div className="mt-2 mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-base font-semibold text-gray-600">
-                      Student ทั้งหมด {filteredData.length} รายการ
+                      นักศึกษา ทั้งหมด {filteredData.length} รายการ
                     </p>
                     {selectedListClass && selectedClassHasStudents && (
                       <button
@@ -550,7 +579,9 @@ export default function StudentsPage() {
                         className="flex h-10 w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-red-200 px-4 text-sm text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                       >
                         <TrashIcon className="h-4 w-4" />
-                        {deletingClass ? "กำลังลบ..." : "ลบรายชื่อทั้งหมดในวิชานี้"}
+                        {deletingClass
+                          ? "กำลังลบ..."
+                          : "ลบรายชื่อทั้งหมดในวิชานี้"}
                       </button>
                     )}
                   </div>
@@ -561,7 +592,9 @@ export default function StudentsPage() {
                       selectedClassId={filters.classId}
                       classHasStudents={selectedClassHasStudents}
                       onDeleteSuccess={handleDeleteSuccess}
-                      onUpdateSuccess={() => { void fetchStudents(selectedYear || undefined); }}
+                      onUpdateSuccess={() => {
+                        void fetchStudents(selectedYear || undefined);
+                      }}
                       onWithdrawSuccess={(studentId, className, section) => {
                         setData((prev) =>
                           prev.map((student) => {
@@ -628,32 +661,43 @@ export default function StudentsPage() {
                 <label className="text-sm text-gray-800">วิชา</label>
 
                 <div className="relative">
-                <input
-                  aria-label="ค้นหาและเลือกวิชา"
-                  disabled={importLoading}
-                  value={openClass ? classSearch : selectedClass?.name || ""}
-                  placeholder="เลือกหรือพิมพ์ค้นหาวิชา"
-                  onFocus={() => { setClassSearch(""); setOpenClass(true); setOpenMajor(false); }}
-                  onChange={(event) => { setClassSearch(event.target.value); setSelectedClass(null); setImportResults([]); setOpenClass(true); }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && filteredClasses[0]) {
-                      event.preventDefault();
-                      setSelectedClass(filteredClasses[0]);
-                      setImportResults([]);
-                      setOpenClass(false);
+                  <input
+                    aria-label="ค้นหาและเลือกวิชา"
+                    disabled={importLoading}
+                    value={openClass ? classSearch : selectedClass?.name || ""}
+                    placeholder="เลือกหรือพิมพ์ค้นหาวิชา"
+                    onFocus={() => {
                       setClassSearch("");
-                    }
-                  }}
-                  className="form-input-card w-full pr-9 text-sm"
-                />
-                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      setOpenClass(true);
+                      setOpenMajor(false);
+                    }}
+                    onChange={(event) => {
+                      setClassSearch(event.target.value);
+                      setSelectedClass(null);
+                      setImportResults([]);
+                      setOpenClass(true);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && filteredClasses[0]) {
+                        event.preventDefault();
+                        setSelectedClass(filteredClasses[0]);
+                        setImportResults([]);
+                        setOpenClass(false);
+                        setClassSearch("");
+                      }
+                    }}
+                    className="form-input-card w-full pr-9 text-sm"
+                  />
+                  <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 {openClass && (
                   <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
                     {filteredClasses.length === 0 ? (
                       <div className="px-4 py-2 text-sm text-gray-400">
-                        {classes.length ? "ไม่พบวิชาที่ค้นหา" : "ไม่พบข้อมูลวิชา"}
+                        {classes.length
+                          ? "ไม่พบวิชาที่ค้นหา"
+                          : "ไม่พบข้อมูลวิชา"}
                       </div>
                     ) : (
                       filteredClasses.map((c) => {
@@ -688,32 +732,43 @@ export default function StudentsPage() {
                 <label className="text-sm text-gray-800">สาขา</label>
 
                 <div className="relative">
-                <input
-                  aria-label="ค้นหาและเลือกสาขา"
-                  disabled={importLoading}
-                  value={openMajor ? majorSearch : selectedMajor}
-                  placeholder="เลือกหรือพิมพ์ค้นหาสาขา"
-                  onFocus={() => { setMajorSearch(""); setOpenMajor(true); setOpenClass(false); }}
-                  onChange={(event) => { setMajorSearch(event.target.value); setSelectedMajor(""); setImportResults([]); setOpenMajor(true); }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && filteredMajors[0]) {
-                      event.preventDefault();
-                      setSelectedMajor(filteredMajors[0]);
-                      setImportResults([]);
-                      setOpenMajor(false);
+                  <input
+                    aria-label="ค้นหาและเลือกสาขา"
+                    disabled={importLoading}
+                    value={openMajor ? majorSearch : selectedMajor}
+                    placeholder="เลือกหรือพิมพ์ค้นหาสาขา"
+                    onFocus={() => {
                       setMajorSearch("");
-                    }
-                  }}
-                  className="form-input-card w-full pr-9 text-sm"
-                />
-                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      setOpenMajor(true);
+                      setOpenClass(false);
+                    }}
+                    onChange={(event) => {
+                      setMajorSearch(event.target.value);
+                      setSelectedMajor("");
+                      setImportResults([]);
+                      setOpenMajor(true);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && filteredMajors[0]) {
+                        event.preventDefault();
+                        setSelectedMajor(filteredMajors[0]);
+                        setImportResults([]);
+                        setOpenMajor(false);
+                        setMajorSearch("");
+                      }
+                    }}
+                    className="form-input-card w-full pr-9 text-sm"
+                  />
+                  <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 {openMajor && (
                   <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
                     {filteredMajors.length === 0 ? (
                       <div className="px-4 py-2 text-sm text-gray-400">
-                        {majors.length ? "ไม่พบสาขาที่ค้นหา" : "ไม่พบข้อมูลสาขา"}
+                        {majors.length
+                          ? "ไม่พบสาขาที่ค้นหา"
+                          : "ไม่พบข้อมูลสาขา"}
                       </div>
                     ) : (
                       filteredMajors.map((m) => {
@@ -753,7 +808,8 @@ export default function StudentsPage() {
                     กรอกหมายเลข Section และเลือกไฟล์ .xlsx หรือ .xls แยกกัน
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    รองรับคอลัมน์รหัสประจำตัว, ชื่อ และ kkumail โดยมีข้อมูลวิชาอยู่เหนือหัวตารางได้
+                    รองรับคอลัมน์รหัสประจำตัว, ชื่อ และ kkumail
+                    โดยมีข้อมูลวิชาอยู่เหนือหัวตารางได้
                   </p>
                 </div>
                 {importRows.map((row, index) => (
@@ -763,7 +819,12 @@ export default function StudentsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <label htmlFor={`import-section-${index}`} className="shrink-0 text-sm text-gray-600">Section</label>
+                        <label
+                          htmlFor={`import-section-${index}`}
+                          className="shrink-0 text-sm text-gray-600"
+                        >
+                          Section
+                        </label>
                         <input
                           id={`import-section-${index}`}
                           type="text"
@@ -773,14 +834,25 @@ export default function StudentsPage() {
                           placeholder="เช่น 4"
                           disabled={importLoading}
                           onChange={(event) => {
-                            const section = event.target.value.replace(/\D/g, "");
-                            setImportRows((rows) => rows.map((item, i) => i === index ? { ...item, section } : item));
+                            const section = event.target.value.replace(
+                              /\D/g,
+                              "",
+                            );
+                            setImportRows((rows) =>
+                              rows.map((item, i) =>
+                                i === index ? { ...item, section } : item,
+                              ),
+                            );
                             setImportResults([]);
                           }}
                           onBlur={() => {
                             if (!row.section) return;
                             const section = String(Number(row.section));
-                            setImportRows((rows) => rows.map((item, i) => i === index ? { ...item, section } : item));
+                            setImportRows((rows) =>
+                              rows.map((item, i) =>
+                                i === index ? { ...item, section } : item,
+                              ),
+                            );
                           }}
                           className="form-input-card min-w-0 flex-1 text-sm"
                         />
@@ -815,8 +887,18 @@ export default function StudentsPage() {
                           const file = event.target.files?.[0] || null;
                           if (file && !/\.(xlsx|xls)$/i.test(file.name)) {
                             event.target.value = "";
-                            setImportRows((rows) => rows.map((item, i) => i === index ? { ...item, file: null } : item));
-                            setImportResults([{ section: row.section || "-", success: false, message: "รองรับเฉพาะไฟล์ .xlsx และ .xls" }]);
+                            setImportRows((rows) =>
+                              rows.map((item, i) =>
+                                i === index ? { ...item, file: null } : item,
+                              ),
+                            );
+                            setImportResults([
+                              {
+                                section: row.section || "-",
+                                success: false,
+                                message: "รองรับเฉพาะไฟล์ .xlsx และ .xls",
+                              },
+                            ]);
                             return;
                           }
                           setImportRows((rows) =>
@@ -831,18 +913,18 @@ export default function StudentsPage() {
                   </div>
                 ))}
                 <button
-                    type="button"
-                    disabled={importLoading}
-                    onClick={() => {
-                      setImportRows((rows) => [
-                        ...rows,
-                        { section: "", file: null },
-                      ]);
-                      setImportResults([]);
-                    }}
-                    className="cursor-pointer text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
-                  >
-                    + เพิ่ม Section
+                  type="button"
+                  disabled={importLoading}
+                  onClick={() => {
+                    setImportRows((rows) => [
+                      ...rows,
+                      { section: "", file: null },
+                    ]);
+                    setImportResults([]);
+                  }}
+                  className="cursor-pointer text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+                >
+                  + เพิ่ม Section
                 </button>
               </div>
             </div>
@@ -903,9 +985,13 @@ export default function StudentsPage() {
                       formData.append("section", row.section);
                       const res = await studentsApi.uploadFile(formData);
                       const result = await res.json();
-                      const errorCount = result.summary?.errors ?? result.errors?.length ?? 0;
+                      const errorCount =
+                        result.summary?.errors ?? result.errors?.length ?? 0;
                       const firstError = result.errors?.[0]?.message;
-                      const warningCount = result.summary?.warnings ?? result.warnings?.length ?? 0;
+                      const warningCount =
+                        result.summary?.warnings ??
+                        result.warnings?.length ??
+                        0;
                       const firstWarning = result.warnings?.[0]?.message;
                       const outcome: ImportResult = {
                         section: row.section,
@@ -934,12 +1020,23 @@ export default function StudentsPage() {
                     }
                     setImportResults([...results]);
                   }
-                  if (results.length === importRows.length && results.every((result) => result.success)) {
+                  if (
+                    results.length === importRows.length &&
+                    results.every((result) => result.success)
+                  ) {
                     const importYear = new Date().getFullYear() + 543;
                     await fetchStudents(importYear);
-                    setFilters({ keyword: "", classId: importedClass?._id || "", branch: "", section: "" });
+                    setFilters({
+                      keyword: "",
+                      classId: importedClass?._id || "",
+                      branch: "",
+                      section: "",
+                    });
                     setOpenImport(false);
-                    showAlert(`นำเข้ารายชื่อวิชา ${importedClass?.name || "ที่เลือก"} สำเร็จ`, "success");
+                    showAlert(
+                      `นำเข้ารายชื่อวิชา ${importedClass?.name || "ที่เลือก"} สำเร็จ`,
+                      "success",
+                    );
                   } else if (results.some((result) => result.success)) {
                     await fetchStudents(new Date().getFullYear() + 543);
                   }

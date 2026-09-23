@@ -20,7 +20,8 @@ type ClassDocumentWithId = ClassDocument & {
 const isValidStudentId = (id: string) => /^\d{9}-\d$/.test(id);
 
 const isValidName = (name: string) =>
-  name.trim().length >= 2 && /\p{L}/u.test(name) &&
+  name.trim().length >= 2 &&
+  /\p{L}/u.test(name) &&
   !/[\uFFFD\u0000-\u001F\u007F-\u009F]/u.test(name) &&
   !/(?:à¸|à¹)/u.test(name) &&
   (name.match(/(?:เธ|เน)/gu) || []).length < 3 &&
@@ -122,7 +123,6 @@ export async function POST(req: Request) {
     }
 
     const academicYear = getAcademicYear();
-
 
     const parsed: StudentDocument[] = [];
 

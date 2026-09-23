@@ -124,12 +124,21 @@ export default function TeachersPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+      <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pt-[80px] lg:pt-6">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              <p className="text-base text-white">กำลังโหลด...</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex min-w-0 flex-col rounded-2xl bg-white">
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-[26px] font-semibold text-gray-800">
-                Teachers
+                อาจารย์
               </h1>
               <p className="mt-1 text-sm text-gray-400">
                 จัดการข้อมูลอาจารย์ที่มีอยู่ในระบบ
@@ -150,32 +159,22 @@ export default function TeachersPage() {
               <TeacherSelect keyword={keyword} onKeywordChange={setKeyword} />
 
               <p className="mt-6 mb-4 font-semibold text-gray-600">
-                อาจารย์ทั้งหมด {teachers.length} รายการ
+                อาจารย์ ทั้งหมด {teachers.length} รายการ
                 {keyword.trim() && ` · พบ ${filtered.length} รายการ`}
               </p>
             </div>
 
             <div className="px-6 pb-6">
-              {filtered.length === 0 && !loading && !error ? (
-                <div className="flex flex-col items-center gap-4 py-16 text-center text-sm text-gray-400">
-                  <p>
-                    {teachers.length
-                      ? "ไม่พบอาจารย์ที่ตรงกับคำค้นหา"
-                      : "ยังไม่มีข้อมูลอาจารย์ กดเพิ่มอาจารย์เพื่อเริ่มต้น"}
-                  </p>
-                </div>
-              ) : (
-                <TeacherTable
-                  teachers={filtered}
-                  deletingId={deleting}
-                  loading={loading}
-                  error={error}
-                  onDeleteTeacher={deleteTeacher}
-                  onEditTeacher={(teacher) => void openTeacherForm(teacher)}
-                  onRetry={() => void loadTeachers()}
-                  filterKey={keyword}
-                />
-              )}
+              <TeacherTable
+                teachers={filtered}
+                deletingId={deleting}
+                loading={loading}
+                error={error}
+                onDeleteTeacher={deleteTeacher}
+                onEditTeacher={(teacher) => void openTeacherForm(teacher)}
+                onRetry={() => void loadTeachers()}
+                filterKey={keyword}
+              />
             </div>
           </div>
         </div>

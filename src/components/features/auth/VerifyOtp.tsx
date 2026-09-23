@@ -62,14 +62,23 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5" aria-busy={busy}>
       <div>
-        <h1 className="text-xl font-semibold text-gray-800">ตรวจสอบอีเมลของคุณ</h1>
+        <h1 className="text-xl font-semibold text-gray-800">
+          ตรวจสอบอีเมลของคุณ
+        </h1>
         <p className="mt-2 text-sm leading-relaxed text-gray-500">
           หากอีเมลนี้มีบัญชีในระบบ คุณจะได้รับรหัส OTP ที่
-          <span className="mt-1 block break-all font-medium text-gray-700">{email}</span>
+          <span className="mt-1 block break-all font-medium text-gray-700">
+            {email}
+          </span>
         </p>
       </div>
       <div>
-        <label htmlFor="recovery-otp" className="mb-2 block text-sm font-medium text-gray-700">รหัส OTP 6 หลัก</label>
+        <label
+          htmlFor="recovery-otp"
+          className="mb-2 block text-sm font-medium text-gray-700"
+        >
+          รหัส OTP 6 หลัก
+        </label>
         <input
           id="recovery-otp"
           type="text"
@@ -81,24 +90,57 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
           maxLength={6}
           disabled={busy}
           value={otp}
-          onChange={(event) => { setOtp(event.target.value.replace(/\D/g, "")); setError(""); }}
+          onChange={(event) => {
+            setOtp(event.target.value.replace(/\D/g, ""));
+            setError("");
+          }}
           aria-invalid={!!error}
-          aria-describedby={error ? "recovery-otp-hint recovery-otp-error" : "recovery-otp-hint"}
+          aria-describedby={
+            error ? "recovery-otp-hint recovery-otp-error" : "recovery-otp-hint"
+          }
           className="form-input text-center text-xl tracking-[0.35em]"
           placeholder="000000"
         />
-        <p id="recovery-otp-hint" className="mt-2 text-xs text-gray-500">รหัสมีอายุ 10 นาที กรุณาตรวจสอบในอีเมลขยะด้วย</p>
-        {error && <p id="recovery-otp-error" role="alert" className="mt-2 text-xs text-red-500">{error}</p>}
+        <p id="recovery-otp-hint" className="mt-2 text-xs text-gray-500">
+          รหัสมีอายุ 10 นาที กรุณาตรวจสอบในอีเมลขยะด้วย
+        </p>
+        {error && (
+          <p
+            id="recovery-otp-error"
+            role="alert"
+            className="mt-2 text-xs text-red-500"
+          >
+            {error}
+          </p>
+        )}
       </div>
-      {notice && <p role="status" className="text-xs text-blue-600">{notice}</p>}
-      <button type="submit" disabled={!isValid || busy} className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+      {notice && (
+        <p role="status" className="text-xs text-blue-600">
+          {notice}
+        </p>
+      )}
+      <button
+        type="submit"
+        disabled={!isValid || busy}
+        className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+      >
         {loading ? "กำลังตรวจสอบ..." : "ยืนยันรหัส OTP"}
       </button>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={onBack} disabled={busy} className="cursor-pointer rounded text-sm text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={busy}
+          className="cursor-pointer rounded text-sm text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+        >
           เปลี่ยนอีเมล
         </button>
-        <button type="button" onClick={() => void resendOtp()} disabled={busy} className="cursor-pointer rounded text-sm text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50">
+        <button
+          type="button"
+          onClick={() => void resendOtp()}
+          disabled={busy}
+          className="cursor-pointer rounded text-sm text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {resending ? "กำลังส่ง..." : "ขอรหัสใหม่หลังครบ 10 นาที"}
         </button>
       </div>
