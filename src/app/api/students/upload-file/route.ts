@@ -10,7 +10,7 @@ import type {
   StudentResultItem,
   StudentImportErrorItem,
   MajorDocument,
-  IncomingStudent
+  IncomingStudent,
 } from "@/types/students";
 
 import type { ClassDocument } from "@/types/classes";
@@ -47,7 +47,8 @@ const isValidName = (name: string): boolean =>
   name.trim().length >= 2 && /\p{L}/u.test(name) && !isGarbledName(name);
 
 const isGarbledName = (name: string): boolean =>
-  /[\uFFFD]/u.test(name) || /(?:à¸|à¹)/u.test(name) ||
+  /[\uFFFD]/u.test(name) ||
+  /(?:à¸|à¹)/u.test(name) ||
   /[\u0000-\u001F\u007F-\u009F]/u.test(name) ||
   (name.match(/(?:เธ|เน)/gu) || []).length >= 3 ||
   /[^\p{Script=Thai}\p{Script=Latin}\s.'’-]/u.test(name);
@@ -63,8 +64,22 @@ const normalizeHeader = (value: unknown): string =>
     .replace(/[\p{Cf}\p{Z}\p{P}\s]/gu, "");
 
 const headerAliases = {
-  studentId: ["รหัสประจำตัว", "รหัสประจำตัวนักศึกษา", "รหัสนักศึกษา", "รหัสนศ", "studentid", "studentnumber"],
-  fullName: ["ชื่อ", "ชื่อสกุล", "ชื่อนามสกุล", "ชื่อและนามสกุล", "fullname", "studentname"],
+  studentId: [
+    "รหัสประจำตัว",
+    "รหัสประจำตัวนักศึกษา",
+    "รหัสนักศึกษา",
+    "รหัสนศ",
+    "studentid",
+    "studentnumber",
+  ],
+  fullName: [
+    "ชื่อ",
+    "ชื่อสกุล",
+    "ชื่อนามสกุล",
+    "ชื่อและนามสกุล",
+    "fullname",
+    "studentname",
+  ],
   email: ["kkumail", "email", "อีเมล", "อีเมล์", "emailaddress", "mail"],
 };
 
@@ -73,8 +88,10 @@ const findColumn = (row: unknown[], aliases: string[]): number =>
     const header = normalizeHeader(cell);
     return aliases.some((alias) => {
       const normalizedAlias = normalizeHeader(alias);
-      return header === normalizedAlias ||
-        (normalizedAlias.length >= 5 && header.includes(normalizedAlias));
+      return (
+        header === normalizedAlias ||
+        (normalizedAlias.length >= 5 && header.includes(normalizedAlias))
+      );
     });
   });
 
@@ -86,18 +103,27 @@ const normalizeStudentId = (value: unknown): string => {
 const scoreWorkbookNames = (workbook: XLSX.WorkBook): number => {
   let score = 0;
   for (const sheetName of workbook.SheetNames) {
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], {
-      header: 1, defval: "", raw: false,
-    });
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(
+      workbook.Sheets[sheetName],
+      {
+        header: 1,
+        defval: "",
+        raw: false,
+      },
+    );
     for (const row of rows.slice(0, 200)) {
-      const idColumn = row.findIndex((cell) => isValidStudentId(normalizeStudentId(cell)));
+      const idColumn = row.findIndex((cell) =>
+        isValidStudentId(normalizeStudentId(cell)),
+      );
       if (idColumn < 0) continue;
       const name = getString(row[idColumn + 1]);
       score += (name.match(/[\u0E00-\u0E7F]/gu) || []).length * 2;
       score -= (name.match(/[\uFFFD]/gu) || []).length * 12;
       score -= (name.match(/[\u0000-\u001F\u007F-\u009F]/gu) || []).length * 15;
       score -= (name.match(/(?:เธ|เน)/gu) || []).length * 12;
-      score -= (name.match(/[^\p{Script=Thai}\p{Script=Latin}\s.'’-]/gu) || []).length * 4;
+      score -=
+        (name.match(/[^\p{Script=Thai}\p{Script=Latin}\s.'’-]/gu) || [])
+          .length * 4;
     }
   }
   return score;
@@ -222,32 +248,49 @@ export async function POST(req: Request) {
     try {
       const buffer = Buffer.from(await file.arrayBuffer());
       const sample = buffer.subarray(0, 4096).toString("latin1").toLowerCase();
-      const isTextWorkbook = /<html|<table|<workbook|<\?xml/.test(sample) ||
+      const isTextWorkbook =
+        /<html|<table|<workbook|<\?xml/.test(sample) ||
         buffer.subarray(0, 2).equals(Buffer.from([0xff, 0xfe])) ||
         buffer.subarray(0, 2).equals(Buffer.from([0xfe, 0xff])) ||
-        sample.startsWith("<\0") || sample.startsWith("\0<");
+        sample.startsWith("<\0") ||
+        sample.startsWith("\0<");
       const candidates: XLSX.WorkBook[] = [];
       if (isTextWorkbook) {
-        for (const encoding of ["utf-8", "windows-874", "utf-16le", "utf-16be"]) {
+        for (const encoding of [
+          "utf-8",
+          "windows-874",
+          "utf-16le",
+          "utf-16be",
+        ]) {
           try {
             const text = new TextDecoder(encoding).decode(buffer);
             candidates.push(XLSX.read(text, { type: "string" }));
-          } catch { /* Try the next encoding. */ }
+          } catch {
+            /* Try the next encoding. */
+          }
         }
       } else {
         for (const codepage of [undefined, 874, 65001]) {
           try {
             candidates.push(XLSX.read(buffer, { type: "buffer", codepage }));
-          } catch { /* Try the next codepage. */ }
+          } catch {
+            /* Try the next codepage. */
+          }
         }
       }
       if (!candidates.length) throw new Error("Unreadable workbook");
       workbook = candidates.reduce((best, candidate) =>
-        scoreWorkbookNames(candidate) > scoreWorkbookNames(best) ? candidate : best,
+        scoreWorkbookNames(candidate) > scoreWorkbookNames(best)
+          ? candidate
+          : best,
       );
     } catch {
       return NextResponse.json(
-        { success: false, message: "ไม่สามารถอ่านไฟล์ Excel ได้ กรุณาตรวจสอบไฟล์ .xlsx หรือ .xls" },
+        {
+          success: false,
+          message:
+            "ไม่สามารถอ่านไฟล์ Excel ได้ กรุณาตรวจสอบไฟล์ .xlsx หรือ .xls",
+        },
         { status: 400 },
       );
     }
@@ -269,11 +312,14 @@ export async function POST(req: Request) {
     let emailColumn = -1;
 
     for (const sheetName of workbook.SheetNames) {
-      const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], {
-        header: 1,
-        defval: "",
-        raw: false,
-      });
+      const rows = XLSX.utils.sheet_to_json<unknown[]>(
+        workbook.Sheets[sheetName],
+        {
+          header: 1,
+          defval: "",
+          raw: false,
+        },
+      );
       for (let index = 0; index < Math.min(rows.length, 50); index++) {
         const row = rows[index];
         const foundId = findColumn(row, headerAliases.studentId);
@@ -296,8 +342,11 @@ export async function POST(req: Request) {
           );
           if (foundId < 0) continue;
           const foundName = row.findIndex(
-            (cell, column) => column > foundId && column <= foundId + 2 &&
-              isValidName(getString(cell)) && !isValidEmail(getString(cell)),
+            (cell, column) =>
+              column > foundId &&
+              column <= foundId + 2 &&
+              isValidName(getString(cell)) &&
+              !isValidEmail(getString(cell)),
           );
           if (foundName < 0) continue;
           sheetRows = rows;
@@ -307,7 +356,9 @@ export async function POST(req: Request) {
           const headerRow = rows[index - 1] ?? [];
           emailColumn = findColumn(headerRow, headerAliases.email);
           if (emailColumn < 0) {
-            emailColumn = row.findIndex((cell) => isValidEmail(getString(cell)));
+            emailColumn = row.findIndex((cell) =>
+              isValidEmail(getString(cell)),
+            );
           }
           break;
         }
@@ -319,7 +370,8 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "ไม่พบคอลัมน์รหัสประจำตัวและชื่อ หรือแถวข้อมูลที่มีรหัสนักศึกษารูปแบบ 123456789-0",
+          message:
+            "ไม่พบคอลัมน์รหัสประจำตัวและชื่อ หรือแถวข้อมูลที่มีรหัสนักศึกษารูปแบบ 123456789-0",
         },
         { status: 400 },
       );
@@ -437,15 +489,26 @@ export async function POST(req: Request) {
       })
       .toArray();
 
-    const parsedById = new Map(parsed.map((student) => [student.studentId, student]));
-    await Promise.all(allStudents.filter((student) => isGarbledName(student.fullName)).map((student) => {
-      const replacement = parsedById.get(student.studentId);
-      if (!student._id || !replacement) return Promise.resolve();
-      return studentsCol.updateOne(
-        { _id: student._id },
-        { $set: { fullName: replacement.fullName, ...(replacement.email ? { email: replacement.email } : {}) } },
-      );
-    }));
+    const parsedById = new Map(
+      parsed.map((student) => [student.studentId, student]),
+    );
+    await Promise.all(
+      allStudents
+        .filter((student) => isGarbledName(student.fullName))
+        .map((student) => {
+          const replacement = parsedById.get(student.studentId);
+          if (!student._id || !replacement) return Promise.resolve();
+          return studentsCol.updateOne(
+            { _id: student._id },
+            {
+              $set: {
+                fullName: replacement.fullName,
+                ...(replacement.email ? { email: replacement.email } : {}),
+              },
+            },
+          );
+        }),
+    );
 
     const idMap = new Map<string, ObjectId>(
       allStudents.map((student) => [student.studentId, student._id!]),

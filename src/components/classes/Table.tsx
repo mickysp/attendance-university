@@ -305,13 +305,17 @@ export default function Table({
                   รหัสวิชา / Section
                 </th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">ชื่อวิชา</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  ชื่อวิชา
+                </th>
 
                 <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   อาจารย์ผู้สอน
                 </th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">สถานะ</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  สถานะ
+                </th>
 
                 <th
                   className="

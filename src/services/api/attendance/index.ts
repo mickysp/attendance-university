@@ -14,13 +14,19 @@ export const attendanceApi = {
       json: data,
     });
   },
-  summary(query: { classId: string; year: number | null }, options?: ApiRequestOptions) {
+  summary(
+    query: { classId: string; year: number | null },
+    options?: ApiRequestOptions,
+  ) {
     return apiRequest("/attendance/summary", {
       ...options,
       query,
     });
   },
-  logs(query: { classId: string; studentId: string }, options?: ApiRequestOptions) {
+  logs(
+    query: { classId: string; studentId: string },
+    options?: ApiRequestOptions,
+  ) {
     return apiRequest("/attendance/logs", {
       ...options,
       query,

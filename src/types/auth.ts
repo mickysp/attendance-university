@@ -1,6 +1,4 @@
-export type UserRole =
-  | "Teacher"
-  | "Teaching Assistant";
+export type UserRole = "Teacher" | "Teaching Assistant";
 
 export interface User {
   _id?: string;
@@ -49,7 +47,10 @@ export interface LoginResponse extends ApiResponse {
   role?: UserRole;
 }
 
-export type UpdateProfileBody = Pick<User, "prefix" | "fullname" | "username" | "email">;
+export type UpdateProfileBody = Pick<
+  User,
+  "prefix" | "fullname" | "username" | "email"
+>;
 
 export type UserProfile = UpdateProfileBody & {
   role: string;

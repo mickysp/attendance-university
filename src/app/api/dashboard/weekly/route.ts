@@ -31,10 +31,9 @@ export async function GET(req: Request) {
       });
     }
 
-    const academicYear =
-      searchParams.get("year")
-        ? Number(searchParams.get("year"))
-        : new Date().getFullYear() + 543;
+    const academicYear = searchParams.get("year")
+      ? Number(searchParams.get("year"))
+      : new Date().getFullYear() + 543;
 
     const client = await clientPromise;
     const db = client.db("attendance");
@@ -75,7 +74,6 @@ export async function GET(req: Request) {
       success: true,
       data: Array.from(weekMap.values()),
     });
-
   } catch (error) {
     return NextResponse.json({
       success: false,

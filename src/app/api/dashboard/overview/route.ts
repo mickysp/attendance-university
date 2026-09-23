@@ -27,10 +27,9 @@ export async function GET(req: Request) {
       });
     }
 
-    const academicYear =
-      searchParams.get("year")
-        ? Number(searchParams.get("year"))
-        : new Date().getFullYear() + 543;
+    const academicYear = searchParams.get("year")
+      ? Number(searchParams.get("year"))
+      : new Date().getFullYear() + 543;
 
     const client = await clientPromise;
     const db = client.db("attendance");
@@ -78,28 +77,24 @@ export async function GET(req: Request) {
       s.score += r.score ?? 0;
     });
 
-    const students = Array.from(studentMap.entries()).map(
-      ([studentId, s]) => {
-        const percent = (s.present / s.total) * 100;
+    const students = Array.from(studentMap.entries()).map(([studentId, s]) => {
+      const percent = (s.present / s.total) * 100;
 
-        return {
-          studentId,
-          name: s.name,
-          percent,
-          score: s.score,
-        };
-      }
-    );
+      return {
+        studentId,
+        name: s.name,
+        percent,
+        score: s.score,
+      };
+    });
 
     const riskStudents = students.filter((s) => s.percent < 60);
 
     const avgScore =
-      students.reduce((sum, s) => sum + s.score, 0) /
-      (students.length || 1);
+      students.reduce((sum, s) => sum + s.score, 0) / (students.length || 1);
 
     const avgPercent =
-      students.reduce((sum, s) => sum + s.percent, 0) /
-      (students.length || 1);
+      students.reduce((sum, s) => sum + s.percent, 0) / (students.length || 1);
 
     return NextResponse.json({
       success: true,
@@ -121,7 +116,6 @@ export async function GET(req: Request) {
 
       students,
     });
-
   } catch (error) {
     return NextResponse.json({
       success: false,

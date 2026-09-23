@@ -28,7 +28,6 @@ export async function POST(req: Request) {
 
     const insertData: ClassDocument[] = [];
 
-
     for (const item of classList) {
       const { className, classCodes, teachers, description } = item;
 
@@ -157,7 +156,13 @@ export async function POST(req: Request) {
     const actor = await currentUser();
     if (actor) {
       const names = insertData.map((item) => item.className).join(", ");
-      await recordActivity({ actor, category: "classes", action: "create", message: `สร้างชั้นเรียน “${names}”`, target: names });
+      await recordActivity({
+        actor,
+        category: "classes",
+        action: "create",
+        message: `สร้างชั้นเรียน “${names}”`,
+        target: names,
+      });
     }
 
     return NextResponse.json(

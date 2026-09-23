@@ -225,8 +225,12 @@ export default function QRPage({ classId }: { classId: string | null }) {
     const updateToday = () => {
       setToday(getBangkokDateKey());
       clearTimeout(midnightTimer);
-      const nextMidnight = Date.parse(`${getBangkokDateKey()}T00:00:00+07:00`) + 86_400_000;
-      midnightTimer = setTimeout(updateToday, Math.max(1, nextMidnight - Date.now() + 100));
+      const nextMidnight =
+        Date.parse(`${getBangkokDateKey()}T00:00:00+07:00`) + 86_400_000;
+      midnightTimer = setTimeout(
+        updateToday,
+        Math.max(1, nextMidnight - Date.now() + 100),
+      );
     };
     updateToday();
     window.addEventListener("focus", updateToday);
@@ -587,8 +591,8 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                   {dateReset && (
                     <p role="status" className="mb-4 text-sm text-blue-600">
-                      ระบบใช้เวลาเดิมเป็นค่าเริ่มต้น
-                      กรุณาตรวจสอบวันที่และเวลา แล้วกดบันทึกเพื่อสร้างรอบเช็กชื่อใหม่
+                      ระบบใช้เวลาเดิมเป็นค่าเริ่มต้น กรุณาตรวจสอบวันที่และเวลา
+                      แล้วกดบันทึกเพื่อสร้างรอบเช็กชื่อใหม่
                     </p>
                   )}
 
@@ -602,8 +606,12 @@ export default function QRPage({ classId }: { classId: string | null }) {
                         selected={schedule.date}
                         minDate={parseCalendarDate(today)!}
                         onChange={(date: Date | null) => {
-                          const selected = date || getScheduleFormDate(undefined).date;
-                          if (getScheduleDateError(formatCalendarDate(selected))) return;
+                          const selected =
+                            date || getScheduleFormDate(undefined).date;
+                          if (
+                            getScheduleDateError(formatCalendarDate(selected))
+                          )
+                            return;
                           setSchedule((previous) => ({
                             ...previous,
                             date: selected,

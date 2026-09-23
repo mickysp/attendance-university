@@ -5,17 +5,14 @@ import { jwtVerify } from "jose";
 const jwtSecret = process.env.JWT_SECRET;
 
 export async function proxy(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
+  const token = req.cookies.get("accessToken")?.value;
   const pathname = req.nextUrl.pathname;
 
   if (pathname === "/check-in" || /^\/checkin\/[^/]+\/?$/.test(pathname)) {
     return NextResponse.next();
   }
 
-  const publicPaths = [
-    "/login",
-    "/forgot-password",
-  ];
+  const publicPaths = ["/login", "/forgot-password"];
 
   if (!jwtSecret) {
     return NextResponse.next();
@@ -45,27 +42,18 @@ export async function proxy(req: NextRequest) {
 
     if (pathname === "/login") {
       if (role === "Teacher") {
-        return NextResponse.redirect(
-          new URL("/dashboard", req.url),
-        );
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
 
       if (role === "Teaching Assistant") {
-        return NextResponse.redirect(
-          new URL("/attendance", req.url),
-        );
+        return NextResponse.redirect(new URL("/attendance", req.url));
       }
 
       return NextResponse.redirect(new URL("/", req.url));
     }
 
-    if (
-      pathname.startsWith("/dashboard") &&
-      role === "Teaching Assistant"
-    ) {
-      return NextResponse.redirect(
-        new URL("/attendance", req.url),
-      );
+    if (pathname.startsWith("/dashboard") && role === "Teaching Assistant") {
+      return NextResponse.redirect(new URL("/attendance", req.url));
     }
 
     if (
@@ -73,25 +61,19 @@ export async function proxy(req: NextRequest) {
       role !== "Teacher" &&
       role !== "Teaching Assistant"
     ) {
-      return NextResponse.redirect(
-        new URL("/dashboard", req.url),
-      );
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     return NextResponse.next();
-  } catch (error) {
-    const response = NextResponse.redirect(
-      new URL("/login", req.url),
-    );
+  } catch {
+    const response = NextResponse.redirect(new URL("/login", req.url));
 
-    response.cookies.delete("token");
+    response.cookies.delete("accessToken");
 
     return response;
   }
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

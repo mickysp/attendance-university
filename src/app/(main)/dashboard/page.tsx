@@ -109,7 +109,9 @@ export default function DashboardPage() {
               <div className="flex flex-col items-center justify-center text-center">
                 <EmptyStateIcon kind="students" />
 
-                <p className="whitespace-nowrap text-sm text-gray-500">ยังไม่มีข้อมูลนักศึกษา</p>
+                <p className="whitespace-nowrap text-sm text-gray-500">
+                  ยังไม่มีข้อมูลนักศึกษา
+                </p>
               </div>
             </div>
           </div>

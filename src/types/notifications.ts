@@ -1,8 +1,5 @@
 export type NotificationCategory =
-  | "accounts"
-  | "classes"
-  | "students"
-  | "attendance";
+  "accounts" | "classes" | "students" | "attendance";
 
 export type NotificationPreferences = Record<NotificationCategory, boolean> & {
   othersOnly: boolean;

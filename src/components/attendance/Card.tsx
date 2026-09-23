@@ -8,10 +8,7 @@ import {
   DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 import type { ComponentType } from "react";
-import type {
-  AttendanceStatus,
-  StudentAttendance,
-} from "@/types/attendance";
+import type { AttendanceStatus, StudentAttendance } from "@/types/attendance";
 
 type SelectedAttendanceStatus = AttendanceStatus | null;
 
@@ -88,7 +85,7 @@ export default function StudentSummaryCard({
       iconColor: "text-yellow-600",
       valueColor: "text-yellow-600",
       borderColor: "border-yellow-100",
-     activeBorder: "border-none",
+      activeBorder: "border-none",
       ringColor: "ring-yellow-500",
       progress: "w-[55%]",
       progressColor: "bg-yellow-500",

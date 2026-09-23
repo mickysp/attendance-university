@@ -22,7 +22,11 @@ async function readResponse(response: Response) {
   return data;
 }
 
-export default function ProfileSection({ initialProfile }: { initialProfile: UserProfile }) {
+export default function ProfileSection({
+  initialProfile,
+}: {
+  initialProfile: UserProfile;
+}) {
   const { showAlert } = useAlert();
   const inputRef = useRef<HTMLInputElement>(null);
   const prefixRef = useRef<HTMLDivElement>(null);
@@ -66,7 +70,8 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
   }, [file]);
 
   const changed = ["prefix", "fullname", "username", "email"].some(
-    (key) => profile[key as keyof UserProfile] !== initial[key as keyof UserProfile],
+    (key) =>
+      profile[key as keyof UserProfile] !== initial[key as keyof UserProfile],
   );
 
   function chooseFile(selected: File | undefined) {
@@ -102,9 +107,7 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
     }
     setSaving(true);
     try {
-      await readResponse(
-        await authApi.updateProfile(normalized),
-      );
+      await readResponse(await authApi.updateProfile(normalized));
       setProfile(normalized);
       setInitial(normalized);
       window.dispatchEvent(new Event("profile-updated"));
@@ -125,9 +128,7 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
     try {
       const body = new FormData();
       body.set("avatar", file);
-      const data = await readResponse(
-        await authApi.uploadAvatar(body),
-      );
+      const data = await readResponse(await authApi.uploadAvatar(body));
       setProfile((current) => ({ ...current, avatarUrl: data.avatarUrl }));
       setInitial((current) => ({ ...current, avatarUrl: data.avatarUrl }));
       setFile(null);
@@ -180,7 +181,7 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
           แก้ไขข้อมูลบัญชีและรูปโปรไฟล์
         </p>
       </div>
-      
+
       <div>
         <div className="flex flex-col gap-5 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:p-6">
           <button
@@ -211,7 +212,7 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
             <p className="font-medium text-gray-800">
               {profile.prefix} {profile.fullname}
             </p>
-        
+
             <p className="mt-0.5 text-sm text-gray-500">{profile.role}</p>
 
             <p className="mt-2 text-xs text-gray-400">
@@ -274,7 +275,6 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
               className="relative text-sm font-medium text-gray-700"
             >
               คำนำหน้า
-
               <button
                 type="button"
                 aria-label="เลือกคำนำหน้า"
@@ -285,7 +285,6 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
                 <span>{profile.prefix || "เลือกคำนำหน้า"}</span>
                 <ChevronDownIcon className="h-4 w-4 text-gray-400" />
               </button>
-
               {openPrefix && (
                 <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
                   {USER_PREFIXES.map((item) => (
@@ -362,7 +361,11 @@ export default function ProfileSection({ initialProfile }: { initialProfile: Use
         </form>
       </div>
       {showImage && imageUrl && (
-        <ProfileImageDialog key={imageUrl} src={imageUrl} onClose={() => setShowImage(false)} />
+        <ProfileImageDialog
+          key={imageUrl}
+          src={imageUrl}
+          onClose={() => setShowImage(false)}
+        />
       )}
     </section>
   );

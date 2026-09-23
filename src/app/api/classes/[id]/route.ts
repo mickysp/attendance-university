@@ -82,17 +82,22 @@ export async function GET(
       classId: classObjectId,
     });
 
-    const classSessions = await sessions.find({
-      classId: {
-        $in: [classObjectId, id],
-      },
-    }).toArray();
+    const classSessions = await sessions
+      .find({
+        classId: {
+          $in: [classObjectId, id],
+        },
+      })
+      .toArray();
 
     const status = getClassStatusForSessions(classSessions);
     const isOpened = status === "active";
 
-    const teacherNames = await getTeacherNames(db,
-      Array.isArray(data.teachers) ? data.teachers.map((teacher) => String(teacher?._id)) : [],
+    const teacherNames = await getTeacherNames(
+      db,
+      Array.isArray(data.teachers)
+        ? data.teachers.map((teacher) => String(teacher?._id))
+        : [],
     );
 
     const teachers: Teacher[] = Array.isArray(data.teachers)
@@ -105,8 +110,9 @@ export async function GET(
           )
           .map((teacher) => ({
             _id: String(teacher._id),
-            name: teacherNames.get(String(teacher._id).toLowerCase())
-              ?? (typeof teacher.name === "string" ? teacher.name : ""),
+            name:
+              teacherNames.get(String(teacher._id).toLowerCase()) ??
+              (typeof teacher.name === "string" ? teacher.name : ""),
           }))
       : [];
 

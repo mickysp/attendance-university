@@ -111,10 +111,17 @@ export default function TeacherTable({
     <div className="w-full min-w-0">
       <div className="space-y-3 md:hidden">
         {pageTeachers.map((teacher) => (
-          <div key={teacher._id} className="rounded-xl border border-gray-200 bg-white p-4">
+          <div
+            key={teacher._id}
+            className="rounded-xl border border-gray-200 bg-white p-4"
+          >
             <div className="flex items-start justify-between gap-4">
-              <span className="shrink-0 text-sm text-gray-500">ชื่อ-นามสกุล</span>
-              <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">{teacher.name}</span>
+              <span className="shrink-0 text-sm text-gray-500">
+                ชื่อ-นามสกุล
+              </span>
+              <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">
+                {teacher.name}
+              </span>
             </div>
             <div className="my-4 border-t border-gray-100" />
             <div className="flex items-center justify-between gap-2">
@@ -149,56 +156,56 @@ export default function TeacherTable({
       </div>
       <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block">
         <div className="max-h-[510px] overflow-auto">
-        <table className="app-data-table w-full table-fixed text-sm">
-          <thead className="text-gray-600">
-            <tr>
-              <th className="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left font-semibold">
-                ชื่อ-นามสกุล
-              </th>
-              <th className="sticky top-0 z-10 w-[120px] bg-gray-50 px-3 py-3 text-left font-semibold sm:w-[190px]">
-                จัดการ
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageTeachers.map((teacher) => (
-              <tr
-                key={teacher._id}
-                className="border-t border-gray-200 hover:bg-gray-50"
-              >
-                <td className="break-words px-3 py-3 text-gray-700">
-                  {teacher.name}
-                </td>
-                <td className="px-3 py-3">
-                  <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
-                    <button
-                      type="button"
-                      aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
-                      title="แก้ไขอาจารย์"
-                      disabled={deletingId !== null}
-                      onClick={() => onEditTeacher(teacher)}
-                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                    >
-                      <PencilSquareIcon className="h-4 w-4 shrink-0" />
-                      <span className="hidden sm:inline">แก้ไข</span>
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`ลบอาจารย์ ${teacher.name}`}
-                      title="ลบอาจารย์"
-                      disabled={deletingId !== null}
-                      onClick={() => onDeleteTeacher(teacher)}
-                      className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      <TrashIcon className="h-4 w-4 shrink-0" />
-                      <span className="hidden sm:inline">ลบ</span>
-                    </button>
-                  </div>
-                </td>
+          <table className="app-data-table w-full table-fixed text-sm">
+            <thead className="text-gray-600">
+              <tr>
+                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  ชื่อ-นามสกุล
+                </th>
+                <th className="sticky top-0 z-10 w-[120px] bg-gray-50 px-3 py-3 text-left font-semibold sm:w-[190px]">
+                  จัดการ
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pageTeachers.map((teacher) => (
+                <tr
+                  key={teacher._id}
+                  className="border-t border-gray-200 hover:bg-gray-50"
+                >
+                  <td className="break-words px-3 py-3 text-gray-700">
+                    {teacher.name}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
+                      <button
+                        type="button"
+                        aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
+                        title="แก้ไขอาจารย์"
+                        disabled={deletingId !== null}
+                        onClick={() => onEditTeacher(teacher)}
+                        className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        <PencilSquareIcon className="h-4 w-4 shrink-0" />
+                        <span className="hidden sm:inline">แก้ไข</span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`ลบอาจารย์ ${teacher.name}`}
+                        title="ลบอาจารย์"
+                        disabled={deletingId !== null}
+                        onClick={() => onDeleteTeacher(teacher)}
+                        className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <TrashIcon className="h-4 w-4 shrink-0" />
+                        <span className="hidden sm:inline">ลบ</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
       {teachers.length > 10 && (

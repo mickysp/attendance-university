@@ -1,13 +1,9 @@
-import DefalutLayout from "@/components/layouts/DefalutLayout";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
 
 export default function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <DefalutLayout>
-      {children}
-    </DefalutLayout>
-  );
+  return <DefaultLayout>{children}</DefaultLayout>;
 }

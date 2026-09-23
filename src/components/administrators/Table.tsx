@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckIcon, ChevronDownIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import type { Administrator, AdministratorRole } from "@/types/administrators";
 import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 
@@ -153,28 +157,49 @@ export default function AdministratorTable({
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
         <EmptyStateIcon kind={noData ? "students" : "search"} />
-        {noData ? <>
-          <p className="mb-4 text-sm text-gray-400">ยังไม่มีข้อมูลผู้ใช้ในระบบ</p>
-          {canCreate && <button type="button" onClick={onAdd} className="flex cursor-pointer items-center gap-2 rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm text-white shadow-sm transition hover:bg-[var(--primary-hover)]">+ เพิ่มผู้ใช้</button>}
-        </> : <p className="whitespace-nowrap text-sm text-gray-500">ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง</p>}
+        {noData ? (
+          <>
+            <p className="mb-4 text-sm text-gray-400">
+              ยังไม่มีข้อมูลผู้ใช้ในระบบ
+            </p>
+            {canCreate && (
+              <button
+                type="button"
+                onClick={onAdd}
+                className="flex cursor-pointer items-center gap-2 rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm text-white shadow-sm transition hover:bg-[var(--primary-hover)]"
+              >
+                + เพิ่มผู้ใช้
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="whitespace-nowrap text-sm text-gray-500">
+            ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
+          </p>
+        )}
       </div>
     );
   }
 
-  const roleSelect = (user: Administrator) => canManage ? (
-    <button
-      type="button"
-      data-admin-role-trigger
-      aria-label={`สิทธิ์ของ ${user.fullname}`}
-      aria-expanded={openRoleId === user._id}
-      disabled={busy || user._id === currentUserId}
-      onClick={(event) => toggleRole(user, event)}
-      className="form-input-card flex min-w-0 cursor-pointer items-center justify-between gap-2 text-left text-sm text-gray-700 disabled:cursor-default disabled:opacity-50"
-    >
-      <span className="truncate">{user.role}</span>
-      <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
-    </button>
-  ) : <span className="inline-flex rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">{user.role}</span>;
+  const roleSelect = (user: Administrator) =>
+    canManage ? (
+      <button
+        type="button"
+        data-admin-role-trigger
+        aria-label={`สิทธิ์ของ ${user.fullname}`}
+        aria-expanded={openRoleId === user._id}
+        disabled={busy || user._id === currentUserId}
+        onClick={(event) => toggleRole(user, event)}
+        className="form-input-card flex min-w-0 cursor-pointer items-center justify-between gap-2 text-left text-sm text-gray-700 disabled:cursor-default disabled:opacity-50"
+      >
+        <span className="truncate">{user.role}</span>
+        <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
+      </button>
+    ) : (
+      <span className="inline-flex rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+        {user.role}
+      </span>
+    );
 
   const deleteButton = (user: Administrator) => (
     <button
@@ -224,10 +249,16 @@ export default function AdministratorTable({
                 <th className="sticky top-0 z-10 w-[25%] bg-gray-50 px-3 text-left font-semibold">
                   อีเมล
                 </th>
-                <th className={`sticky top-0 z-10 bg-gray-50 px-3 text-left font-semibold ${canManage ? "w-[25%]" : "w-[36%]"}`}>
+                <th
+                  className={`sticky top-0 z-10 bg-gray-50 px-3 text-left font-semibold ${canManage ? "w-[25%]" : "w-[36%]"}`}
+                >
                   สิทธิ์ปัจจุบัน
                 </th>
-                {canManage && <th className="sticky top-0 z-10 w-[11%] bg-gray-50 px-3 text-left font-semibold">จัดการ</th>}
+                {canManage && (
+                  <th className="sticky top-0 z-10 w-[11%] bg-gray-50 px-3 text-left font-semibold">
+                    จัดการ
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -246,7 +277,9 @@ export default function AdministratorTable({
                     {user.email}
                   </td>
                   <td className="px-3 py-3">{roleSelect(user)}</td>
-                  {canManage && <td className="px-3 py-3">{deleteButton(user)}</td>}
+                  {canManage && (
+                    <td className="px-3 py-3">{deleteButton(user)}</td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -350,7 +383,8 @@ export default function AdministratorTable({
                   className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${users.find((item) => item._id === openRoleId)?.role === role ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
                 >
                   {role}
-                  {users.find((item) => item._id === openRoleId)?.role === role && <CheckIcon className="h-4 w-4" />}
+                  {users.find((item) => item._id === openRoleId)?.role ===
+                    role && <CheckIcon className="h-4 w-4" />}
                 </button>
               ),
             )}

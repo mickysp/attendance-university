@@ -4,6 +4,7 @@ import { checkInApi } from "@/services/api/check-in";
 import { classesApi } from "@/services/api/classes";
 import { attendanceApi } from "@/services/api/attendance";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   CameraIcon,
   MapPinIcon,
@@ -38,7 +39,7 @@ export default function CheckInStudentPage({
   const [showSuccess, setShowSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors] = useState<Record<string, string>>({});
   const [loadingClass, setLoadingClass] = useState(true);
 
   const [openPrefix, setOpenPrefix] = useState(false);
@@ -144,7 +145,7 @@ export default function CheckInStudentPage({
     };
 
     fetchClassInfo();
-  }, [classId]);
+  }, [classId, showAlert]);
 
   const handlePhoto = (file: File) => {
     const reader = new FileReader();
@@ -242,7 +243,7 @@ export default function CheckInStudentPage({
           setSubmitting(false);
           setShowSuccess(true);
         }, 300);
-      } catch (error) {
+      } catch {
         showAlert("เกิดข้อผิดพลาด", "error");
         setSubmitting(false);
       }
@@ -374,7 +375,7 @@ export default function CheckInStudentPage({
               )}
               <li>กด “ยืนยันเช็กชื่อ” และรอจนระบบแสดงข้อความเช็กชื่อสำเร็จ</li>
             </ol>
-            
+
             {config?.photo && (
               <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
                 <p className="text-sm text-blue-800 leading-relaxed">
@@ -695,9 +696,12 @@ export default function CheckInStudentPage({
                   {preview && (
                     <div className="mt-2">
                       <label className="block cursor-pointer">
-                        <img
+                        <Image
+                          unoptimized
                           src={preview}
-                          alt="preview"
+                          alt="ตัวอย่างรูปสำหรับเช็กชื่อ"
+                          width={720}
+                          height={480}
                           className="w-full max-h-60 object-contain rounded-lg border bg-gray-50 hover:opacity-90 transition"
                         />
 

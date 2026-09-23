@@ -2,11 +2,7 @@ import Swal from "sweetalert2";
 import type { SweetAlertOptions } from "sweetalert2";
 
 export type ConfirmVariant =
-  | "delete"
-  | "warning"
-  | "info"
-  | "edit"
-  | "withdraw";
+  "delete" | "warning" | "info" | "edit" | "withdraw";
 
 const baseSwalOptions: SweetAlertOptions = {
   target: "body",
@@ -216,7 +212,7 @@ export const appSwal = {
 
       inputValidator: (value) =>
         !value.trim() ? "กรุณากรอกชื่อ-นามสกุลอาจารย์" : undefined,
-      
+
       preConfirm: async (value: string) => {
         try {
           await onSave(value.trim());

@@ -225,7 +225,7 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ success: true, message: "ลบอาจารย์สำเร็จ" });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "ลบอาจารย์ไม่สำเร็จ กรุณาลองอีกครั้ง" },
       { status: 500 },

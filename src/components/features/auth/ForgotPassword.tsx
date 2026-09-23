@@ -14,7 +14,8 @@ export default function ForgotPassword({ initialEmail, onNext }: Props) {
   const [error, setError] = useState("");
   const normalizedEmail = email.trim().toLowerCase();
   const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
-  const alreadySent = normalizedEmail !== "" && normalizedEmail === initialEmail;
+  const alreadySent =
+    normalizedEmail !== "" && normalizedEmail === initialEmail;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,10 +45,17 @@ export default function ForgotPassword({ initialEmail, onNext }: Props) {
     <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
       <div>
         <h1 className="text-xl font-semibold text-gray-800">ลืมรหัสผ่าน?</h1>
-        <p className="mt-2 text-sm leading-relaxed text-gray-500">กรอกอีเมลที่ใช้ในระบบ เพื่อรับรหัส OTP สำหรับตั้งรหัสผ่านใหม่</p>
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">
+          กรอกอีเมลที่ใช้ในระบบ เพื่อรับรหัส OTP สำหรับตั้งรหัสผ่านใหม่
+        </p>
       </div>
       <div>
-        <label htmlFor="recovery-email" className="mb-2 block text-sm font-medium text-gray-700">อีเมล</label>
+        <label
+          htmlFor="recovery-email"
+          className="mb-2 block text-sm font-medium text-gray-700"
+        >
+          อีเมล
+        </label>
         <input
           id="recovery-email"
           type="email"
@@ -56,18 +64,39 @@ export default function ForgotPassword({ initialEmail, onNext }: Props) {
           required
           disabled={loading}
           value={email}
-          onChange={(event) => { setEmail(event.target.value); setError(""); }}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setError("");
+          }}
           aria-invalid={!!error}
           aria-describedby={error ? "recovery-email-error" : undefined}
           className="form-input text-sm"
           placeholder="name@example.com"
         />
-        {error && <p id="recovery-email-error" role="alert" className="mt-2 text-xs text-red-500">{error}</p>}
+        {error && (
+          <p
+            id="recovery-email-error"
+            role="alert"
+            className="mt-2 text-xs text-red-500"
+          >
+            {error}
+          </p>
+        )}
       </div>
-      <button type="submit" disabled={!isValid || loading} className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
-        {loading ? "กำลังส่งรหัส OTP..." : alreadySent ? "กลับไปกรอกรหัส OTP" : "ส่งรหัส OTP"}
+      <button
+        type="submit"
+        disabled={!isValid || loading}
+        className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+      >
+        {loading
+          ? "กำลังส่งรหัส OTP..."
+          : alreadySent
+            ? "กลับไปกรอกรหัส OTP"
+            : "ส่งรหัส OTP"}
       </button>
-      <p className="text-center text-xs leading-relaxed text-gray-500">หากจำอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ</p>
+      <p className="text-center text-xs leading-relaxed text-gray-500">
+        หากจำอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ
+      </p>
     </form>
   );
 }

@@ -235,8 +235,17 @@ export async function PUT(req: Request) {
     }
     const actor = await currentUser();
     if (actor) {
-      const targetName = typeof updateData.className === "string" ? updateData.className : existing.className;
-      await recordActivity({ actor, category: "classes", action: "update", message: `แก้ไขชั้นเรียน “${targetName}”`, target: targetName });
+      const targetName =
+        typeof updateData.className === "string"
+          ? updateData.className
+          : existing.className;
+      await recordActivity({
+        actor,
+        category: "classes",
+        action: "update",
+        message: `แก้ไขชั้นเรียน “${targetName}”`,
+        target: targetName,
+      });
     }
 
     return NextResponse.json(

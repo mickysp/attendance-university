@@ -1,6 +1,7 @@
 "use client";
 
 import { attendanceApi } from "@/services/api/attendance";
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import {
   ChevronDownIcon,
@@ -8,7 +9,6 @@ import {
   ClockIcon,
   MapPinIcon,
   PhotoIcon,
-  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import type { AttendanceLog, StudentAttendance } from "@/types/attendance";
@@ -34,11 +34,6 @@ export default function AttendanceTable({ data, classId }: Props) {
   const [openPageSize, setOpenPageSize] = useState(false);
   const [selectedStudent, setSelectedStudent] =
     useState<StudentAttendance | null>(null);
-
-  const hasData = data.length > 0;
-  const hasRowsOnPage = paginatedData.length > 0;
-
-  const shouldScroll = paginatedData.length > 8;
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -118,12 +113,6 @@ export default function AttendanceTable({ data, classId }: Props) {
       dot: "bg-gray-400",
     },
   } as const;
-
-  const getScoreColor = (score: number) => {
-    if (score < 50) return "text-red-500";
-    if (score < 70) return "text-yellow-600";
-    return "text-blue-600";
-  };
 
   if (data.length === 0) {
     return (
@@ -313,7 +302,7 @@ export default function AttendanceTable({ data, classId }: Props) {
                               setSelectedStudent(s);
 
                               setOpenModal(true);
-                            } catch (error) {
+                            } catch {
                               setLogs([]);
                             } finally {
                               setLoadingLogs(false);
@@ -324,17 +313,6 @@ export default function AttendanceTable({ data, classId }: Props) {
                           <EyeIcon className="w-4 h-4 text-gray-500" />
                           <span className="text-xs font-medium text-gray-700">
                             รายละเอียด
-                          </span>
-                        </button>
-
-                        <button
-                          title="แจ้งลา"
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 hover:bg-sky-100 transition cursor-pointer"
-                        >
-                          <DocumentTextIcon className="w-4 h-4 text-sky-600" />
-
-                          <span className="text-xs font-medium text-sky-700">
-                            แจ้งลา
                           </span>
                         </button>
                       </div>
@@ -619,9 +597,12 @@ export default function AttendanceTable({ data, classId }: Props) {
 
                             <div className="w-24 shrink-0">
                               {log.photo ? (
-                                <img
+                                <Image
+                                  unoptimized
                                   src={log.photo}
-                                  alt="attendance"
+                                  alt="รูปประกอบการเช็กชื่อ"
+                                  width={96}
+                                  height={96}
                                   className="h-full min-h-[96px] w-24 rounded-2xl border border-gray-200 object-cover"
                                 />
                               ) : (

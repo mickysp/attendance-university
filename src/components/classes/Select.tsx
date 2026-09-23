@@ -28,9 +28,24 @@ export default function ClassFilter({ onChange }: Props) {
           onChange={(event) => update(event.target.value)}
           className="w-full rounded-md border border-gray-200 py-[9px] pl-9 pr-9 text-[14px] text-gray-700 outline-none focus:ring-1 focus:ring-gray-200"
         />
-        {keyword && <button type="button" aria-label="ล้างคำค้นหา" onClick={() => update("")} className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-blue-500"><XMarkIcon className="h-5 w-5" /></button>}
+        {keyword && (
+          <button
+            type="button"
+            aria-label="ล้างคำค้นหา"
+            onClick={() => update("")}
+            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-blue-500"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        )}
       </div>
-      <button type="button" onClick={() => update("")} className="cursor-pointer whitespace-nowrap text-[13px] text-blue-500 hover:underline">ล้างค่า</button>
+      <button
+        type="button"
+        onClick={() => update("")}
+        className="cursor-pointer whitespace-nowrap text-[13px] text-blue-500 hover:underline"
+      >
+        ล้างค่า
+      </button>
     </div>
   );
 }

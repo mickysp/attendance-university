@@ -48,7 +48,8 @@ export async function GET() {
   const state = await db.collection("notification_states").findOne({
     _id: user._id,
   });
-  const lastReadAt = state?.lastReadAt instanceof Date ? state.lastReadAt : null;
+  const lastReadAt =
+    state?.lastReadAt instanceof Date ? state.lastReadAt : null;
   const filter = {
     category: { $in: enabled },
     ...(settings.othersOnly ? { actorId: { $ne: user._id } } : {}),
@@ -101,11 +102,13 @@ export async function PATCH(req: Request) {
   const db = (await clientPromise).db("attendance");
 
   if (body?.action === "mark-all-read") {
-    await db.collection("notification_states").updateOne(
-      { _id: user._id },
-      { $set: { lastReadAt: new Date() } },
-      { upsert: true },
-    );
+    await db
+      .collection("notification_states")
+      .updateOne(
+        { _id: user._id },
+        { $set: { lastReadAt: new Date() } },
+        { upsert: true },
+      );
     return NextResponse.json({ success: true });
   }
 

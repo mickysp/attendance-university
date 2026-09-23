@@ -166,14 +166,14 @@ export default function TeachersPage() {
 
             <div className="px-6 pb-6">
               <TeacherTable
-                  teachers={filtered}
-                  deletingId={deleting}
-                  loading={loading}
-                  error={error}
-                  onDeleteTeacher={deleteTeacher}
-                  onEditTeacher={(teacher) => void openTeacherForm(teacher)}
-                  onRetry={() => void loadTeachers()}
-                  filterKey={keyword}
+                teachers={filtered}
+                deletingId={deleting}
+                loading={loading}
+                error={error}
+                onDeleteTeacher={deleteTeacher}
+                onEditTeacher={(teacher) => void openTeacherForm(teacher)}
+                onRetry={() => void loadTeachers()}
+                filterKey={keyword}
               />
             </div>
           </div>

@@ -77,7 +77,13 @@ export async function DELETE(req: Request) {
     }
     const actor = await currentUser();
     if (actor) {
-      await recordActivity({ actor, category: "classes", action: "delete", message: `ลบชั้นเรียน “${existing.className}”`, target: existing.className });
+      await recordActivity({
+        actor,
+        category: "classes",
+        action: "delete",
+        message: `ลบชั้นเรียน “${existing.className}”`,
+        target: existing.className,
+      });
     }
 
     return NextResponse.json(
