@@ -117,17 +117,6 @@ html {
   font-family: var(--font-noto), sans-serif;
 }
 
-.app-page-loading {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(156 163 175 / 80%);
-  backdrop-filter: blur(1px);
-}
-
 .app-page-header,
 .app-card {
   border: 1px solid #e5e7eb;

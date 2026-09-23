@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
 
 type ThaiStatus = "มาเรียน" | "มาสาย" | "ลา";
 
 type AttendanceDoc = {
-  classId: ObjectId;
+  classId: unknown;
   studentId: string;
   status: ThaiStatus;
   date: string;
@@ -21,16 +21,13 @@ type WeeklyItem = {
 
 export async function GET(req: Request) {
   try {
+    const user = await currentUser();
+    if (!user)
+      return NextResponse.json(
+        { success: false, message: "กรุณาเข้าสู่ระบบ" },
+        { status: 401 },
+      );
     const { searchParams } = new URL(req.url);
-    const classId = searchParams.get("classId");
-
-    if (!classId || !ObjectId.isValid(classId)) {
-      return NextResponse.json({
-        success: false,
-        message: "classId ไม่ถูกต้อง",
-      });
-    }
-
     const academicYear = searchParams.get("year")
       ? Number(searchParams.get("year"))
       : new Date().getFullYear() + 543;
@@ -42,7 +39,6 @@ export async function GET(req: Request) {
 
     const records = await attendanceCol
       .find({
-        classId: new ObjectId(classId),
         academicYear,
       })
       .toArray();
@@ -72,12 +68,17 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      data: Array.from(weekMap.values()),
+      data: Array.from(weekMap.values()).sort((left, right) =>
+        left.week.localeCompare(right.week),
+      ),
     });
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      message: error instanceof Error ? error.message : "error",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      },
+      { status: 500 },
+    );
   }
 }
