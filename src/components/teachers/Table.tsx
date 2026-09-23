@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AcademicCapIcon,
   ChevronDownIcon,
+  DocumentTextIcon,
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -97,9 +98,13 @@ export default function TeacherTable({
     );
   if (!teachers.length)
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-sm text-gray-400">
-        <AcademicCapIcon className="h-16 w-16" />
-        <p>ไม่พบรายชื่ออาจารย์</p>
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-gray-500">
+        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
+          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
+        </div>
+        <p className="whitespace-nowrap text-base font-medium text-gray-600">
+          ไม่พบรายชื่ออาจารย์
+        </p>
       </div>
     );
 

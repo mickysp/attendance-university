@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
-import { CheckIcon, ChevronDownIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronDownIcon, DocumentTextIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { Administrator, AdministratorRole } from "@/types/administrators";
 
 interface Props {
@@ -153,7 +152,7 @@ export default function AdministratorTable({
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
         <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
-          <Image src={noData ? "/not-exist.png" : "/not_exist_search.svg"} alt={noData ? "ไม่มีข้อมูล" : "ไม่พบข้อมูล"} width={112} height={112} className="h-28 w-28" />
+          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
         </div>
         {noData ? <>
           <p className="mb-4 text-sm text-gray-400">ยังไม่มีข้อมูลผู้ใช้ในระบบ</p>

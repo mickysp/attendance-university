@@ -9,6 +9,7 @@ import {
   TrashIcon,
   ChevronDownIcon,
   ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useRef, useEffect } from "react";
 import { useConfirm } from "@/context/swal";
@@ -185,11 +186,7 @@ export default function Table({
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
         <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
-          <img
-            src="/not_exist_search.svg"
-            alt="ไม่พบข้อมูล"
-            className="h-28 w-28"
-          />
+          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
         </div>
 
         <p className="text-sm text-gray-400">

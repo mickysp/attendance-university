@@ -8,6 +8,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
   EyeIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
@@ -305,7 +306,7 @@ export default function StudentTable({
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
         <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-          <img src="/not_exist_search.svg" className="w-28 h-28" />
+          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
         </div>
         <p className="text-sm text-gray-400">
           {selectedClassId && !classHasStudents
