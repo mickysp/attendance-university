@@ -17,13 +17,14 @@ import {
 import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);  
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
@@ -528,9 +529,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
       </div>
 
       {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
-          การจัดการ
-        </p>
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">การจัดการ</p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -541,15 +540,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
           active={pathname.startsWith("/administrators")}
           onClick={() => onNavigate("/administrators")}
         />
-      </div>
 
-      {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
-          อื่น ๆ
-        </p>
-      )}
-
-      <div className="flex flex-col gap-2">
         <SidebarItem
           icon={<Cog6ToothIcon />}
           label="ตั้งค่า"
@@ -642,10 +633,12 @@ function UserSection({
   return (
     <div
       className={`
-        pt-4
-        ${collapsed ? "" : "border-t border-gray-200"}
+        pt-1
       `}
     >
+      <div className="mb-3 border-b border-gray-200 pb-3">
+        <NotificationCenter collapsed={collapsed} />
+      </div>
       <div
         className={`
           flex
@@ -680,7 +673,19 @@ function UserSection({
               text-gray-700
             "
           >
-            {user.avatarUrl ? <Image unoptimized loading="eager" src={user.avatarUrl} alt="รูปโปรไฟล์" width={36} height={36} className="h-full w-full object-cover" /> : userInitial}
+            {user.avatarUrl ? (
+              <Image
+                unoptimized
+                loading="eager"
+                src={user.avatarUrl}
+                alt="รูปโปรไฟล์"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              userInitial
+            )}
           </div>
 
           {!collapsed && (

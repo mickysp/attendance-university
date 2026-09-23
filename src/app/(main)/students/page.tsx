@@ -8,6 +8,7 @@ import {
   DocumentArrowUpIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import StudentFilter from "@/components/students/Select";
 import { useRouter } from "next/navigation";
 import StudentTable from "@/components/students/Table";
@@ -506,11 +507,9 @@ export default function StudentsPage() {
 
               {!hasInitialData && (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="students" />
 
-                  <p className="text-sm text-gray-400 mb-4">
+                  <p className="mb-4 whitespace-nowrap text-sm text-gray-500">
                     ยังไม่มีข้อมูลนักศึกษา
                   </p>
 
@@ -526,11 +525,9 @@ export default function StudentsPage() {
 
               {hasInitialData && data.length === 0 && (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="students" />
 
-                  <p className="text-sm text-gray-400">
+                  <p className="whitespace-nowrap text-sm text-gray-500">
                     ยังไม่มีข้อมูลรายนักศึกษาล่าสุด
                   </p>
                 </div>

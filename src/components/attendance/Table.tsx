@@ -10,6 +10,7 @@ import {
   PhotoIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import type { AttendanceLog, StudentAttendance } from "@/types/attendance";
 
 type Props = {
@@ -127,10 +128,8 @@ export default function AttendanceTable({ data, classId }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-        <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-          <img src="/not-exist.png" className="w-28 h-28" />
-        </div>
-        <p className="text-sm text-gray-400">
+        <EmptyStateIcon />
+        <p className="whitespace-nowrap text-sm text-gray-500">
           ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
         </p>
       </div>

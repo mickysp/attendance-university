@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 import { ObjectId } from "mongodb";
 
 import type { ClassDocument, Teacher } from "@/types/classes";
@@ -230,6 +232,11 @@ export async function PUT(req: Request) {
         },
         { status: 500 },
       );
+    }
+    const actor = await currentUser();
+    if (actor) {
+      const targetName = typeof updateData.className === "string" ? updateData.className : existing.className;
+      await recordActivity({ actor, category: "classes", action: "update", message: `แก้ไขชั้นเรียน “${targetName}”`, target: targetName });
     }
 
     return NextResponse.json(

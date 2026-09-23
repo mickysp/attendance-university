@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import AppearanceSection from "@/components/setting/AppearanceSection";
+import NotificationSettingsSection from "@/components/setting/NotificationSettingsSection";
 import ProfileSection from "@/components/setting/ProfileSection";
 import Footer from "@/components/layouts/Footer";
 import { authApi } from "@/services/api/auth";
+import { notificationsApi } from "@/services/api/notifications";
 import type { UserProfile } from "@/types/auth";
+import type { NotificationPreferences } from "@/types/notifications";
 
 export default function SettingPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [notificationSettings, setNotificationSettings] =
+    useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -17,14 +22,26 @@ export default function SettingPage() {
     let active = true;
     const controller = new AbortController();
 
-    async function loadProfile() {
+    async function loadSettings() {
       try {
-        const response = await authApi.getProfile({ signal: controller.signal });
-        const data = await response.json();
-        if (!response.ok || !data?.success || !data.data) {
-          throw new Error(data?.message || "โหลดข้อมูลการตั้งค่าไม่สำเร็จ");
+        const [profileResponse, notificationsResponse] = await Promise.all([
+          authApi.getProfile({ signal: controller.signal }),
+          notificationsApi.list({ signal: controller.signal, cache: "no-store" }),
+        ]);
+        const [profileData, notificationsData] = await Promise.all([
+          profileResponse.json(),
+          notificationsResponse.json(),
+        ]);
+        if (!profileResponse.ok || !profileData?.success || !profileData.data) {
+          throw new Error(profileData?.message || "โหลดข้อมูลการตั้งค่าไม่สำเร็จ");
         }
-        if (active) setProfile(data.data);
+        if (!notificationsResponse.ok || !notificationsData?.success || !notificationsData.settings) {
+          throw new Error(notificationsData?.message || "โหลดการตั้งค่าการแจ้งเตือนไม่สำเร็จ");
+        }
+        if (active) {
+          setProfile(profileData.data);
+          setNotificationSettings(notificationsData.settings);
+        }
       } catch (cause) {
         if (active) {
           setError(cause instanceof Error ? cause.message : "โหลดข้อมูลการตั้งค่าไม่สำเร็จ");
@@ -34,7 +51,7 @@ export default function SettingPage() {
       }
     }
 
-    void loadProfile();
+    void loadSettings();
     return () => {
       active = false;
       controller.abort();
@@ -64,7 +81,7 @@ export default function SettingPage() {
               ลองอีกครั้ง
             </button>
           </div>
-        ) : profile && (
+        ) : profile && notificationSettings && (
           <div className="flex min-h-full flex-col gap-5 sm:gap-6">
             <header className="rounded-2xl border border-gray-200 bg-white px-5 py-4 sm:px-6 sm:py-5">
               <h1 className="text-[26px] font-semibold text-gray-800">ตั้งค่า</h1>
@@ -72,6 +89,7 @@ export default function SettingPage() {
             </header>
             <ProfileSection initialProfile={profile} />
             <AppearanceSection />
+            <NotificationSettingsSection initialSettings={notificationSettings} />
             <div className="mt-auto">
               <Footer />
             </div>

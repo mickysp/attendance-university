@@ -11,7 +11,10 @@ import type {
 
 import SubjectSelect from "@/components/attendance/Select";
 import AttendanceTable from "@/components/attendance/Table";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
+import {
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
 import StudentSummaryCard from "@/components/attendance/Card";
 
 export default function AttendancePage() {
@@ -330,23 +333,19 @@ export default function AttendancePage() {
             <div className="flex-1 min-h-0 p-6 flex flex-col">
               {!selectedClass ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="classes" />
 
                   <p className="text-base font-medium text-gray-500">
                     ยังไม่ได้เลือกวิชา
                   </p>
 
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="mt-1 text-sm text-gray-400">
                     กรุณาเลือกวิชาจากด้านบนเพื่อดูข้อมูลการเข้าเรียน
                   </p>
                 </div>
               ) : majors.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="students" />
 
                   <p className="text-base font-medium text-gray-500">
                     ยังไม่มีข้อมูลนักศึกษา
@@ -354,9 +353,7 @@ export default function AttendancePage() {
                 </div>
               ) : !selectedMajor ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <div className="mb-4 w-28 h-28 rounded-full bg-gray-100 flex items-center justify-center">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="classes" />
 
                   <p className="text-base font-medium text-gray-500">
                     ยังไม่ได้เลือกสาขา
@@ -364,15 +361,13 @@ export default function AttendancePage() {
                 </div>
               ) : students.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
+                  <EmptyStateIcon kind="students" />
 
                   <p className="text-base font-medium text-gray-500">
                     ไม่มีข้อมูลการเข้าเรียน
                   </p>
 
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="mt-1 text-sm text-gray-400">
                     วิชานี้ยังไม่มีการเช็คชื่อในระบบ
                   </p>
                 </div>

@@ -9,8 +9,8 @@ import {
   TrashIcon,
   ChevronDownIcon,
   ClipboardDocumentCheckIcon,
-  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { useState, useRef, useEffect } from "react";
 import { useConfirm } from "@/context/swal";
 
@@ -185,14 +185,10 @@ export default function Table({
   if (data.length === 0) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
-        <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
-          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
-        </div>
+        <EmptyStateIcon />
 
-        <p className="text-sm text-gray-400">
-          ไม่พบข้อมูลที่ค้นหา
-          <br />
-          กรุณาลองใหม่อีกครั้ง
+        <p className="whitespace-nowrap text-sm text-gray-500">
+          ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
         </p>
       </div>
     );

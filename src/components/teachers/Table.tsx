@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  AcademicCapIcon,
   ChevronDownIcon,
-  DocumentTextIcon,
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import type { Teacher } from "@/types/teachers";
 
 interface TeacherTableProps {
@@ -98,12 +97,12 @@ export default function TeacherTable({
     );
   if (!teachers.length)
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-gray-500">
-        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
-          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
-        </div>
-        <p className="whitespace-nowrap text-base font-medium text-gray-600">
-          ไม่พบรายชื่ออาจารย์
+      <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
+        <EmptyStateIcon kind={filterKey.trim() ? "search" : "teachers"} />
+        <p className="whitespace-nowrap text-sm text-gray-500">
+          {filterKey.trim()
+            ? "ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง"
+            : "ยังไม่มีข้อมูลอาจารย์ในระบบ"}
         </p>
       </div>
     );

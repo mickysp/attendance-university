@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckIcon, ChevronDownIcon, DocumentTextIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { Administrator, AdministratorRole } from "@/types/administrators";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 
 interface Props {
   users: Administrator[];
@@ -151,13 +152,11 @@ export default function AdministratorTable({
     const noData = totalCount === 0;
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
-        <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gray-100">
-          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
-        </div>
+        <EmptyStateIcon kind={noData ? "students" : "search"} />
         {noData ? <>
           <p className="mb-4 text-sm text-gray-400">ยังไม่มีข้อมูลผู้ใช้ในระบบ</p>
           {canCreate && <button type="button" onClick={onAdd} className="flex cursor-pointer items-center gap-2 rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm text-white shadow-sm transition hover:bg-[var(--primary-hover)]">+ เพิ่มผู้ใช้</button>}
-        </> : <p className="text-sm text-gray-400">ไม่พบข้อมูลที่ค้นหา<br />กรุณาลองใหม่อีกครั้ง</p>}
+        </> : <p className="whitespace-nowrap text-sm text-gray-500">ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง</p>}
       </div>
     );
   }

@@ -8,8 +8,8 @@ import {
   PencilSquareIcon,
   TrashIcon,
   EyeIcon,
-  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
 
@@ -305,10 +305,8 @@ export default function StudentTable({
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-        <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-          <DocumentTextIcon className="h-16 w-16 text-gray-400" aria-hidden="true" />
-        </div>
-        <p className="text-sm text-gray-400">
+        <EmptyStateIcon kind="search" />
+        <p className="whitespace-nowrap text-sm text-gray-500">
           {selectedClassId && !classHasStudents
             ? "วิชานี้ยังไม่มีรายชื่อนักศึกษา"
             : "ไม่พบรายชื่อนักศึกษาที่ตรงกับตัวกรอง"}

@@ -3,6 +3,7 @@
 import { classesApi } from "@/services/api/classes";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 
 import Table from "@/components/classes/Table";
 import Select from "@/components/classes/Select";
@@ -239,26 +240,9 @@ export default function ClassesPage() {
                   text-center
                 "
               >
-                <div
-                  className="
-                    mb-3
-                    flex
-                    h-28
-                    w-28
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-gray-100
-                  "
-                >
-                  <img
-                    src="/not-exist.png"
-                    alt="ไม่มีข้อมูล"
-                    className="h-28 w-28"
-                  />
-                </div>
+                <EmptyStateIcon kind="classes" />
 
-                <p className="mb-4 text-sm text-gray-400">
+                <p className="mb-4 whitespace-nowrap text-sm text-gray-500">
                   ยังไม่มีข้อมูลรายวิชาล่าสุด
                 </p>
 

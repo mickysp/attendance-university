@@ -165,16 +165,7 @@ export default function TeachersPage() {
             </div>
 
             <div className="px-6 pb-6">
-              {filtered.length === 0 && !loading && !error ? (
-                <div className="flex flex-col items-center gap-4 py-16 text-center text-sm text-gray-400">
-                  <p>
-                    {teachers.length
-                      ? "ไม่พบอาจารย์ที่ตรงกับคำค้นหา"
-                      : "ยังไม่มีข้อมูลอาจารย์ กดเพิ่มอาจารย์เพื่อเริ่มต้น"}
-                  </p>
-                </div>
-              ) : (
-                <TeacherTable
+              <TeacherTable
                   teachers={filtered}
                   deletingId={deleting}
                   loading={loading}
@@ -183,8 +174,7 @@ export default function TeachersPage() {
                   onEditTeacher={(teacher) => void openTeacherForm(teacher)}
                   onRetry={() => void loadTeachers()}
                   filterKey={keyword}
-                />
-              )}
+              />
             </div>
           </div>
         </div>
