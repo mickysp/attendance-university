@@ -237,7 +237,7 @@ export default function AttendancePage() {
               }}
               options={classes.map((item) => ({
                 value: item._id,
-                label: `${item.className || item.name || "ไม่ระบุชื่อวิชา"}${item.classCode ? ` (${item.classCode})` : ""}`,
+                label: getClassLabel(item),
               }))}
               placeholder="เลือกวิชา"
             />
@@ -405,4 +405,10 @@ function EmptyAttendanceState({
       <p className="mt-1 max-w-lg text-sm text-gray-500">{description}</p>
     </section>
   );
+}
+
+function getClassLabel(item: AttendanceClassOption) {
+  const name = item.className || item.name || "ไม่ระบุชื่อวิชา";
+  const code = item.classCode || item.classCodes?.join(", ");
+  return code ? `${name} (${code})` : name;
 }

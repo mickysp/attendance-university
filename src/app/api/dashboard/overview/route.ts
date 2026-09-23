@@ -1,46 +1,72 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
 
 type ThaiStatus = "มาเรียน" | "มาสาย" | "ลา";
 
 type AttendanceDoc = {
-  classId: ObjectId;
+  classId: unknown;
   studentId: string;
   name?: string;
+  className?: string;
   status: ThaiStatus;
   score?: number;
   date: string;
+  checkInHour?: string;
+  createdAt?: Date;
   academicYear: number;
 };
 
 export async function GET(req: Request) {
   try {
+    const user = await currentUser();
+    if (!user)
+      return NextResponse.json(
+        { success: false, message: "กรุณาเข้าสู่ระบบ" },
+        { status: 401 },
+      );
     const { searchParams } = new URL(req.url);
 
-    const classId = searchParams.get("classId");
-
-    if (!classId || !ObjectId.isValid(classId)) {
-      return NextResponse.json({
-        success: false,
-        message: "classId ไม่ถูกต้อง",
-      });
-    }
-
-    const academicYear = searchParams.get("year")
-      ? Number(searchParams.get("year"))
-      : new Date().getFullYear() + 543;
+    const currentAcademicYear =
+      Number(
+        new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          timeZone: "Asia/Bangkok",
+        }).format(new Date()),
+      ) + 543;
+    const requestedYear = Number(searchParams.get("year"));
+    const academicYear =
+      Number.isFinite(requestedYear) && requestedYear > 0
+        ? requestedYear
+        : currentAcademicYear;
 
     const client = await clientPromise;
     const db = client.db("attendance");
 
     const attendanceCol = db.collection<AttendanceDoc>("attendance");
+    const classesCol = db.collection("classes");
+    const studentClassesCol = db.collection("student_classes");
+
+    const [attendanceYears, totalClasses, enrolledStudentIds] =
+      await Promise.all([
+        attendanceCol.distinct("academicYear"),
+        classesCol.countDocuments(),
+        studentClassesCol.distinct("studentId", { academicYear }),
+      ]);
+    const years = [
+      ...new Set([
+        currentAcademicYear,
+        ...attendanceYears.filter(
+          (year): year is number => typeof year === "number",
+        ),
+      ]),
+    ].sort((a, b) => b - a);
 
     const records = await attendanceCol
       .find({
-        classId: new ObjectId(classId),
         academicYear,
       })
+      .sort({ date: -1, createdAt: -1 })
       .toArray();
 
     let present = 0;
@@ -83,6 +109,8 @@ export async function GET(req: Request) {
       return {
         studentId,
         name: s.name,
+        total: s.total,
+        present: s.present,
         percent,
         score: s.score,
       };
@@ -96,9 +124,21 @@ export async function GET(req: Request) {
     const avgPercent =
       students.reduce((sum, s) => sum + s.percent, 0) / (students.length || 1);
 
+    const recentActivity = records.slice(0, 6).map((record) => ({
+      studentId: record.studentId,
+      name: record.name || "ไม่ระบุชื่อ",
+      className: record.className || "ไม่ระบุวิชา",
+      status: record.status,
+      date: record.date,
+      time: record.checkInHour || "-",
+    }));
+
     return NextResponse.json({
       success: true,
       academicYear,
+      years,
+      totalClasses,
+      totalStudents: enrolledStudentIds.length,
       totalRecords: total,
 
       summary: {
@@ -115,11 +155,15 @@ export async function GET(req: Request) {
       riskStudents,
 
       students,
+      recentActivity,
     });
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      message: error instanceof Error ? error.message : "error",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      },
+      { status: 500 },
+    );
   }
 }

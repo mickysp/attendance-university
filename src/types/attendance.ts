@@ -83,6 +83,7 @@ export interface AttendanceClassOption {
   _id: string;
   className?: string;
   classCode?: string;
+  classCodes?: string[];
   name?: string;
   title?: string;
   isOpen?: boolean;
