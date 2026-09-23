@@ -14,16 +14,17 @@ export default function TeacherSelect({
   placeholder = "ค้นหาชื่ออาจารย์",
 }: TeacherSelectProps) {
   return (
-    <div className="flex w-full flex-col gap-3 md:max-w-md md:flex-row md:items-center">
-      <div className="relative w-full">
+    <div className="flex w-full max-w-md flex-wrap items-center gap-3">
+      <div className="relative w-full min-w-0 sm:flex-1">
         <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           aria-label="ค้นหาอาจารย์"
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-md border border-gray-200 py-[9px] pl-9 pr-9 text-base text-gray-700 outline-none focus:ring-1 focus:ring-gray-200 md:text-sm"
+          className="w-full rounded-md border border-gray-200 py-[9px] pl-9 pr-9 text-[14px] text-gray-700 outline-none focus:ring-1 focus:ring-gray-200"
         />
+
         {keyword && (
           <button
             type="button"
@@ -35,7 +36,11 @@ export default function TeacherSelect({
           </button>
         )}
       </div>
-      <button type="button" onClick={() => onKeywordChange("")} className="cursor-pointer self-center whitespace-nowrap text-[13px] text-blue-500 hover:underline md:self-auto">
+      <button
+        type="button"
+        onClick={() => onKeywordChange("")}
+        className="cursor-pointer whitespace-nowrap text-[13px] text-blue-500 hover:underline"
+      >
         ล้างค่า
       </button>
     </div>

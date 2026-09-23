@@ -171,24 +171,16 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-
       studentId,
-
       academicYear,
-
       totalLogs: logs.length,
-
       logs,
     });
   } catch (error) {
-    console.error("attendance logs error:", error);
-
     return NextResponse.json(
       {
         success: false,
-
         logs: [],
-
         message: error instanceof Error ? error.message : "error",
       },
       { status: 500 },

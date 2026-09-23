@@ -95,8 +95,6 @@ export default function AttendancePage() {
 
         const json = await res.json();
 
-        console.log("classes api:", json);
-
         const allClasses: AttendanceClassOption[] = json?.data || [];
 
         const years: number[] = json?.years || [];
@@ -112,7 +110,6 @@ export default function AttendancePage() {
 
         setClasses(allClasses);
       } catch (err) {
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -145,7 +142,6 @@ export default function AttendancePage() {
           })),
         );
       } catch (err) {
-        console.error(err);
       } finally {
         setLoadingMajors(false);
       }

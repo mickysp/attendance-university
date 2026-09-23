@@ -17,7 +17,6 @@ const baseSwalOptions: SweetAlertOptions = {
 
     if (popup) {
       popup.classList.remove("app-swal-bounce");
-      // Restart the animation even when the backdrop is clicked repeatedly.
       void popup.offsetWidth;
       popup.classList.add("app-swal-bounce");
     }
@@ -188,7 +187,11 @@ const getStatusIconHtml = (status: "success" | "error") => {
 };
 
 export const appSwal = {
-  nameForm({ title, initialValue = "", onSave }: {
+  nameForm({
+    title,
+    initialValue = "",
+    onSave,
+  }: {
     title: string;
     initialValue?: string;
     onSave: (name: string) => Promise<void>;
@@ -197,7 +200,8 @@ export const appSwal = {
       ...baseSwalOptions,
       titleText: title,
       text: "กรอกชื่อ-นามสกุลอาจารย์ให้ครบถ้วนก่อนบันทึก",
-      iconHtml: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-5 9 5-9 5-9-5Zm3 2v6c3 3 9 3 12 0v-6M21 9v7" /></svg>',
+      iconHtml:
+        '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-5 9 5-9 5-9-5Zm3 2v6c3 3 9 3 12 0v-6M21 9v7" /></svg>',
       input: "text",
       inputLabel: "ชื่อ-นามสกุลอาจารย์",
       inputPlaceholder: "กรอกชื่อ-นามสกุลอาจารย์",
@@ -209,16 +213,22 @@ export const appSwal = {
       confirmButtonText: "บันทึก",
       reverseButtons: true,
       showLoaderOnConfirm: true,
-      inputValidator: (value) => !value.trim() ? "กรุณากรอกชื่อ-นามสกุลอาจารย์" : undefined,
+
+      inputValidator: (value) =>
+        !value.trim() ? "กรุณากรอกชื่อ-นามสกุลอาจารย์" : undefined,
+      
       preConfirm: async (value: string) => {
         try {
           await onSave(value.trim());
           return true;
         } catch (error) {
-          // Use textContent because API error messages must not become HTML.
           Swal.showValidationMessage("บันทึกไม่สำเร็จ");
           const message = Swal.getValidationMessage();
-          if (message) message.textContent = error instanceof Error ? error.message : "บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง";
+          if (message)
+            message.textContent =
+              error instanceof Error
+                ? error.message
+                : "บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง";
           return false;
         }
       },
@@ -249,23 +259,14 @@ export const appSwal = {
   }) {
     return Swal.fire({
       ...baseSwalOptions,
-
       titleText: title,
-
       text: text ?? description ?? getDefaultDescription(variant),
-
       html,
-
       showCancelButton: true,
-
       cancelButtonText: "ยกเลิก",
-
       confirmButtonText: "ยืนยัน",
-
       reverseButtons: true,
-
       iconHtml: getIconHtml(variant),
-
       customClass: {
         popup: `app-swal-popup app-swal-popup-${variant}`,
         title: "app-swal-title",
@@ -289,19 +290,12 @@ export const appSwal = {
   }) {
     return Swal.fire({
       ...baseSwalOptions,
-
       showCloseButton: false,
-
       iconHtml: getStatusIconHtml("success"),
-
       title,
-
       text,
-
       html,
-
       confirmButtonText: "ตกลง",
-
       customClass: {
         popup: "app-swal-popup app-swal-popup-success",
         title: "app-swal-title app-swal-title-success",
@@ -315,17 +309,11 @@ export const appSwal = {
   error(text?: string) {
     return Swal.fire({
       ...baseSwalOptions,
-
       showCloseButton: false,
-
       iconHtml: getStatusIconHtml("error"),
-
       title: "เกิดข้อผิดพลาด",
-
       html: text,
-
       confirmButtonText: "ตกลง",
-
       customClass: {
         popup: "app-swal-popup app-swal-popup-error",
         title: "app-swal-title",
@@ -355,23 +343,14 @@ export const appSwal = {
   }) {
     return Swal.fire({
       ...baseSwalOptions,
-
       title,
-
       text,
-
       html,
-
       iconHtml: getIconHtml(variant),
-
       showCancelButton,
-
       confirmButtonText,
-
       cancelButtonText,
-
       reverseButtons: true,
-
       customClass: {
         popup: `app-swal-popup app-swal-popup-${variant}`,
         title: "app-swal-title",

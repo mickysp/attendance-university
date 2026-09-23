@@ -171,7 +171,7 @@ export default function ClassesPage() {
                   bg-[var(--primary)]
                   px-6
                   py-2
-                  text-base
+                  text-[14px]
                   text-white
                   transition
                   hover:bg-[var(--primary-hover)]

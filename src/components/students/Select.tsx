@@ -31,7 +31,13 @@ type Props = {
   }) => void;
 };
 
-export default function StudentFilter({ data, selectedClassId, selectedBranch, keyword, onChange }: Props) {
+export default function StudentFilter({
+  data,
+  selectedClassId,
+  selectedBranch,
+  keyword,
+  onChange,
+}: Props) {
   const section = "";
 
   const [openClass, setOpenClass] = useState(false);
@@ -53,12 +59,14 @@ export default function StudentFilter({ data, selectedClassId, selectedBranch, k
   }, []);
 
   const classOptions = data;
-  const branchOptions = [...new Set(
-    (selectedClassId
-      ? data.find((course) => course._id === selectedClassId)?.branches || []
-      : data.flatMap((course) => course.branches || [])
-    ).map((item) => item.name),
-  )];
+  const branchOptions = [
+    ...new Set(
+      (selectedClassId
+        ? data.find((course) => course._id === selectedClassId)?.branches || []
+        : data.flatMap((course) => course.branches || [])
+      ).map((item) => item.name),
+    ),
+  ];
   const branchLocked = Boolean(selectedClassId) && branchOptions.length <= 1;
 
   const handleChange = (k: string, c: string, b: string, s: string) => {
@@ -71,8 +79,8 @@ export default function StudentFilter({ data, selectedClassId, selectedBranch, k
   };
 
   return (
-    <div className="relative z-30 flex w-full max-w-[760px] min-w-0 flex-wrap gap-3">
-      <div className="relative min-w-0 w-full sm:flex-[2_1_260px]">
+    <div className="relative z-30 flex w-full max-w-[760px] flex-wrap items-center gap-3">
+      <div className="relative w-full min-w-0 sm:flex-[2_1_260px]">
         <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
 
         <input
@@ -80,7 +88,12 @@ export default function StudentFilter({ data, selectedClassId, selectedBranch, k
           placeholder="ค้นหาจากชื่อ หรือรหัสนักศึกษา"
           value={keyword}
           onChange={(e) => {
-            handleChange(e.target.value, selectedClassId, selectedBranch, section);
+            handleChange(
+              e.target.value,
+              selectedClassId,
+              selectedBranch,
+              section,
+            );
           }}
           className="w-full pl-9 pr-9 py-[9px] text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-200"
         />
@@ -97,17 +110,25 @@ export default function StudentFilter({ data, selectedClassId, selectedBranch, k
         )}
       </div>
 
-      <div ref={classRef} className="relative min-w-0 w-full sm:flex-[1_1_180px]">
+      <div
+        ref={classRef}
+        className="relative w-full min-w-0 sm:flex-[1_1_200px]"
+      >
         <button
           onClick={() => setOpenClass(!openClass)}
           className="w-full px-3 py-[9px] text-sm border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer"
         >
           <span
-            className={`truncate block max-w-[180px] ${
+            className={`truncate block max-w-[200px] ${
               selectedClassId ? "text-gray-800" : "text-gray-400"
             }`}
           >
-            {selectedClassId ? truncate(data.find((item) => item._id === selectedClassId)?.className || "") : "ทุกวิชา"}
+            {selectedClassId
+              ? truncate(
+                  data.find((item) => item._id === selectedClassId)
+                    ?.className || "",
+                )
+              : "ทุกวิชา"}
           </span>
           <ChevronDownIcon className="w-4 h-4 text-blue-500" />
         </button>
@@ -151,7 +172,10 @@ export default function StudentFilter({ data, selectedClassId, selectedBranch, k
         )}
       </div>
 
-      <div ref={branchRef} className="relative min-w-0 w-full sm:flex-[1_1_180px]">
+      <div
+        ref={branchRef}
+        className="relative w-full min-w-0 sm:flex-[1_1_200px]"
+      >
         <button
           type="button"
           disabled={branchLocked}
@@ -159,13 +183,19 @@ export default function StudentFilter({ data, selectedClassId, selectedBranch, k
           className="w-full px-3 py-[9px] text-sm border border-gray-200 rounded-md bg-white flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer disabled:cursor-default"
         >
           <span
-            className={`truncate block max-w-[180px] ${
+            className={`truncate block max-w-[200px] ${
               selectedBranch ? "text-gray-800" : "text-gray-400"
             }`}
           >
-            {selectedBranch ? truncate(selectedBranch) : branchLocked ? "ยังไม่มีสาขา" : "ทุกสาขา"}
+            {selectedBranch
+              ? truncate(selectedBranch)
+              : branchLocked
+                ? "ยังไม่มีสาขา"
+                : "ทุกสาขา"}
           </span>
-          {!branchLocked && <ChevronDownIcon className="w-4 h-4 text-blue-500" />}
+          {!branchLocked && (
+            <ChevronDownIcon className="w-4 h-4 text-blue-500" />
+          )}
         </button>
 
         {openBranch && (

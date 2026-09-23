@@ -160,26 +160,10 @@ export async function POST(
       });
     }
 
-    console.log(
-      JSON.stringify(
-        session,
-        null,
-        2,
-      ),
-    );
-
     const nowTH = getNowTH();
 
     const todayTH =
       getDateTH(nowTH);
-
-    console.log({
-      todayTH,
-      sessionDate:
-        session.date,
-      sessionId,
-    });
-
 
     const sessionDate =
       new Date(
@@ -399,8 +383,6 @@ export async function POST(
       updatedAt: nowTH,
     };
 
-    console.log(insertData);
-
     await attendanceCol.insertOne(
       insertData,
     );
@@ -430,11 +412,6 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error(
-      "ATTENDANCE ERROR:",
-      error,
-    );
-
     return NextResponse.json({
       success: false,
 

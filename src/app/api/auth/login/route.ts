@@ -10,8 +10,6 @@ export async function POST(req: Request) {
     const { username, password, remember } = await req.json();
 
     if (!JWT_SECRET) {
-      console.error("JWT_SECRET is not configured");
-
       return NextResponse.json(
         {
           success: false,
@@ -102,8 +100,6 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,

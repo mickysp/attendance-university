@@ -11,10 +11,11 @@ import {
   ClipboardDocumentCheckIcon,
   Cog6ToothIcon,
   CalendarDaysIcon,
-  BellIcon,
   AcademicCapIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function Sidebar() {
@@ -29,6 +30,7 @@ export default function Sidebar() {
   const [user, setUser] = useState({
     fullname: "",
     role: "",
+    avatarUrl: null as string | null,
   });
 
   const touchStartX = useRef(0);
@@ -69,14 +71,15 @@ export default function Sidebar() {
         } else {
           router.replace("/login");
         }
-      } catch (err) {
-        console.error("Fetch user error:", err);
+      } catch {
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
+    void fetchUser();
+    window.addEventListener("profile-updated", fetchUser);
+    return () => window.removeEventListener("profile-updated", fetchUser);
   }, [router]);
 
   useEffect(() => {
@@ -103,8 +106,7 @@ export default function Sidebar() {
 
     try {
       await authApi.logout();
-    } catch (err) {
-      console.error("Logout error:", err);
+    } catch {
     } finally {
       router.replace("/login");
     }
@@ -526,7 +528,25 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
       </div>
 
       {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">Other</p>
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
+          Management
+        </p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <SidebarItem
+          icon={<UserCircleIcon />}
+          label="Administrators"
+          collapsed={collapsed}
+          active={pathname.startsWith("/administrators")}
+          onClick={() => onNavigate("/administrators")}
+        />
+      </div>
+
+      {!collapsed && (
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
+          Other
+        </p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -602,6 +622,7 @@ type UserSectionProps = {
   user: {
     fullname: string;
     role: string;
+    avatarUrl: string | null;
   };
   loading: boolean;
   userInitial: string;
@@ -653,12 +674,13 @@ function UserSection({
               justify-center
               rounded-full
               bg-gray-300
+              overflow-hidden
               text-sm
               font-semibold
               text-gray-700
             "
           >
-            {userInitial}
+            {user.avatarUrl ? <Image unoptimized src={user.avatarUrl} alt="รูปโปรไฟล์" width={36} height={36} className="h-full w-full object-cover" /> : userInitial}
           </div>
 
           {!collapsed && (

@@ -54,9 +54,9 @@ export default function SubjectSelect({
   }, []);
 
   return (
-    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+    <div className="flex w-full flex-wrap items-center gap-3 sm:gap-4">
       {showSearch && (
-        <div className="relative w-full flex-shrink-0 sm:w-[380px]">
+        <div className="relative w-full min-w-0 sm:max-w-[380px] sm:flex-1">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
           <input
@@ -93,7 +93,7 @@ export default function SubjectSelect({
         </div>
       )}
 
-      <div className="relative w-full flex-shrink-0 sm:w-[260px]" ref={ref}>
+      <div className="relative w-full min-w-0 sm:w-[260px] sm:shrink-0" ref={ref}>
         <div
           className="
             flex
@@ -175,9 +175,7 @@ export default function SubjectSelect({
             }
           }}
           className="
-            flex-shrink-0
             cursor-pointer
-            self-start
             whitespace-nowrap
             text-sm
             text-blue-500

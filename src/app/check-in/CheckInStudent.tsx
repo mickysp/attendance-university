@@ -243,7 +243,6 @@ export default function CheckInStudentPage({
           setShowSuccess(true);
         }, 300);
       } catch (error) {
-        console.error(error);
         showAlert("เกิดข้อผิดพลาด", "error");
         setSubmitting(false);
       }

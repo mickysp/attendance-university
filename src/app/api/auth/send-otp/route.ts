@@ -64,7 +64,6 @@ export async function POST(req: Request) {
 
       try {
         await sendOtpEmail(user.email, otp);
-        console.log("SEND OTP TO:", user.email);
       } catch (err) {
         console.error("EMAIL ERROR:", err);
       }
@@ -75,8 +74,6 @@ export async function POST(req: Request) {
       message: "หากบัญชีมีอยู่ เราได้ส่ง OTP แล้ว",
     });
   } catch (error) {
-    console.error(error);
-
     return NextResponse.json(
       { success: false, message: "เกิดข้อผิดพลาด" },
       { status: 500 }

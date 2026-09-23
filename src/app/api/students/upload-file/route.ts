@@ -532,8 +532,6 @@ export async function POST(req: Request) {
       { status: 200 },
     );
   } catch (error: unknown) {
-    console.error("IMPORT STUDENTS ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,
