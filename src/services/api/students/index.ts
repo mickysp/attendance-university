@@ -6,7 +6,10 @@ import type {
 } from "@/types/students";
 
 export const studentsApi = {
-  list(query: { year?: number; page?: number; limit?: number } = {}, options?: ApiRequestOptions) {
+  list(
+    query: { year?: number; page?: number; limit?: number } = {},
+    options?: ApiRequestOptions,
+  ) {
     return apiRequest("/students", {
       ...options,
       query,
@@ -40,7 +43,11 @@ export const studentsApi = {
       query: { id },
     });
   },
-  removeClassStudents(classId: string, year: number, options?: ApiRequestOptions) {
+  removeClassStudents(
+    classId: string,
+    year: number,
+    options?: ApiRequestOptions,
+  ) {
     return apiRequest("/students/delete-class", {
       ...options,
       method: "DELETE",

@@ -4,10 +4,7 @@ import { authApi } from "@/services/api/auth";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  EyeIcon,
-  EyeSlashIcon,
-} from "@heroicons/react/24/solid";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { useAuthStore } from "@/stores/auth";
 
 export default function LoginForm() {
@@ -15,7 +12,9 @@ export default function LoginForm() {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const [status, setStatus] = useState<"idle" | "checking" | "redirecting">("idle");
+  const [status, setStatus] = useState<"idle" | "checking" | "redirecting">(
+    "idle",
+  );
   const [loginError, setLoginError] = useState("");
   const [slow, setSlow] = useState(false);
   const [destination, setDestination] = useState("");
@@ -74,25 +73,34 @@ export default function LoginForm() {
     const timeout = setTimeout(() => controller.abort("timeout"), 20000);
 
     try {
-      const res = await authApi.login(
-        { username, password, remember },
-        { signal: controller.signal },
-      ).catch(() => {
-        throw new Error("เชื่อมต่อระบบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง");
-      });
+      const res = await authApi
+        .login({ username, password, remember }, { signal: controller.signal })
+        .catch(() => {
+          throw new Error(
+            "เชื่อมต่อระบบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง",
+          );
+        });
 
       if (res.status === 404) {
-        throw new Error("ระบบยังไม่ได้ตรวจสอบชื่อผู้ใช้และรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ");
+        throw new Error(
+          "ระบบยังไม่ได้ตรวจสอบชื่อผู้ใช้และรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ",
+        );
       }
       if (res.status >= 500) {
-        throw new Error("ระบบเข้าสู่ระบบขัดข้อง กรุณาลองใหม่ภายหลัง ยังไม่สามารถยืนยันได้ว่าชื่อผู้ใช้หรือรหัสผ่านถูกต้อง");
+        throw new Error(
+          "ระบบเข้าสู่ระบบขัดข้อง กรุณาลองใหม่ภายหลัง ยังไม่สามารถยืนยันได้ว่าชื่อผู้ใช้หรือรหัสผ่านถูกต้อง",
+        );
       }
 
       const data = await res.json().catch(() => {
-        throw new Error("ระบบตอบกลับไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ");
+        throw new Error(
+          "ระบบตอบกลับไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ",
+        );
       });
       if (!data || typeof data.success !== "boolean") {
-        throw new Error("ระบบตอบกลับไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ");
+        throw new Error(
+          "ระบบตอบกลับไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ",
+        );
       }
       if (!res.ok || !data.success) {
         throw new Error(
@@ -103,9 +111,16 @@ export default function LoginForm() {
       }
 
       const role = typeof data.role === "string" ? data.role.toLowerCase() : "";
-      const nextPage = role === "teacher" ? "/dashboard" : role === "teaching assistant" ? "/attendance" : "";
+      const nextPage =
+        role === "teacher"
+          ? "/dashboard"
+          : role === "teaching assistant"
+            ? "/attendance"
+            : "";
       if (!nextPage) {
-        throw new Error("ไม่พบสิทธิ์เข้าใช้งานที่รองรับ กรุณาติดต่อผู้ดูแลระบบ");
+        throw new Error(
+          "ไม่พบสิทธิ์เข้าใช้งานที่รองรับ กรุณาติดต่อผู้ดูแลระบบ",
+        );
       }
 
       if (remember) {
@@ -198,9 +213,7 @@ export default function LoginForm() {
           />
 
           {usernameError && (
-            <p className="mt-1 text-xs text-red-500">
-              {usernameError}
-            </p>
+            <p className="mt-1 text-xs text-red-500">{usernameError}</p>
           )}
         </div>
 
@@ -231,14 +244,8 @@ export default function LoginForm() {
           <button
             type="button"
             disabled={busy}
-            aria-label={
-              showPassword
-                ? "ซ่อนรหัสผ่าน"
-                : "แสดงรหัสผ่าน"
-            }
-            onClick={() =>
-              setShowPassword((prev) => !prev)
-            }
+            aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+            onClick={() => setShowPassword((prev) => !prev)}
             className="
               absolute
               right-3
@@ -261,9 +268,7 @@ export default function LoginForm() {
           </button>
 
           {passwordError && (
-            <p className="mt-1 text-xs text-red-500">
-              {passwordError}
-            </p>
+            <p className="mt-1 text-xs text-red-500">{passwordError}</p>
           )}
         </div>
 
@@ -281,9 +286,7 @@ export default function LoginForm() {
             type="checkbox"
             disabled={busy}
             checked={remember}
-            onChange={(e) =>
-              setRemember(e.target.checked)
-            }
+            onChange={(e) => setRemember(e.target.checked)}
             className="h-4 w-4 shrink-0"
           />
 
@@ -304,16 +307,51 @@ export default function LoginForm() {
             tracking-wide
           "
         >
-          {busy && <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" />}
-          {status === "checking" ? "กำลังตรวจสอบบัญชี..." : status === "redirecting" ? "กำลังเปิดหน้าระบบ..." : "เข้าสู่ระบบ"}
+          {busy && (
+            <span
+              aria-hidden="true"
+              className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
+            />
+          )}
+          {status === "checking"
+            ? "กำลังตรวจสอบบัญชี..."
+            : status === "redirecting"
+              ? "กำลังเปิดหน้าระบบ..."
+              : "เข้าสู่ระบบ"}
         </button>
 
-        <div role="status" aria-live="polite" aria-atomic="true" className={busy ? "" : "sr-only"}>
-          {status === "checking" && <p className="text-sm text-gray-500">{slow ? "ระบบกำลังตอบกลับ กรุณารอสักครู่ ยังไม่ทราบผลการตรวจสอบบัญชี" : "กำลังตรวจสอบชื่อผู้ใช้และรหัสผ่าน"}</p>}
-          {status === "redirecting" && <p className="text-sm text-blue-600">เข้าสู่ระบบสำเร็จ กำลังเปิดหน้าระบบ...</p>}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className={busy ? "" : "sr-only"}
+        >
+          {status === "checking" && (
+            <p className="text-sm text-gray-500">
+              {slow
+                ? "ระบบกำลังตอบกลับ กรุณารอสักครู่ ยังไม่ทราบผลการตรวจสอบบัญชี"
+                : "กำลังตรวจสอบชื่อผู้ใช้และรหัสผ่าน"}
+            </p>
+          )}
+          {status === "redirecting" && (
+            <p className="text-sm text-blue-600">
+              เข้าสู่ระบบสำเร็จ กำลังเปิดหน้าระบบ...
+            </p>
+          )}
         </div>
-        {status === "redirecting" && slow && <a href={destination} className="text-sm text-blue-600 underline">หากหน้ายังไม่เปลี่ยน คลิกเพื่อเปิดหน้าระบบ</a>}
-        {loginError && <p role="alert" className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600">{loginError}</p>}
+        {status === "redirecting" && slow && (
+          <a href={destination} className="text-sm text-blue-600 underline">
+            หากหน้ายังไม่เปลี่ยน คลิกเพื่อเปิดหน้าระบบ
+          </a>
+        )}
+        {loginError && (
+          <p
+            role="alert"
+            className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600"
+          >
+            {loginError}
+          </p>
+        )}
 
         <Link
           href="/forgot-password"

@@ -48,7 +48,10 @@ export async function POST(req: Request) {
     const { config, classId } = body;
 
     if (typeof classId !== "string" || !ObjectId.isValid(classId)) {
-      return NextResponse.json({ success: false, message: "กรุณาเลือกรายวิชาให้ถูกต้อง" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "กรุณาเลือกรายวิชาให้ถูกต้อง" },
+        { status: 400 },
+      );
     }
     const normalizedClassId = new ObjectId(classId).toHexString();
 
@@ -68,9 +71,14 @@ export async function POST(req: Request) {
 
     const db = client.db("attendance");
 
-    const subject = await db.collection("classes").findOne({ _id: new ObjectId(classId) });
+    const subject = await db
+      .collection("classes")
+      .findOne({ _id: new ObjectId(classId) });
     if (!subject) {
-      return NextResponse.json({ success: false, message: "ไม่พบรายวิชา" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "ไม่พบรายวิชา" },
+        { status: 404 },
+      );
     }
 
     const checkIn = db.collection<CheckInConfigDocument>("checkIn");
@@ -123,7 +131,10 @@ export async function GET(req: Request) {
   try {
     const classId = new URL(req.url).searchParams.get("classId");
     if (classId !== null && !ObjectId.isValid(classId)) {
-      return NextResponse.json({ success: false, message: "รหัสรายวิชาไม่ถูกต้อง" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "รหัสรายวิชาไม่ถูกต้อง" },
+        { status: 400 },
+      );
     }
     const client = await clientPromise;
 
@@ -132,9 +143,13 @@ export async function GET(req: Request) {
     const checkIn = db.collection<CheckInConfigDocument>("checkIn");
 
     const classConfig = classId
-      ? await checkIn.findOne({ type: "class_config", classId: new ObjectId(classId).toHexString() })
+      ? await checkIn.findOne({
+          type: "class_config",
+          classId: new ObjectId(classId).toHexString(),
+        })
       : null;
-    const result = classConfig ?? await checkIn.findOne({ type: "global_config" });
+    const result =
+      classConfig ?? (await checkIn.findOne({ type: "global_config" }));
 
     const config = result?.config
       ? {

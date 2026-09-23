@@ -31,7 +31,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       if (result.isConfirmed) {
         await onConfirm();
       }
-    } catch (error) {
+    } catch {
       await appSwal.error("ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง");
     }
   };

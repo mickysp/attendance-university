@@ -9,6 +9,7 @@ import {
   TrashIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { useConfirm } from "@/context/swal";
 import { useAlert } from "@/context/AlertContext";
 
@@ -62,16 +63,9 @@ export default function StudentTable({
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [openWithdrawModal, setOpenWithdrawModal] = useState(false);
   const [editingClasses, setEditingClasses] = useState<
     { className: string; section: string }[]
   >([]);
-
-  const originalClasses = (originalStudent?.classes || []).map((c) => ({
-    className: c.className,
-    section: c.section || "",
-  }));
 
   const paginatedData = data.slice(
     (currentPage - 1) * itemsPerPage,
@@ -304,10 +298,8 @@ export default function StudentTable({
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-        <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-          <img src="/not_exist_search.svg" className="w-28 h-28" />
-        </div>
-        <p className="text-sm text-gray-400">
+        <EmptyStateIcon kind="search" />
+        <p className="whitespace-nowrap text-sm text-gray-500">
           {selectedClassId && !classHasStudents
             ? "วิชานี้ยังไม่มีรายชื่อนักศึกษา"
             : "ไม่พบรายชื่อนักศึกษาที่ตรงกับตัวกรอง"}
@@ -427,8 +419,12 @@ export default function StudentTable({
                 <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   ชื่อ-นามสกุล
                 </th>
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">อีเมล</th>
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">Section</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  อีเมล
+                </th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
+                  Section
+                </th>
                 <th className="app-table-sticky-end sticky right-0 top-0 z-30 whitespace-nowrap bg-gray-50 px-3 py-3 text-left font-semibold">
                   จัดการ
                 </th>
@@ -506,7 +502,6 @@ export default function StudentTable({
 
                       <button
                         onClick={() => {
-                          setOpenMenuId(null);
                           handleDelete(s._id);
                         }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-red-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
@@ -810,8 +805,6 @@ export default function StudentTable({
                                         c.className,
                                         c.section,
                                       );
-
-                                      setOpenWithdrawModal(false);
                                     }}
                                     className="shrink-0 px-4 py-2 rounded-xl bg-red-500 text-white text-sm hover:bg-red-600 transition cursor-pointer"
                                   >

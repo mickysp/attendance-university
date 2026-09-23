@@ -1,4 +1,7 @@
-import type { AdministratorRole, CreateAdministratorBody } from "@/types/administrators";
+import type {
+  AdministratorRole,
+  CreateAdministratorBody,
+} from "@/types/administrators";
 import { apiRequest, type ApiRequestOptions } from "../client";
 
 export const administratorsApi = {

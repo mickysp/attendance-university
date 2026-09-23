@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       success: true,
       message: "เปลี่ยนรหัสผ่านสำเร็จ",
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "เกิดข้อผิดพลาด" },
       { status: 500 },

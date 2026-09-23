@@ -1,397 +1,389 @@
 "use client";
 
-import { classesApi } from "@/services/api/classes";
+import {
+  AcademicCapIcon,
+  BookOpenIcon,
+  MagnifyingGlassIcon,
+  UserGroupIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect, useMemo, useState } from "react";
+import StudentSummaryCard from "@/components/attendance/Card";
+import AttendanceTable from "@/components/attendance/Table";
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { attendanceApi } from "@/services/api/attendance";
-import { useState, useEffect, useRef } from "react";
+import { classesApi } from "@/services/api/classes";
 import type {
   AttendanceClassOption,
   AttendanceStatus,
   StudentAttendance,
 } from "@/types/attendance";
 
-import SubjectSelect from "@/components/attendance/Select";
-import AttendanceTable from "@/components/attendance/Table";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import StudentSummaryCard from "@/components/attendance/Card";
-
 export default function AttendancePage() {
-  const [loading, setLoading] = useState(true);
-  const yearRef = useRef<HTMLDivElement | null>(null);
-
-  const [students, setStudents] = useState<StudentAttendance[]>([]);
-  const [openYear, setOpenYear] = useState(false);
   const [classes, setClasses] = useState<AttendanceClassOption[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
-
-  const [majors, setMajors] = useState<{ id: string; name: string }[]>([]);
-  const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
-
-  const [sections, setSections] = useState<string[]>([]);
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-
+  const [students, setStudents] = useState<StudentAttendance[]>([]);
+  const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  const [yearOptions, setYearOptions] = useState<number[]>([]);
-  const [loadingMajors, setLoadingMajors] = useState(false);
-
-  const [keyword, setKeyword] = useState("");
-
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedMajor, setSelectedMajor] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<AttendanceStatus | null>(
     null,
   );
-
-  const handleClearAll = () => {
-    setSelectedClass(null);
-    setSelectedMajor(null);
-    setStudents([]);
-    setMajors([]);
-    setSelectedSection(null);
-    setSections([]);
-  };
-
-  const filteredStudents =
-    selectedStatus === null
-      ? students
-      : students.filter((s) => s.status === selectedStatus);
-
-  const displayStudents = filteredStudents.filter((s) => {
-    const matchMajor = selectedMajor ? s.major === selectedMajor : true;
-
-    const matchSection = selectedSection ? s.section === selectedSection : true;
-
-    const lowerKeyword = keyword.trim().toLowerCase();
-
-    const matchKeyword =
-      !lowerKeyword ||
-      s.name.toLowerCase().includes(lowerKeyword) ||
-      s.studentId.toLowerCase().includes(lowerKeyword);
-
-    return matchMajor && matchSection && matchKeyword;
-  });
+  const [keyword, setKeyword] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (yearRef.current && !yearRef.current.contains(event.target as Node)) {
-        setOpenYear(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const loadData = async () => {
+    const controller = new AbortController();
+    async function loadClasses() {
+      setLoading(true);
+      setError("");
       try {
-        setLoading(true);
-
-        const res = await classesApi.list({ year: selectedYear || undefined });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch classes");
-        }
-
-        const json = await res.json();
-
-        const allClasses: AttendanceClassOption[] = json?.data || [];
-
-        const years: number[] = json?.years || [];
-
-        setYearOptions(years);
-
-        if (
-          years.length > 0 &&
-          (!selectedYear || !years.includes(selectedYear))
-        ) {
-          setSelectedYear(years[0]);
-        }
-
-        setClasses(allClasses);
-      } catch (err) {
+        const response = await classesApi.list(
+          { year: selectedYear ?? undefined },
+          { signal: controller.signal, cache: "no-store" },
+        );
+        const result = await response.json();
+        if (!response.ok || !result.success)
+          throw new Error(result.message || "โหลดข้อมูลชั้นเรียนไม่สำเร็จ");
+        const availableYears = Array.isArray(result.years) ? result.years : [];
+        setClasses(Array.isArray(result.data) ? result.data : []);
+        setYears(availableYears);
+        if (!selectedYear && availableYears.length > 0)
+          setSelectedYear(availableYears[0]);
+      } catch (cause) {
+        if (!controller.signal.aborted)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "โหลดข้อมูลชั้นเรียนไม่สำเร็จ",
+          );
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
-    };
-
-    loadData();
+    }
+    void loadClasses();
+    return () => controller.abort();
   }, [selectedYear]);
 
   useEffect(() => {
-    if (!selectedClass) return;
-
-    const load = async () => {
-      try {
-        setLoadingMajors(true);
-
-        const res = await attendanceApi.summary({ classId: selectedClass, year: selectedYear });
-
-        const json = await res.json();
-
-        const list: StudentAttendance[] = json.data ?? [];
-
-        setStudents(list);
-
-        const majorsByClass: string[] = json.majorsByClass ?? [];
-
-        setMajors(
-          majorsByClass.map((m) => ({
-            id: m,
-            name: m,
-          })),
-        );
-      } catch (err) {
-      } finally {
-        setLoadingMajors(false);
-      }
-    };
-
-    load();
-  }, [selectedClass, selectedYear]);
-
-  useEffect(() => {
-    if (!selectedMajor) {
-      const allSections = Array.from(
-        new Set(students.map((s) => s.section).filter(Boolean)),
-      );
-
-      setSections(allSections);
-
+    if (!selectedClass) {
+      setStudents([]);
       return;
     }
+    const controller = new AbortController();
+    async function loadStudents() {
+      setLoadingStudents(true);
+      setError("");
+      try {
+        const response = await attendanceApi.summary(
+          { classId: selectedClass, year: selectedYear },
+          { signal: controller.signal, cache: "no-store" },
+        );
+        const result = await response.json();
+        if (!response.ok || !result.success)
+          throw new Error(result.message || "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ");
+        setStudents(Array.isArray(result.data) ? result.data : []);
+      } catch (cause) {
+        if (!controller.signal.aborted) {
+          setStudents([]);
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoadingStudents(false);
+      }
+    }
+    void loadStudents();
+    return () => controller.abort();
+  }, [selectedClass, selectedYear]);
 
-    const filteredSections = Array.from(
-      new Set(
-        students
-          .filter((s) => s.major === selectedMajor)
-          .map((s) => s.section)
-          .filter(Boolean),
-      ),
+  const majors = useMemo(
+    () =>
+      [...new Set(students.map((student) => student.major).filter(Boolean))]
+        .filter((major) => major !== "-")
+        .sort(),
+    [students],
+  );
+  const sections = useMemo(
+    () =>
+      [
+        ...new Set(
+          students
+            .filter(
+              (student) => !selectedMajor || student.major === selectedMajor,
+            )
+            .map((student) => student.section)
+            .filter(Boolean),
+        ),
+      ]
+        .filter((section) => section !== "-")
+        .sort((left, right) =>
+          left.localeCompare(right, "th", { numeric: true }),
+        ),
+    [selectedMajor, students],
+  );
+  const visibleStudents = useMemo(() => {
+    const query = keyword.trim().toLocaleLowerCase("th");
+    return students.filter(
+      (student) =>
+        (!selectedMajor || student.major === selectedMajor) &&
+        (!selectedSection || student.section === selectedSection) &&
+        (!selectedStatus || student.status === selectedStatus) &&
+        (!query ||
+          student.name.toLocaleLowerCase("th").includes(query) ||
+          student.studentId.toLocaleLowerCase("th").includes(query)),
     );
+  }, [keyword, selectedMajor, selectedSection, selectedStatus, students]);
 
-    setSections(filteredSections);
-
-    setSelectedSection(null);
-  }, [selectedMajor, students]);
+  function resetFilters() {
+    setSelectedMajor("");
+    setSelectedSection("");
+    setSelectedStatus(null);
+    setKeyword("");
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-[80px] font-noto sm:p-4 lg:p-6 lg:pt-6">
-        {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300">
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+    <div className="app-page" aria-busy={loading || loadingStudents}>
+      {(loading || loadingStudents) && (
+        <div className="app-page-loading" role="status">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent motion-reduce:animate-none" />
+            <p className="text-base text-white">กำลังโหลด...</p>
+          </div>
+        </div>
+      )}
+      <div className="flex min-h-full flex-col gap-5 sm:gap-6">
+        <header className="app-page-header">
+          <div>
+            <h1 className="app-page-title">เวลาเข้าเรียน</h1>
+            <p className="app-page-description">
+              ตรวจสอบการเช็กชื่อ คะแนน และประวัติการเข้าเรียนรายนักศึกษา
+            </p>
+          </div>
+          <label className="w-full sm:w-48">
+            <span className="mb-1.5 block text-xs font-medium text-gray-500">
+              ปีการศึกษา
+            </span>
+            <select
+              value={selectedYear ?? ""}
+              onChange={(event) => {
+                setSelectedYear(Number(event.target.value));
+                setSelectedClass("");
+                resetFilters();
+              }}
+              className="app-field"
+            >
+              {years.length === 0 && <option value="">ไม่มีข้อมูลปี</option>}
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </label>
+        </header>
 
-              <p className="text-gray-600 text-base text-white">กำลังโหลด...</p>
-            </div>
+        <section className="app-card" aria-labelledby="attendance-filter-title">
+          <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
+            <h2
+              id="attendance-filter-title"
+              className="text-lg font-semibold text-gray-800"
+            >
+              เลือกข้อมูลที่ต้องการตรวจสอบ
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              เริ่มจากเลือกวิชา แล้วกรองรายชื่อตามสาขาหรือ Section
+            </p>
+          </div>
+          <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
+            <FilterField
+              number="1"
+              icon={BookOpenIcon}
+              label="วิชา"
+              value={selectedClass}
+              onChange={(value) => {
+                setSelectedClass(value);
+                resetFilters();
+              }}
+              options={classes.map((item) => ({
+                value: item._id,
+                label: `${item.className || item.name || "ไม่ระบุชื่อวิชา"}${item.classCode ? ` (${item.classCode})` : ""}`,
+              }))}
+              placeholder="เลือกวิชา"
+            />
+            <FilterField
+              number="2"
+              icon={AcademicCapIcon}
+              label="สาขา"
+              value={selectedMajor}
+              onChange={(value) => {
+                setSelectedMajor(value);
+                setSelectedSection("");
+              }}
+              options={majors.map((major) => ({ value: major, label: major }))}
+              placeholder="ทุกสาขา"
+              disabled={!selectedClass || students.length === 0}
+            />
+            <FilterField
+              number="3"
+              icon={UserGroupIcon}
+              label="Section"
+              value={selectedSection}
+              onChange={setSelectedSection}
+              options={sections.map((section) => ({
+                value: section,
+                label: `Section ${section}`,
+              }))}
+              placeholder="ทุก Section"
+              disabled={!selectedClass || students.length === 0}
+            />
+          </div>
+        </section>
+
+        {error && (
+          <div
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            role="alert"
+          >
+            {error}
           </div>
         )}
-
-        {!loading && (
-          <div
-            className={`flex flex-col bg-white rounded-2xl overflow-hidden ${
-              displayStudents.length === 0 &&
-              selectedClass &&
-              selectedMajor &&
-              students.length > 0
-                ? "h-[90vh]"
-                : !selectedClass ||
-                    !selectedMajor ||
-                    students.length === 0 ||
-                    displayStudents.length > 6
-                  ? "min-h-[90vh]"
-                  : "min-h-fit"
-            }`}
-          >
-            <div className="px-4 pt-5 shrink-0 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
-              <div className="min-w-0">
-                <h1 className="text-[26px] font-semibold text-gray-800">
-                  Attendance
-                </h1>
-
-                <p className="text-sm text-gray-400 mt-1">
-                  รายงานการเข้าเรียนและคะแนนนักศึกษา
-                </p>
-              </div>
-
-              <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
-                <div ref={yearRef} className="relative flex items-center gap-2">
-                  <span className="text-sm text-gray-500 whitespace-nowrap">
-                    ปีการศึกษา:
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => setOpenYear(!openYear)}
-                    className="h-[40px] w-full rounded-md border border-gray-200 bg-white px-3 text-sm flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-200 cursor-pointer sm:w-[140px]"
-                  >
-                    <span
-                      className={
-                        selectedYear ? "text-gray-800" : "text-gray-400"
-                      }
+        {!selectedClass ? (
+          <EmptyAttendanceState
+            kind="classes"
+            title="เลือกวิชาเพื่อเริ่มตรวจสอบ"
+            description="ระบบจะแสดงรายชื่อนักศึกษาและสรุปการเข้าเรียนของวิชาที่เลือก"
+          />
+        ) : students.length === 0 && !loadingStudents ? (
+          <EmptyAttendanceState
+            kind="students"
+            title="ยังไม่มีข้อมูลนักศึกษา"
+            description="วิชานี้ยังไม่มีนักศึกษาหรือข้อมูลการเข้าเรียนในปีการศึกษาที่เลือก"
+          />
+        ) : (
+          <>
+            <StudentSummaryCard
+              students={students}
+              selectedStatus={selectedStatus}
+              onSelectStatus={(status) =>
+                setSelectedStatus((current) =>
+                  current === status ? null : status,
+                )
+              }
+            />
+            <section className="app-card min-h-[420px]">
+              <div className="flex flex-col gap-4 border-b border-gray-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    รายชื่อนักศึกษา
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    พบ {visibleStudents.length.toLocaleString("th-TH")} จาก{" "}
+                    {students.length.toLocaleString("th-TH")} คน
+                  </p>
+                </div>
+                <div className="relative w-full lg:max-w-sm">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={keyword}
+                    onChange={(event) => setKeyword(event.target.value)}
+                    placeholder="ค้นหาชื่อหรือรหัสนักศึกษา"
+                    className="app-field pl-9 pr-9"
+                  />
+                  {keyword && (
+                    <button
+                      type="button"
+                      onClick={() => setKeyword("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-700"
+                      aria-label="ล้างคำค้นหา"
                     >
-                      {selectedYear || "เลือกปี"}
-                    </span>
-
-                    <ChevronDownIcon className="w-4 h-4 text-blue-500 ml-2" />
-                  </button>
-
-                  {openYear && (
-                    <div className="absolute right-0 top-[44px] z-20 bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto w-[140px]">
-                      {yearOptions.length === 0 ? (
-                        <div className="px-3 py-2 text-sm text-gray-400">
-                          ไม่มีข้อมูลปี
-                        </div>
-                      ) : (
-                        yearOptions.map((year) => (
-                          <button
-                            key={year}
-                            onClick={() => {
-                              setSelectedYear(year);
-                              setSelectedClass(null);
-                              setSelectedMajor(null);
-                              setStudents([]);
-                              setMajors([]);
-                              setSelectedSection(null);
-                              setSections([]);
-                              setOpenYear(false);
-                            }}
-                            className={`block w-full px-3 py-2 text-left text-sm cursor-pointer ${
-                              selectedYear === year
-                                ? "bg-blue-50 text-blue-600 font-medium"
-                                : "hover:bg-gray-100 text-gray-700"
-                            }`}
-                          >
-                            {year}
-                          </button>
-                        ))
-                      )}
-                    </div>
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
                   )}
                 </div>
               </div>
-            </div>
-
-            {selectedClass && selectedMajor && students.length > 0 && (
-              <div className="px-6 pt-4">
-                <StudentSummaryCard
-                  students={students}
-                  selectedStatus={selectedStatus}
-                  onSelectStatus={(status) => {
-                    setSelectedStatus((prev) =>
-                      prev === status ? null : status,
-                    );
-                  }}
+              <div className="p-4 sm:p-6">
+                <AttendanceTable
+                  classId={selectedClass}
+                  data={visibleStudents}
                 />
               </div>
-            )}
-
-            <div className="mt-4 flex w-full flex-col items-stretch gap-3 px-4 sm:flex-row sm:items-start sm:gap-4 sm:px-6">
-              <SubjectSelect
-                subjects={classes.map((c) => ({
-                  id: c._id,
-                  name: `${c.className || c.name} (${c.classCode || ""})`,
-                }))}
-                value={selectedClass}
-                onChange={(value) => {
-                  setSelectedClass(value);
-                  setSelectedMajor(null);
-                  setSelectedSection(null);
-                  setStudents([]);
-                  setMajors([]);
-                  setSections([]);
-                  setKeyword("");
-                  setSelectedStatus(null);
-                }}
-                keyword={keyword}
-                onKeywordChange={setKeyword}
-                showSearch={!!selectedClass && !!selectedMajor}
-                showClear={false}
-                placeholder="เลือกวิชา"
-              />
-
-              {selectedClass && majors.length > 0 && (
-                <SubjectSelect
-                  subjects={
-                    loadingMajors
-                      ? [{ id: "loading", name: "กำลังโหลด..." }]
-                      : majors
-                  }
-                  value={selectedMajor}
-                  onChange={setSelectedMajor}
-                  showClear={true}
-                  onClearAll={handleClearAll}
-                  placeholder="เลือกสาขา"
-                />
-              )}
-            </div>
-
-            <div className="flex-1 min-h-0 p-6 flex flex-col">
-              {!selectedClass ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
-
-                  <p className="text-base font-medium text-gray-500">
-                    ยังไม่ได้เลือกวิชา
-                  </p>
-
-                  <p className="text-sm text-gray-400 mt-1">
-                    กรุณาเลือกวิชาจากด้านบนเพื่อดูข้อมูลการเข้าเรียน
-                  </p>
-                </div>
-              ) : majors.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
-
-                  <p className="text-base font-medium text-gray-500">
-                    ยังไม่มีข้อมูลนักศึกษา
-                  </p>
-                </div>
-              ) : !selectedMajor ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <div className="mb-4 w-28 h-28 rounded-full bg-gray-100 flex items-center justify-center">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
-
-                  <p className="text-base font-medium text-gray-500">
-                    ยังไม่ได้เลือกสาขา
-                  </p>
-                </div>
-              ) : students.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <div className="mb-4 flex items-center justify-center w-28 h-28 rounded-full bg-gray-100">
-                    <img src="/not-exist.png" className="w-28 h-28" />
-                  </div>
-
-                  <p className="text-base font-medium text-gray-500">
-                    ไม่มีข้อมูลการเข้าเรียน
-                  </p>
-
-                  <p className="text-sm text-gray-400 mt-1">
-                    วิชานี้ยังไม่มีการเช็คชื่อในระบบ
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="text-base text-gray-600 font-semibold mb-6">
-                    Student ทั้งหมด {displayStudents.length} รายการ
-                  </div>
-
-                  <AttendanceTable
-                    classId={selectedClass}
-                    data={displayStudents}
-                  />
-                </>
-              )}
-            </div>
-          </div>
+            </section>
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+type FilterFieldProps = {
+  number: string;
+  icon: typeof BookOpenIcon;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+  disabled?: boolean;
+};
+
+function FilterField({
+  number,
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled = false,
+}: FilterFieldProps) {
+  return (
+    <label className="min-w-0">
+      <span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-600">
+          {number}
+        </span>
+        <Icon className="h-4 w-4 text-gray-400" />
+        {label}
+      </span>
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="app-field disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function EmptyAttendanceState({
+  kind,
+  title,
+  description,
+}: {
+  kind: "classes" | "students";
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="app-card flex min-h-[420px] flex-col items-center justify-center px-6 text-center">
+      <EmptyStateIcon kind={kind} />
+      <h2 className="text-base font-semibold text-gray-700">{title}</h2>
+      <p className="mt-1 max-w-lg text-sm text-gray-500">{description}</p>
+    </section>
   );
 }

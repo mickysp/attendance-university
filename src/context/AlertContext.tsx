@@ -38,18 +38,11 @@ export const useAlert = () => {
   return context;
 };
 
-export const AlertProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+export const AlertProvider = ({ children }: { children: ReactNode }) => {
   const [alert, setAlert] = useState<Alert | null>(null);
   const [visible, setVisible] = useState(false);
 
-  const showAlert = (
-    message: string,
-    type: AlertType = "info",
-  ) => {
+  const showAlert = (message: string, type: AlertType = "info") => {
     setAlert({ message, type });
     setVisible(true);
 
@@ -107,9 +100,7 @@ export const AlertProvider = ({
               ${alert.type === "info" && "bg-blue-500"}
             `}
           >
-            <span className="flex-shrink-0">
-              {iconMap[alert.type]}
-            </span>
+            <span className="flex-shrink-0">{iconMap[alert.type]}</span>
 
             <span>{alert.message}</span>
 

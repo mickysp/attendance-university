@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
 
 type ThaiStatus = "มาเรียน" | "มาสาย" | "ลา" | "ขาด" | "ยังไม่เช็คชื่อ";
 
@@ -73,6 +74,13 @@ function isSessionEnded(session: SessionDoc) {
 
 export async function GET(req: Request) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "กรุณาเข้าสู่ระบบ", logs: [] },
+        { status: 401 },
+      );
+    }
     const { searchParams } = new URL(req.url);
 
     const classId = searchParams.get("classId");

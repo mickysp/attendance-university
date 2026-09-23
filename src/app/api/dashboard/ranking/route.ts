@@ -35,10 +35,9 @@ export async function GET(req: Request) {
       });
     }
 
-    const academicYear =
-      searchParams.get("year")
-        ? Number(searchParams.get("year"))
-        : new Date().getFullYear() + 543;
+    const academicYear = searchParams.get("year")
+      ? Number(searchParams.get("year"))
+      : new Date().getFullYear() + 543;
 
     const client = await clientPromise;
     const db = client.db("attendance");
@@ -82,16 +81,12 @@ export async function GET(req: Request) {
       };
     });
 
-    const sortedByScore = [...students].sort(
-      (a, b) => b.score - a.score
-    );
+    const sortedByScore = [...students].sort((a, b) => b.score - a.score);
 
     const topScore = sortedByScore.slice(0, 5);
     const bottomScore = sortedByScore.slice(-5).reverse();
 
-    const sortedByPercent = [...students].sort(
-      (a, b) => b.percent - a.percent
-    );
+    const sortedByPercent = [...students].sort((a, b) => b.percent - a.percent);
 
     const topPercent = sortedByPercent.slice(0, 5);
     const bottomPercent = sortedByPercent.slice(-5).reverse();
@@ -111,7 +106,6 @@ export async function GET(req: Request) {
         },
       },
     });
-
   } catch (error) {
     return NextResponse.json({
       success: false,

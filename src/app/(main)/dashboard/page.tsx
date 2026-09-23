@@ -1,5 +1,6 @@
 "use client";
 
+import EmptyStateIcon from "@/components/common/EmptyStateIcon";
 import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
@@ -83,7 +84,7 @@ export default function DashboardPage() {
               "
             >
               <h1 className="text-[26px] font-semibold text-gray-800">
-                Dashboard
+                แดชบอร์ด
               </h1>
 
               <p className="mt-1 text-sm text-gray-400">
@@ -106,26 +107,11 @@ export default function DashboardPage() {
               "
             >
               <div className="flex flex-col items-center justify-center text-center">
-                <div
-                  className="
-                    mb-4
-                    flex
-                    h-28
-                    w-28
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-gray-100
-                  "
-                >
-                  <img
-                    src="/not-exist.png"
-                    alt="ไม่มีข้อมูล"
-                    className="h-28 w-28"
-                  />
-                </div>
+                <EmptyStateIcon kind="students" />
 
-                <p className="text-sm text-gray-400">ยังไม่มีข้อมูลนักศึกษา</p>
+                <p className="whitespace-nowrap text-sm text-gray-500">
+                  ยังไม่มีข้อมูลนักศึกษา
+                </p>
               </div>
             </div>
           </div>

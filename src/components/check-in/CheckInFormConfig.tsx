@@ -50,7 +50,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
 
   useEffect(() => {
     onChange?.(config);
-  }, [config]);
+  }, [config, onChange]);
 
   const toggleField = (key: keyof FormConfig) => {
     setConfig((prev) => ({

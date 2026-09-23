@@ -76,10 +76,7 @@ export interface UpdateStudentBody {
   }[];
 }
 
-export type ExcelRow = Record<
-  string,
-  string | number | undefined
->;
+export type ExcelRow = Record<string, string | number | undefined>;
 export interface StudentImportErrorItem {
   student?: IncomingStudent;
   message: string;

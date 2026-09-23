@@ -44,7 +44,12 @@ export default function RootLayout({
       className={`${prompt.variable} ${sarabun.variable} ${notoSansThai.variable}`}
     >
       <body className="antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="attendy-theme">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          storageKey="attendy-theme"
+        >
           <AlertProvider>
             <ConfirmProvider>{children}</ConfirmProvider>
           </AlertProvider>

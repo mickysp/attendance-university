@@ -2,7 +2,12 @@
 
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import { CheckIcon, ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ComputerDesktopIcon,
+  MoonIcon,
+  SunIcon,
+} from "@heroicons/react/24/outline";
 
 const themeOptions = [
   { value: "light", label: "สว่าง", icon: SunIcon },
@@ -14,16 +19,34 @@ const subscribe = () => () => {};
 
 export default function AppearanceSection() {
   const { theme, setTheme } = useTheme();
-  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white" aria-labelledby="appearance-heading">
+    <section
+      className="overflow-hidden rounded-2xl border border-gray-200 bg-white"
+      aria-labelledby="appearance-heading"
+    >
       <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 id="appearance-heading" className="text-lg font-semibold text-gray-800">การแสดงผล</h2>
-        <p className="mt-1 text-sm text-gray-500">เลือกธีมที่ต้องการใช้บนอุปกรณ์นี้</p>
+        <h2
+          id="appearance-heading"
+          className="text-lg font-semibold text-gray-800"
+        >
+          การแสดงผล
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          เลือกธีมที่ต้องการใช้บนอุปกรณ์นี้
+        </p>
       </div>
 
-      <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6" role="group" aria-label="เลือกธีม">
+      <div
+        className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6"
+        role="group"
+        aria-label="เลือกธีม"
+      >
         {themeOptions.map((option) => {
           const Icon = option.icon;
           const selected = mounted && theme === option.value;
@@ -38,7 +61,9 @@ export default function AppearanceSection() {
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="flex-1 text-sm font-medium">{option.label}</span>
-              {selected && <CheckIcon className="h-5 w-5 shrink-0" aria-hidden="true" />}
+              {selected && (
+                <CheckIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              )}
             </button>
           );
         })}

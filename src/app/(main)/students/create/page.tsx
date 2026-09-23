@@ -78,8 +78,7 @@ export default function CreateStudentPage() {
 
         if (classData.success) setClasses(classData.data);
         if (majorData.success) setMajors(majorData.data);
-      } catch (err) {
-      }
+      } catch {}
     };
 
     fetchData();
@@ -112,7 +111,8 @@ export default function CreateStudentPage() {
 
   const isValidStudentId = (id: string) => /^\d{9}-\d$/.test(id);
   const isValidName = (name: string) =>
-    name.trim().length >= 2 && /\p{L}/u.test(name) &&
+    name.trim().length >= 2 &&
+    /\p{L}/u.test(name) &&
     !/[\uFFFD\u0000-\u001F\u007F-\u009F]/u.test(name) &&
     !/(?:à¸|à¹)/u.test(name) &&
     (name.match(/(?:เธ|เน)/gu) || []).length < 3 &&
@@ -161,7 +161,10 @@ export default function CreateStudentPage() {
       }
 
       if (data.errors?.length) {
-        showAlert(data.errors[0].message || "ข้อมูลนักศึกษาบางรายการไม่ถูกต้อง", "error");
+        showAlert(
+          data.errors[0].message || "ข้อมูลนักศึกษาบางรายการไม่ถูกต้อง",
+          "error",
+        );
         return;
       }
 
@@ -186,7 +189,10 @@ export default function CreateStudentPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6" ref={dropdownRef}>
+        <div
+          className="bg-white rounded-2xl shadow-sm p-4 sm:p-6"
+          ref={dropdownRef}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
@@ -401,12 +407,20 @@ export default function CreateStudentPage() {
                       <input
                         inputMode="numeric"
                         value={item.section}
-                        onChange={(e) => handleChange(index, "section", e.target.value.replace(/\D/g, ""))}
+                        onChange={(e) =>
+                          handleChange(
+                            index,
+                            "section",
+                            e.target.value.replace(/\D/g, ""),
+                          )
+                        }
                         className="form-input-card w-full text-sm"
                         placeholder="เช่น 1, 4, 10"
                       />
                       {item.section && !/^[1-9]\d*$/.test(item.section) && (
-                        <p className="mt-1 text-xs text-red-500">Section ต้องเป็นจำนวนเต็มมากกว่า 0</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          Section ต้องเป็นจำนวนเต็มมากกว่า 0
+                        </p>
                       )}
                     </div>
                   </div>

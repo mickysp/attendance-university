@@ -91,7 +91,7 @@ export default function CreateClassPage() {
         } else {
           showAlert("ไม่สามารถโหลดข้อมูลอาจารย์ได้", "error");
         }
-      } catch (error) {
+      } catch {
         showAlert("ไม่สามารถโหลดข้อมูลอาจารย์ได้", "error");
       } finally {
         setLoadingTeachers(false);
@@ -332,7 +332,7 @@ export default function CreateClassPage() {
       showAlert(data.message || "เพิ่มรายวิชาสำเร็จ", "success");
 
       router.push("/classes");
-    } catch (error) {
+    } catch {
       showAlert("เกิดข้อผิดพลาดในการเพิ่มรายวิชา", "error");
     } finally {
       setLoading(false);

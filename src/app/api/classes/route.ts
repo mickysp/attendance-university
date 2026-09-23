@@ -62,9 +62,14 @@ export async function GET() {
       );
     }
 
-    const teacherNames = await getTeacherNames(db, classes.flatMap((item) =>
-      Array.isArray(item.teachers) ? item.teachers.map((teacher) => String(teacher?._id)) : [],
-    ));
+    const teacherNames = await getTeacherNames(
+      db,
+      classes.flatMap((item) =>
+        Array.isArray(item.teachers)
+          ? item.teachers.map((teacher) => String(teacher?._id))
+          : [],
+      ),
+    );
 
     const classIds = classes.map((item) => item._id);
 
@@ -97,21 +102,16 @@ export async function GET() {
       studentCountMap.set(String(item._id), item.count);
     });
 
-    const classSessions = await sessionsCol.find({
-      classId: {
-        $in: [
-          ...classIds,
-          ...classIds.map((classId) => classId.toString()),
-        ],
-      },
-    })
+    const classSessions = await sessionsCol
+      .find({
+        classId: {
+          $in: [...classIds, ...classIds.map((classId) => classId.toString())],
+        },
+      })
       .sort({ date: -1, startTime: -1, updatedAt: -1 })
       .toArray();
 
-    const classSessionMap = new Map<
-      string,
-      (typeof classSessions)
-    >();
+    const classSessionMap = new Map<string, typeof classSessions>();
 
     classSessions.forEach((session) => {
       const key = String(session.classId);
@@ -131,8 +131,9 @@ export async function GET() {
             )
             .map((teacher) => ({
               _id: String(teacher._id),
-              name: teacherNames.get(String(teacher._id).toLowerCase())
-                ?? (typeof teacher.name === "string" ? teacher.name : ""),
+              name:
+                teacherNames.get(String(teacher._id).toLowerCase()) ??
+                (typeof teacher.name === "string" ? teacher.name : ""),
             }))
         : [];
 

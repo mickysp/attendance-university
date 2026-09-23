@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 
 import type { IncomingClass, ClassDocument } from "@/types/classes";
 
@@ -25,7 +27,6 @@ export async function POST(req: Request) {
     const classes = db.collection<ClassDocument>("classes");
 
     const insertData: ClassDocument[] = [];
-
 
     for (const item of classList) {
       const { className, classCodes, teachers, description } = item;
@@ -152,6 +153,17 @@ export async function POST(req: Request) {
     }
 
     const result = await classes.insertMany(insertData);
+    const actor = await currentUser();
+    if (actor) {
+      const names = insertData.map((item) => item.className).join(", ");
+      await recordActivity({
+        actor,
+        category: "classes",
+        action: "create",
+        message: `สร้างชั้นเรียน “${names}”`,
+        target: names,
+      });
+    }
 
     return NextResponse.json(
       {
