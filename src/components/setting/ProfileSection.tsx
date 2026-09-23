@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { authApi } from "@/services/api/auth";
+import ProfileImageDialog from "@/components/setting/ProfileImageDialog";
 import Image from "next/image";
 import {
   CameraIcon,
@@ -51,6 +52,8 @@ export default function ProfileSection() {
   const [error, setError] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [showImage, setShowImage] = useState(false);
+  const imageUrl = preview || profile.avatarUrl;
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
@@ -234,7 +237,15 @@ export default function ProfileSection() {
         ) : (
           <>
             <div className="flex flex-col gap-5 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:p-6">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-blue-50 text-blue-600 shadow-sm">
+              <button
+                type="button"
+                aria-label="ดูรูปโปรไฟล์ขนาดเต็ม"
+                aria-haspopup="dialog"
+                disabled={!imageUrl}
+                onClick={() => setShowImage(true)}
+                title={imageUrl ? "ดูรูปโปรไฟล์ขนาดเต็ม" : "ยังไม่มีรูปโปรไฟล์"}
+                className="flex h-24 w-24 shrink-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-full border-4 border-white bg-blue-50 text-blue-600 shadow-sm transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-default disabled:hover:opacity-100"
+              >
                 {preview || profile.avatarUrl ? (
                   <Image
                     unoptimized
@@ -247,7 +258,7 @@ export default function ProfileSection() {
                 ) : (
                   <UserCircleIcon className="h-16 w-16" />
                 )}
-              </div>
+              </button>
 
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-gray-800">
@@ -405,6 +416,9 @@ export default function ProfileSection() {
           </>
         )}
       </div>
+      {showImage && imageUrl && (
+        <ProfileImageDialog key={imageUrl} src={imageUrl} onClose={() => setShowImage(false)} />
+      )}
     </section>
   );
 }
