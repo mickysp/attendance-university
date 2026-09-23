@@ -70,8 +70,6 @@ export async function DELETE(req: Request) {
       },
     );
   } catch (error: unknown) {
-    console.error("DELETE STUDENT CLASS ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,

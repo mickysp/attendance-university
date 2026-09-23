@@ -8,19 +8,16 @@ export async function proxy(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
   const pathname = req.nextUrl.pathname;
 
-  // Student check-in is public, including for visitors with an expired token.
   if (pathname === "/check-in" || /^\/checkin\/[^/]+\/?$/.test(pathname)) {
     return NextResponse.next();
   }
 
   const publicPaths = [
     "/login",
-    "/register",
     "/forgot-password",
   ];
 
   if (!jwtSecret) {
-    console.error("JWT_SECRET is not configured");
     return NextResponse.next();
   }
 
@@ -83,8 +80,6 @@ export async function proxy(req: NextRequest) {
 
     return NextResponse.next();
   } catch (error) {
-    console.error("JWT VERIFY ERROR:", error);
-
     const response = NextResponse.redirect(
       new URL("/login", req.url),
     );

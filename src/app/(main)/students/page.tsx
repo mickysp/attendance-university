@@ -474,7 +474,7 @@ export default function StudentsPage() {
 
                   <button
                     onClick={() => router.push("/students/create")}
-                    className="h-[40px] w-full px-5 rounded-md text-base bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] cursor-pointer sm:w-auto"
+                    className="h-[40px] w-full px-5 rounded-md text-[14px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] cursor-pointer sm:w-auto"
                   >
                     + เพิ่มนักศึกษา
                   </button>

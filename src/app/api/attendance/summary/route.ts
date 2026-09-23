@@ -331,22 +331,14 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-
       academicYear,
-
       latestSessionDate: latestDate,
-
       totalSessions,
-
       totalEndedSessions,
-
       data: result,
-
       majorsByClass,
     });
   } catch (error) {
-    console.error("attendance summary error:", error);
-
     return NextResponse.json(
       {
         success: false,

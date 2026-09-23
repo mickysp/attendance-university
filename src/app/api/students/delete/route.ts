@@ -62,8 +62,6 @@ export async function DELETE(req: Request) {
       { status: 200 },
     );
   } catch (error: unknown) {
-    console.error("DELETE STUDENT ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,

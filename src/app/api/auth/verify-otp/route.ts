@@ -61,8 +61,6 @@ export async function POST(req: Request) {
       message: "ยืนยันสำเร็จ",
     });
   } catch (error) {
-    console.error(error);
-
     return NextResponse.json(
       { success: false, message: "เกิดข้อผิดพลาด" },
       { status: 500 },

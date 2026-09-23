@@ -296,8 +296,6 @@ export async function GET(req: Request) {
       students: data,
     });
   } catch (error: unknown) {
-    console.error("GET STUDENTS ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,

@@ -26,8 +26,6 @@ export async function GET() {
       },
     );
   } catch (error) {
-    console.error("years api error:", error);
-
     return NextResponse.json(
       {
         success: false,

@@ -11,15 +11,7 @@ export interface User {
   password: string;
   role: UserRole;
   createdAt: Date;
-}
-
-export interface RegisterBody {
-  prefix: string;
-  fullname: string;
-  username: string;
-  email: string;
-  password: string;
-  role: UserRole;
+  avatarUpdatedAt?: Date;
 }
 
 export interface LoginBody {
@@ -56,3 +48,5 @@ export interface ApiResponse {
 export interface LoginResponse extends ApiResponse {
   role?: UserRole;
 }
+
+export type UpdateProfileBody = Pick<User, "prefix" | "fullname" | "username" | "email">;

@@ -1,8 +1,8 @@
 import type {
   ForgotPasswordBody,
   LoginBody,
-  RegisterBody,
   ResetPasswordBody,
+  UpdateProfileBody,
   VerifyOtpBody,
 } from "@/types/auth";
 import { apiRequest, type ApiRequestOptions } from "../client";
@@ -11,13 +11,6 @@ export const authApi = {
   login(data: LoginBody, options?: ApiRequestOptions) {
     return apiRequest("/auth/login", {
       credentials: "include",
-      ...options,
-      method: "POST",
-      json: data,
-    });
-  },
-  register(data: RegisterBody, options?: ApiRequestOptions) {
-    return apiRequest("/auth/register", {
       ...options,
       method: "POST",
       json: data,
@@ -48,6 +41,36 @@ export const authApi = {
     return apiRequest("/auth/user", {
       credentials: "include",
       ...options,
+    });
+  },
+  getProfile(options?: ApiRequestOptions) {
+    return apiRequest("/auth/profile", {
+      credentials: "include",
+      cache: "no-store",
+      ...options,
+    });
+  },
+  updateProfile(data: UpdateProfileBody, options?: ApiRequestOptions) {
+    return apiRequest("/auth/profile", {
+      credentials: "include",
+      ...options,
+      method: "PATCH",
+      json: data,
+    });
+  },
+  uploadAvatar(body: FormData, options?: ApiRequestOptions) {
+    return apiRequest("/auth/avatar", {
+      credentials: "include",
+      ...options,
+      method: "POST",
+      body,
+    });
+  },
+  removeAvatar(options?: ApiRequestOptions) {
+    return apiRequest("/auth/avatar", {
+      credentials: "include",
+      ...options,
+      method: "DELETE",
     });
   },
   logout(options?: ApiRequestOptions) {

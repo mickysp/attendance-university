@@ -15,11 +15,17 @@ export async function GET(req: Request) {
     const id = new URL(req.url).searchParams.get("id");
     if (id !== null) {
       if (!/^[a-f\d]{24}$/i.test(id)) {
-        return NextResponse.json({ success: false, message: "รหัสอาจารย์ไม่ถูกต้อง" }, { status: 400 });
+        return NextResponse.json(
+          { success: false, message: "รหัสอาจารย์ไม่ถูกต้อง" },
+          { status: 400 },
+        );
       }
       const teacher = await teachers.findOne({ _id: new ObjectId(id) });
       if (!teacher) {
-        return NextResponse.json({ success: false, message: "ไม่พบข้อมูลอาจารย์" }, { status: 404 });
+        return NextResponse.json(
+          { success: false, message: "ไม่พบข้อมูลอาจารย์" },
+          { status: 404 },
+        );
       }
       return NextResponse.json({ success: true, data: teacher });
     }
@@ -41,15 +47,11 @@ export async function GET(req: Request) {
       },
     );
   } catch (error) {
-    console.error("GET TEACHERS ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,
-
         message: error instanceof Error ? error.message : "Unknown error",
       },
-
       {
         status: 500,
       },
@@ -110,9 +112,12 @@ export async function PATCH(req: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("PATCH TEACHER ERROR:", error);
     return NextResponse.json(
-      { success: false, message: error instanceof Error ? error.message : "แก้ไขอาจารย์ไม่สำเร็จ" },
+      {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "แก้ไขอาจารย์ไม่สำเร็จ",
+      },
       { status: 500 },
     );
   }
@@ -207,8 +212,9 @@ export async function DELETE(req: Request) {
 
   try {
     const client = await clientPromise;
-    // Classes store a snapshot of their teachers; preserve those existing records.
-    const result = await client.db("attendance").collection<TeacherDocument>("teachers")
+    const result = await client
+      .db("attendance")
+      .collection<TeacherDocument>("teachers")
       .deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
@@ -220,7 +226,6 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true, message: "ลบอาจารย์สำเร็จ" });
   } catch (error) {
-    console.error("DELETE TEACHER ERROR:", error);
     return NextResponse.json(
       { success: false, message: "ลบอาจารย์ไม่สำเร็จ กรุณาลองอีกครั้ง" },
       { status: 500 },

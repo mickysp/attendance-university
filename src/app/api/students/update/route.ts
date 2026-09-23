@@ -230,8 +230,6 @@ export async function PUT(req: Request) {
       },
     );
   } catch (error: unknown) {
-    console.error("UPDATE STUDENT ERROR:", error);
-
     return NextResponse.json(
       {
         success: false,
