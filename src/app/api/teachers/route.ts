@@ -132,6 +132,7 @@ export async function PATCH(req: Request) {
         category: "accounts",
         action: "update",
         message: `แก้ไขอาจารย์ “${name}”`,
+        targetType: "teachers",
         target: name,
       });
     }
@@ -218,6 +219,7 @@ export async function POST(req: Request) {
             category: "accounts",
             action: "create",
             message: `เพิ่มอาจารย์ “${teacher.name}”`,
+            targetType: "teachers",
             target: teacher.name,
           }),
         ),
@@ -289,6 +291,7 @@ export async function DELETE(req: Request) {
         category: "accounts",
         action: "delete",
         message: `ลบอาจารย์ “${existingTeacher.name}”`,
+        targetType: "teachers",
         target: existingTeacher.name,
       });
     }

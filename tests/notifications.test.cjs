@@ -21,6 +21,17 @@ function loadTs(file, dependencies = {}) {
 
 const { notificationStream } = loadTs("src/lib/notification-stream.ts");
 
+test("teacher notifications open teachers for both legacy and new activities", () => {
+  const { notificationHref } = loadTs("src/lib/notification-links.ts");
+  for (const [action, verb] of [["create", "เพิ่ม"], ["update", "แก้ไข"], ["delete", "ลบ"]]) {
+    assert.equal(notificationHref({ category: "accounts", action, message: `${verb}อาจารย์ “สมชาย”` }), "/teachers");
+    assert.equal(notificationHref({ category: "accounts", action, targetType: "teachers", message: "ข้อความใหม่" }), "/teachers");
+  }
+  assert.equal(notificationHref({ category: "accounts", message: "เพิ่มผู้ดูแลระบบ “อาจารย์ สมชาย”" }), "/administrators");
+  assert.equal(notificationHref({ category: "accounts", targetType: "administrators", message: "เพิ่มอาจารย์ สมชาย" }), "/administrators");
+  assert.equal(notificationHref({ category: "accounts", message: null }), "/administrators");
+});
+
 test("notification links resolve class details and safely handle old or deleted targets", () => {
   const { notificationHref } = loadTs("src/lib/notification-links.ts");
   const id = "123456789012345678901234";

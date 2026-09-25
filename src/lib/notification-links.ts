@@ -4,6 +4,8 @@ type ActivityTarget = {
   action?: unknown;
   target?: unknown;
   targetId?: unknown;
+  targetType?: unknown;
+  message?: unknown;
 };
 
 type ExistingClass = { _id: unknown; className?: unknown };
@@ -28,7 +30,16 @@ export function notificationHref(
     const id = matches.length === 1 ? String(matches[0]._id) : "";
     return /^[a-f\d]{24}$/i.test(id) ? `/classes/form/${id}` : "/classes";
   }
-  if (log.category === "accounts") return "/administrators";
+  if (log.category === "accounts") {
+    // Older teacher activities share the accounts category with administrators.
+    const legacyTeacherActivity =
+      !log.targetType &&
+      typeof log.message === "string" &&
+      /^(เพิ่ม|แก้ไข|ลบ)อาจารย์(?:\s|$)/u.test(log.message.trim());
+    return log.targetType === "teachers" || legacyTeacherActivity
+      ? "/teachers"
+      : "/administrators";
+  }
   if (log.category === "students") return "/students";
   return "/attendance";
 }

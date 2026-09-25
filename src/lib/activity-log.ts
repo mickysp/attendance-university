@@ -9,6 +9,7 @@ type ActivityInput = {
   message: string;
   target?: string;
   targetId?: string;
+  targetType?: "teachers" | "administrators";
 };
 
 export async function recordActivity(input: ActivityInput) {
@@ -29,6 +30,7 @@ export async function recordActivity(input: ActivityInput) {
       message: input.message,
       ...(input.target ? { target: input.target } : {}),
       ...(input.targetId ? { targetId: input.targetId } : {}),
+      ...(input.targetType ? { targetType: input.targetType } : {}),
       createdAt: new Date(),
     });
   } catch (error) {
