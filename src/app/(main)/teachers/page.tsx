@@ -94,8 +94,9 @@ export default function TeachersPage() {
             .filter(Boolean);
 
           const duplicate = existingNames.some(
-            (existingName) =>
-              normalizeTeacherName(existingName) === normalizeTeacherName(trimmedName) &&
+            (existingName: string) =>
+              normalizeTeacherName(existingName) ===
+                normalizeTeacherName(trimmedName) &&
               (!teacher ||
                 normalizeTeacherName(existingName) !==
                   normalizeTeacherName(teacher.name.trim())),
@@ -111,6 +112,13 @@ export default function TeachersPage() {
             }),
           );
         },
+        onSaveMany: teacher
+          ? undefined
+          : async (names) => {
+              await readResponse(
+                await teachersApi.createMany(names.map((name) => ({ name }))),
+              );
+            },
       });
       if (result.isConfirmed) {
         if (!teacher) setKeyword("");

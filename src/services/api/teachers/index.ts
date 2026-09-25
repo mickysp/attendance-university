@@ -17,6 +17,13 @@ export const teachersApi = {
       json: data,
     });
   },
+  createMany(data: { name: string }[], options?: ApiRequestOptions) {
+    return apiRequest("/teachers", {
+      ...options,
+      method: "POST",
+      json: data,
+    });
+  },
   remove(id: string, options?: ApiRequestOptions) {
     return apiRequest("/teachers", {
       ...options,

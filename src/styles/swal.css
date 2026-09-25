@@ -273,6 +273,54 @@
   box-shadow: 0 0 0 3px rgb(59 130 246 / 10%);
 }
 
+.app-swal-teacher-batch {
+  grid-column: 1 / -1;
+  min-width: 0;
+  text-align: left;
+}
+
+.app-swal-teacher-rows {
+  max-height: 32vh;
+  overflow-y: auto;
+}
+
+.app-swal-teacher-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 0 3px 3px;
+}
+
+.app-swal-teacher-row label {
+  grid-column: 1 / -1;
+}
+
+.app-swal-add-teacher,
+.app-swal-remove-teacher {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.app-swal-add-teacher {
+  margin-top: 16px;
+  border: 1px solid #bfdbfe;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.app-swal-remove-teacher {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.app-swal-teacher-batch button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .app-swal-popup .swal2-actions {
   gap: 12px;
 }

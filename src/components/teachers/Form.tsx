@@ -23,25 +23,47 @@ export default function TeacherForm({ id }: { id?: string }) {
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
   const [name, setName] = useState("");
+  const [additionalTeachers, setAdditionalTeachers] = useState<
+    { key: number; name: string }[]
+  >([]);
+  const nextTeacherKey = useRef(1);
   const [originalName, setOriginalName] = useState("");
   const [loading, setLoading] = useState(Boolean(id));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [existingTeacherNames, setExistingTeacherNames] = useState<string[]>([]);
+  const [existingTeacherNames, setExistingTeacherNames] = useState<string[]>(
+    [],
+  );
   const [retry, setRetry] = useState(0);
   const busy = useRef(false);
   const title = id ? "แก้ไขอาจารย์" : "เพิ่มอาจารย์";
 
   const trimmedName = name.trim();
-  const isDuplicateName = (() => {
-    if (!trimmedName) return false;
+  const names = [
+    trimmedName,
+    ...additionalTeachers.map((teacher) => teacher.name.trim()),
+  ];
+  const duplicateMessage = (value: string) => {
+    if (!value.trim()) return "";
+    const normalized = normalizeTeacherName(value);
+    if (
+      names.filter((item) => normalizeTeacherName(item) === normalized).length >
+      1
+    ) {
+      return "ชื่อซ้ำกับอาจารย์ที่กำลังเพิ่ม";
+    }
     const currentName = normalizeTeacherName(originalName);
-    if (id && normalizeTeacherName(trimmedName) === currentName) return false;
+    if (id && normalized === currentName) return "";
     return existingTeacherNames.some(
-      (teacherName) =>
-        normalizeTeacherName(teacherName) === normalizeTeacherName(trimmedName),
-    );
-  })();
+      (teacherName) => normalizeTeacherName(teacherName) === normalized,
+    )
+      ? "มีชื่อนี้ในระบบแล้ว"
+      : "";
+  };
+  const isDuplicateName = Boolean(duplicateMessage(name));
+  const invalidNames = names.some(
+    (value) => !value || Boolean(duplicateMessage(value)),
+  );
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -112,7 +134,10 @@ export default function TeacherForm({ id }: { id?: string }) {
 
   const leave = () => {
     if (saving) return;
-    if (name.trim() !== originalName) {
+    if (
+      name.trim() !== originalName ||
+      additionalTeachers.some((teacher) => teacher.name.trim())
+    ) {
       void showConfirm(
         "ยกเลิกการกรอกข้อมูล?",
         () => router.push("/teachers"),
@@ -124,7 +149,7 @@ export default function TeacherForm({ id }: { id?: string }) {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!trimmedName || isDuplicateName || busy.current) return;
+    if (invalidNames || busy.current) return;
     void showConfirm(
       id ? "บันทึกการแก้ไขอาจารย์?" : "เพิ่มอาจารย์?",
       async () => {
@@ -132,10 +157,9 @@ export default function TeacherForm({ id }: { id?: string }) {
         busy.current = true;
         setSaving(true);
         try {
-          const res = await teachersApi.save({
-            ...(id ? { id } : {}),
-            name: trimmedName,
-          });
+          const res = id
+            ? await teachersApi.save({ id, name: trimmedName })
+            : await teachersApi.createMany(names.map((name) => ({ name })));
           const result = await res.json();
           if (!res.ok || !result.success)
             throw new Error(result.message || "บันทึกข้อมูลไม่สำเร็จ");
@@ -152,7 +176,9 @@ export default function TeacherForm({ id }: { id?: string }) {
         }
       },
       "info",
-      `ยืนยันการบันทึกข้อมูลอาจารย์ ${trimmedName}`,
+      id
+        ? `ยืนยันการบันทึกข้อมูลอาจารย์ ${trimmedName}`
+        : `ยืนยันการเพิ่มอาจารย์ทั้งหมด ${names.length} คน`,
     );
   };
 
@@ -212,7 +238,9 @@ export default function TeacherForm({ id }: { id?: string }) {
                   <div>
                     <h2 className="font-medium text-gray-800">ข้อมูลอาจารย์</h2>
                     <p className="mt-1 text-sm text-gray-400">
-                      กรอกชื่อ-นามสกุลให้ครบถ้วน
+                      {id
+                        ? "กรอกชื่อ-นามสกุลให้ครบถ้วน"
+                        : "กรอกชื่อ-นามสกุลให้ครบถ้วน สามารถเพิ่มอาจารย์หลายคนแล้วบันทึกพร้อมกันได้"}
                     </p>
                   </div>
                 </div>
@@ -234,15 +262,101 @@ export default function TeacherForm({ id }: { id?: string }) {
                     placeholder="กรอกชื่อ-นามสกุลอาจารย์"
                     aria-invalid={isDuplicateName}
                     className={`form-input w-full ${
-                      isDuplicateName ? "border-red-300 bg-red-50 text-red-700" : ""
+                      isDuplicateName
+                        ? "border-red-300 bg-red-50 text-red-700"
+                        : ""
                     }`}
                   />
                   {isDuplicateName && (
                     <p className="mt-2 text-sm text-red-600">
-                      มีชื่อนี้ในระบบแล้ว
+                      {duplicateMessage(name)}
                     </p>
                   )}
                 </div>
+                {!id && (
+                  <div className="mt-4 max-w-2xl space-y-4">
+                    {additionalTeachers.map((teacher, index) => {
+                      const message = duplicateMessage(teacher.name);
+                      return (
+                        <div key={teacher.key}>
+                          <label
+                            htmlFor={`teacher-name-${teacher.key}`}
+                            className="mb-2 block text-sm font-medium text-gray-600"
+                          >
+                            ชื่อ-นามสกุลอาจารย์ คนที่ {index + 2}{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              id={`teacher-name-${teacher.key}`}
+                              required
+                              autoFocus
+                              value={teacher.name}
+                              onChange={(event) =>
+                                setAdditionalTeachers((items) =>
+                                  items.map((item) =>
+                                    item.key === teacher.key
+                                      ? { ...item, name: event.target.value }
+                                      : item,
+                                  ),
+                                )
+                              }
+                              disabled={saving}
+                              placeholder="กรอกชื่อ-นามสกุลอาจารย์"
+                              aria-invalid={Boolean(message)}
+                              aria-describedby={
+                                message
+                                  ? `teacher-error-${teacher.key}`
+                                  : undefined
+                              }
+                              className={`form-input min-w-0 flex-1 ${message ? "border-red-300 bg-red-50 text-red-700" : ""}`}
+                            />
+                            <button
+                              type="button"
+                              disabled={saving}
+                              aria-label={`ลบอาจารย์ คนที่ ${index + 2}`}
+                              onClick={() =>
+                                setAdditionalTeachers((items) =>
+                                  items.filter(
+                                    (item) => item.key !== teacher.key,
+                                  ),
+                                )
+                              }
+                              className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              ลบ
+                            </button>
+                          </div>
+                          {message && (
+                            <p
+                              id={`teacher-error-${teacher.key}`}
+                              className="mt-2 text-sm text-red-600"
+                            >
+                              {message}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => {
+                        const key = nextTeacherKey.current++;
+                        setAdditionalTeachers((items) => [
+                          ...items,
+                          { key, name: "" },
+                        ]);
+                      }}
+                      className="min-h-11 cursor-pointer rounded-md border border-blue-200 px-4 py-2 text-sm text-blue-500 hover:bg-blue-50 disabled:opacity-50"
+                    >
+                      + เพิ่มอาจารย์อีกคน
+                    </button>
+                    <p className="text-sm text-gray-400">
+                      ทั้งหมด {names.length} คน
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-6">
@@ -258,8 +372,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                   type="submit"
                   disabled={
                     saving ||
-                    !trimmedName ||
-                    isDuplicateName ||
+                    invalidNames ||
                     Boolean(id && trimmedName === originalName.trim())
                   }
                   className="min-h-11 cursor-pointer rounded-md bg-(--primary) px-6 py-2 text-sm text-white hover:bg-(--primary-hover) disabled:opacity-50"

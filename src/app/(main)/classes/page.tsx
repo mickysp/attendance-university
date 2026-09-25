@@ -18,7 +18,7 @@ export default function ClassesPage() {
 
   const [filter, setFilter] = useState({
     keyword: "",
-    branch: "",
+    teacherId: "",
   });
 
   const fetchData = useCallback(async (background = false) => {
@@ -72,9 +72,11 @@ export default function ClassesPage() {
         classCode.toLowerCase().includes(keyword),
       );
 
-    const matchBranch = true;
+    const matchTeacher =
+      !filter.teacherId ||
+      item.teachers.some((teacher) => teacher._id === filter.teacherId);
 
-    return matchKeyword && matchBranch;
+    return matchKeyword && matchTeacher;
   });
 
   const hasData = classes.length > 0;
@@ -186,7 +188,7 @@ export default function ClassesPage() {
 
             <div className="shrink-0 px-6 pb-4">
               <div className="flex items-center justify-between">
-                <Select data={classes} onChange={setFilter} />
+                <Select data={classes} value={filter} onChange={setFilter} />
               </div>
 
               <div className="mt-6 text-base font-semibold text-gray-600">

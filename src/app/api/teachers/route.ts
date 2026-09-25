@@ -17,9 +17,6 @@ const normalizeTeacherName = (value: string) => {
     .trim();
 };
 
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 export async function GET(req: Request) {
   try {
     const client = await clientPromise;
@@ -163,6 +160,18 @@ export async function POST(req: Request) {
       ? body
       : [body];
 
+    if (
+      !teacherList.length ||
+      teacherList.some(
+        (item) => typeof item?.name !== "string" || !item.name.trim(),
+      )
+    ) {
+      return NextResponse.json(
+        { success: false, message: "กรุณากรอกชื่ออาจารย์ให้ครบทุกคน" },
+        { status: 400 },
+      );
+    }
+
     const client = await clientPromise;
 
     const db = client.db("attendance");
@@ -171,61 +180,31 @@ export async function POST(req: Request) {
 
     const insertData: TeacherDocument[] = [];
     const seenNames = new Set<string>();
+    const existingTeachers = await teachers
+      .find({}, { projection: { name: 1 } })
+      .toArray();
+    const existingNames = new Set(
+      existingTeachers.map((teacher) =>
+        normalizeTeacherName(String(teacher.name ?? "")),
+      ),
+    );
 
     for (const item of teacherList) {
       const name = typeof item?.name === "string" ? item.name.trim() : "";
 
-      if (!name) {
-        continue;
-      }
-
       const normalized = normalizeTeacherName(name);
-      if (seenNames.has(normalized)) {
+      if (seenNames.has(normalized) || existingNames.has(normalized)) {
         return NextResponse.json(
-          { success: false, message: "มีชื่อนี้ในระบบแล้ว" },
+          { success: false, message: `ชื่ออาจารย์ซ้ำ: ${name}` },
           { status: 409 },
         );
       }
       seenNames.add(normalized);
 
-      const exists = await teachers.findOne({
-        name: { $regex: `^${escapeRegExp(name)}$`, $options: "i" },
-      });
-
-      if (exists) {
-        const existingTeachers = await teachers.find({}).toArray();
-        const duplicate = existingTeachers.some(
-          (teacher) => normalizeTeacherName(String(teacher.name ?? "")) === normalized,
-        );
-
-        if (duplicate) {
-          return NextResponse.json(
-            { success: false, message: "มีชื่อนี้ในระบบแล้ว" },
-            { status: 409 },
-          );
-        }
-      }
-
       insertData.push({
         name,
         createdAt: new Date(),
       });
-    }
-
-    if (insertData.length === 0) {
-      const hasNameInput = teacherList.some(
-        (item) => typeof item?.name === "string" && item.name.trim(),
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: hasNameInput ? "มีชื่อนี้ในระบบแล้ว" : "ไม่มีข้อมูลใหม่ให้เพิ่ม",
-        },
-        {
-          status: hasNameInput ? 409 : 400,
-        },
-      );
     }
 
     const result = await teachers.insertMany(insertData);
@@ -279,7 +258,9 @@ export async function DELETE(req: Request) {
 
   try {
     const client = await clientPromise;
-    const teachers = client.db("attendance").collection<TeacherDocument>("teachers");
+    const teachers = client
+      .db("attendance")
+      .collection<TeacherDocument>("teachers");
     const existingTeacher = await teachers.findOne(
       { _id: new ObjectId(id) },
       { projection: { name: 1 } },

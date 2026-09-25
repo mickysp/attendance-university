@@ -198,17 +198,23 @@ export const appSwal = {
     title,
     initialValue = "",
     onSave,
+    onSaveMany,
     validateName,
   }: {
     title: string;
     initialValue?: string;
     onSave: (name: string) => Promise<void>;
-    validateName?: (name: string) => Promise<string | undefined> | string | undefined;
+    onSaveMany?: (names: string[]) => Promise<void>;
+    validateName?: (
+      name: string,
+    ) => Promise<string | undefined> | string | undefined;
   }) {
     return Swal.fire({
       ...baseSwalOptions,
       titleText: title,
-      text: "กรอกชื่อ-นามสกุลอาจารย์ให้ครบถ้วนก่อนบันทึก",
+      text: onSaveMany
+        ? "กรอกชื่อ-นามสกุล และกดเพิ่มอาจารย์อีกคนเพื่อบันทึกหลายคนพร้อมกัน"
+        : "กรอกชื่อ-นามสกุลอาจารย์ให้ครบถ้วนก่อนบันทึก",
       iconHtml:
         '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-5 9 5-9 5-9-5Zm3 2v6c3 3 9 3 12 0v-6M21 9v7" /></svg>',
       input: "text",
@@ -222,6 +228,52 @@ export const appSwal = {
       confirmButtonText: "บันทึก",
       reverseButtons: true,
       showLoaderOnConfirm: true,
+      didOpen: () => {
+        if (!onSaveMany) return;
+        const input = Swal.getInput();
+        if (!input) return;
+        const container = document.createElement("div");
+        container.className = "app-swal-teacher-batch";
+        const rows = document.createElement("div");
+        rows.className = "app-swal-teacher-rows";
+        const add = document.createElement("button");
+        add.type = "button";
+        add.className = "app-swal-add-teacher";
+        add.textContent = "+ เพิ่มอาจารย์อีกคน";
+        let nextId = 1;
+        add.onclick = () => {
+          if (Swal.isLoading()) return;
+          Swal.resetValidationMessage();
+          const row = document.createElement("div");
+          row.className = "app-swal-teacher-row";
+          const label = document.createElement("label");
+          label.className = "app-swal-input-label";
+          label.textContent = "ชื่อ-นามสกุลอาจารย์";
+          const field = document.createElement("input");
+          field.id = `app-swal-teacher-${nextId++}`;
+          field.className = "swal2-input app-swal-input";
+          field.placeholder = "กรอกชื่อ-นามสกุลอาจารย์";
+          field.autocomplete = "name";
+          field.dataset.teacherName = "true";
+          label.htmlFor = field.id;
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "app-swal-remove-teacher";
+          remove.textContent = "ลบ";
+          remove.setAttribute("aria-label", "ลบช่องอาจารย์นี้");
+          remove.onclick = () => {
+            if (Swal.isLoading()) return;
+            row.remove();
+            Swal.resetValidationMessage();
+            add.focus();
+          };
+          row.append(label, field, remove);
+          rows.append(row);
+          field.focus();
+        };
+        container.append(rows, add);
+        input.after(container);
+      },
 
       inputValidator: async (value) => {
         const trimmed = value.trim();
@@ -234,8 +286,41 @@ export const appSwal = {
       },
 
       preConfirm: async (value: string) => {
+        const controls = Swal.getPopup()?.querySelectorAll<
+          HTMLInputElement | HTMLButtonElement
+        >(".app-swal-teacher-batch input, .app-swal-teacher-batch button");
         try {
-          await onSave(value.trim());
+          if (onSaveMany) {
+            const fields = Array.from(
+              Swal.getPopup()?.querySelectorAll<HTMLInputElement>(
+                "[data-teacher-name]",
+              ) ?? [],
+            );
+            const names = [
+              value.trim(),
+              ...fields.map((field) => field.value.trim()),
+            ];
+            if (names.some((name) => !name)) {
+              Swal.showValidationMessage(
+                "กรุณากรอกชื่อ-นามสกุลอาจารย์ให้ครบทุกคน",
+              );
+              return false;
+            }
+            if (
+              new Set(names.map(normalizeTeacherName)).size !== names.length
+            ) {
+              Swal.showValidationMessage(
+                "มีชื่ออาจารย์ซ้ำในรายการที่กำลังเพิ่ม",
+              );
+              return false;
+            }
+            controls?.forEach((control) => {
+              control.disabled = true;
+            });
+            await onSaveMany(names);
+          } else {
+            await onSave(value.trim());
+          }
           return true;
         } catch (error) {
           Swal.showValidationMessage("บันทึกไม่สำเร็จ");
@@ -246,6 +331,10 @@ export const appSwal = {
                 ? error.message
                 : "บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง";
           return false;
+        } finally {
+          controls?.forEach((control) => {
+            control.disabled = false;
+          });
         }
       },
       customClass: {
