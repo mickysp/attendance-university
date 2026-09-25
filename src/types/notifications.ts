@@ -1,9 +1,7 @@
 export type NotificationCategory =
   "accounts" | "classes" | "students" | "attendance";
 
-export type NotificationPreferences = Record<NotificationCategory, boolean> & {
-  othersOnly: boolean;
-};
+export type NotificationPreferences = Record<NotificationCategory, boolean>;
 
 export type ActivityNotification = {
   id: string;
@@ -15,6 +13,7 @@ export type ActivityNotification = {
   target?: string;
   createdAt: string;
   unread: boolean;
+  href: string;
 };
 
 export type NotificationsResponse = {
@@ -22,4 +21,11 @@ export type NotificationsResponse = {
   data: ActivityNotification[];
   unreadCount: number;
   settings: NotificationPreferences;
+  readThrough: string;
+  readCount: number;
+  totalCount: number;
+  page: number;
+  hasMore: boolean;
 };
+
+export type NotificationFilter = "all" | "unread" | "read";

@@ -8,6 +8,7 @@ type ActivityInput = {
   action: "create" | "update" | "delete";
   message: string;
   target?: string;
+  targetId?: string;
 };
 
 export async function recordActivity(input: ActivityInput) {
@@ -27,6 +28,7 @@ export async function recordActivity(input: ActivityInput) {
       action: input.action,
       message: input.message,
       ...(input.target ? { target: input.target } : {}),
+      ...(input.targetId ? { targetId: input.targetId } : {}),
       createdAt: new Date(),
     });
   } catch (error) {

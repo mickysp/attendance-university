@@ -103,15 +103,9 @@ export default function NotificationSettingsSection({
           />
         ))}
 
-        <SettingToggle
-          label="แสดงเฉพาะกิจกรรมของผู้อื่น"
-          description="ซ่อนกิจกรรมที่คุณเป็นผู้ดำเนินการเอง"
-          checked={settings.othersOnly}
-          disabled={saving}
-          onChange={() =>
-            void update({ ...settings, othersOnly: !settings.othersOnly })
-          }
-        />
+        <p className="py-4 text-xs leading-5 text-gray-500">
+          แสดงกิจกรรมของทุกคน รวมถึงรายการที่คุณดำเนินการเอง ตามหมวดหมู่ที่เลือก
+        </p>
       </div>
     </section>
   );

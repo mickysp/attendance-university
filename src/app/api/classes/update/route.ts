@@ -245,6 +245,7 @@ export async function PUT(req: Request) {
         action: "update",
         message: `แก้ไขชั้นเรียน “${targetName}”`,
         target: targetName,
+        targetId: String(existing._id),
       });
     }
 

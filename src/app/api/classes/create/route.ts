@@ -155,14 +155,18 @@ export async function POST(req: Request) {
     const result = await classes.insertMany(insertData);
     const actor = await currentUser();
     if (actor) {
-      const names = insertData.map((item) => item.className).join(", ");
-      await recordActivity({
-        actor,
-        category: "classes",
-        action: "create",
-        message: `สร้างชั้นเรียน “${names}”`,
-        target: names,
-      });
+      await Promise.all(
+        insertData.map((item, index) =>
+          recordActivity({
+            actor,
+            category: "classes",
+            action: "create",
+            message: `สร้างชั้นเรียน “${item.className}”`,
+            target: item.className,
+            targetId: String(result.insertedIds[index]),
+          }),
+        ),
+      );
     }
 
     return NextResponse.json(

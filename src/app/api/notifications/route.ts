@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/admin-auth";
 import clientPromise from "@/lib/mongodb";
+import { ObjectId, type Db, type Document } from "mongodb";
+import { notificationHref } from "@/lib/notification-links";
 import type {
   NotificationCategory,
   NotificationPreferences,
@@ -18,7 +20,6 @@ const defaults: NotificationPreferences = {
   classes: true,
   students: true,
   attendance: true,
-  othersOnly: true,
 };
 
 function normalizeSettings(value: unknown): NotificationPreferences {
@@ -29,11 +30,32 @@ function normalizeSettings(value: unknown): NotificationPreferences {
     classes: source.classes !== false,
     students: source.students !== false,
     attendance: source.attendance !== false,
-    othersOnly: source.othersOnly !== false,
   };
 }
 
-export async function GET() {
+async function linkedClasses(db: Db, logs: Document[]) {
+  const classLogs = logs.filter(
+    (log) => log.category === "classes" && log.action !== "delete",
+  );
+  const ids = classLogs.flatMap((log) =>
+    typeof log.targetId === "string" && ObjectId.isValid(log.targetId)
+      ? [new ObjectId(log.targetId)]
+      : [],
+  );
+  const names = classLogs.flatMap((log) =>
+    !log.targetId && typeof log.target === "string" ? [log.target] : [],
+  );
+  if (!ids.length && !names.length) return [];
+  return db
+    .collection("classes")
+    .find(
+      { $or: [{ _id: { $in: ids } }, { className: { $in: names } }] },
+      { projection: { _id: 1, className: 1 } },
+    )
+    .toArray();
+}
+
+export async function GET(request: Request) {
   const user = await currentUser();
   if (!user) {
     return NextResponse.json(
@@ -43,6 +65,21 @@ export async function GET() {
   }
 
   const db = (await clientPromise).db("attendance");
+  const params = new URL(request.url).searchParams;
+  const status = params.get("status") ?? "all";
+  const page = Number(params.get("page") ?? 1);
+  if (
+    !["all", "read", "unread"].includes(status) ||
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    page > 100000
+  )
+    return NextResponse.json(
+      { success: false, message: "ตัวกรองไม่ถูกต้อง" },
+      { status: 400 },
+    );
+  const pageSize = 30;
+  const readThrough = new Date();
   const settings = normalizeSettings(user.notificationPreferences);
   const enabled = categories.filter((category) => settings[category]);
   const state = await db.collection("notification_states").findOne({
@@ -52,19 +89,68 @@ export async function GET() {
     state?.lastReadAt instanceof Date ? state.lastReadAt : null;
   const filter = {
     category: { $in: enabled },
-    ...(settings.othersOnly ? { actorId: { $ne: user._id } } : {}),
+    createdAt: { $lte: readThrough },
   };
-  const logs = await db
+  const [result] = await db
     .collection("activity_logs")
-    .find(filter)
-    .sort({ createdAt: -1 })
-    .limit(30)
+    .aggregate<{
+      data: Document[];
+      counts: { _id: boolean; count: number }[];
+    }>([
+      { $match: filter },
+      {
+        $set: {
+          receiptId: {
+            $concat: [String(user._id) + ":", { $toString: "$_id" }],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "notification_reads",
+          localField: "receiptId",
+          foreignField: "_id",
+          as: "receipts",
+        },
+      },
+      {
+        $set: {
+          unread: {
+            $and: [
+              lastReadAt ? { $gt: ["$createdAt", lastReadAt] } : true,
+              { $eq: [{ $size: "$receipts" }, 0] },
+            ],
+          },
+        },
+      },
+      {
+        $facet: {
+          counts: [{ $group: { _id: "$unread", count: { $sum: 1 } } }],
+          data: [
+            ...(status === "all"
+              ? []
+              : [{ $match: { unread: status === "unread" } }]),
+            { $sort: { createdAt: -1, _id: -1 } },
+            { $skip: (page - 1) * pageSize },
+            { $limit: pageSize },
+            { $unset: ["receipts", "receiptId"] },
+          ],
+        },
+      },
+    ])
     .toArray();
-
-  const unreadCount = await db.collection("activity_logs").countDocuments({
-    ...filter,
-    ...(lastReadAt ? { createdAt: { $gt: lastReadAt } } : {}),
-  });
+  const logs = result?.data ?? [];
+  const counts = result?.counts ?? [];
+  const unreadCount = counts.find((item) => item._id === true)?.count ?? 0;
+  const readCount = counts.find((item) => item._id === false)?.count ?? 0;
+  const totalCount = readCount + unreadCount;
+  const filteredCount =
+    status === "unread"
+      ? unreadCount
+      : status === "read"
+        ? readCount
+        : totalCount;
+  const classes = await linkedClasses(db, logs);
 
   const data = logs.map((log) => ({
     id: String(log._id),
@@ -78,15 +164,24 @@ export async function GET() {
       log.createdAt instanceof Date
         ? log.createdAt.toISOString()
         : new Date(log.createdAt).toISOString(),
-    unread: !lastReadAt || new Date(log.createdAt) > lastReadAt,
+    unread: Boolean(log.unread),
+    href: notificationHref(log, classes),
   }));
 
-  return NextResponse.json({
-    success: true,
-    data,
-    unreadCount,
-    settings,
-  });
+  return NextResponse.json(
+    {
+      success: true,
+      data,
+      unreadCount,
+      settings,
+      readThrough: readThrough.toISOString(),
+      readCount,
+      totalCount,
+      page,
+      hasMore: page * pageSize < filteredCount,
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function PATCH(req: Request) {
@@ -101,12 +196,55 @@ export async function PATCH(req: Request) {
   const body = await req.json().catch(() => null);
   const db = (await clientPromise).db("attendance");
 
+  if (body?.action === "mark-read") {
+    if (typeof body.id !== "string" || !ObjectId.isValid(body.id))
+      return NextResponse.json(
+        { success: false, message: "รายการไม่ถูกต้อง" },
+        { status: 400 },
+      );
+    const log = await db
+      .collection("activity_logs")
+      .findOne({ _id: new ObjectId(body.id) });
+    if (!log)
+      return NextResponse.json(
+        { success: false, message: "ไม่พบกิจกรรมนี้" },
+        { status: 404 },
+      );
+    // The primary key makes repeated clicks idempotent and isolates each user.
+    await db
+      .collection<Document & { _id: string }>("notification_reads")
+      .updateOne(
+        { _id: `${user._id}:${log._id}` },
+        {
+          $setOnInsert: {
+            userId: user._id,
+            notificationId: log._id,
+            readAt: new Date(),
+          },
+        },
+        { upsert: true },
+      );
+    return NextResponse.json({
+      success: true,
+      href: notificationHref(log, await linkedClasses(db, [log])),
+    });
+  }
+
   if (body?.action === "mark-all-read") {
+    const readThrough = new Date(body.readThrough ?? Date.now());
+    if (
+      !Number.isFinite(readThrough.getTime()) ||
+      readThrough.getTime() > Date.now()
+    )
+      return NextResponse.json(
+        { success: false, message: "เวลาอ่านไม่ถูกต้อง" },
+        { status: 400 },
+      );
     await db
       .collection("notification_states")
       .updateOne(
         { _id: user._id },
-        { $set: { lastReadAt: new Date() } },
+        { $max: { lastReadAt: readThrough } },
         { upsert: true },
       );
     return NextResponse.json({ success: true });

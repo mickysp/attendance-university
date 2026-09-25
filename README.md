@@ -20,6 +20,36 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Live activity notifications
+
+The notification bell subscribes to `/api/notifications/stream` using SSE
+(`EventSource`). MongoDB change streams notify connected clients when a new
+`activity_logs` entry is committed, including entries written by another app
+instance. The client reloads its filtered feed and unread count on each event.
+Existing activity logging currently covers account and class operations through
+`recordActivity`; new operations should call that helper after a successful write.
+
+- MongoDB must be a replica set (including Atlas) or a sharded cluster, with
+  permission to open a database change stream. A standalone MongoDB server does
+  not support this feature.
+- Hosting must support streaming responses for the Node.js route and allow at
+  least 60 seconds per request. Disable reverse-proxy buffering for this endpoint
+  (the route sends `X-Accel-Buffering: no`).
+- Connections close after 55 seconds and automatically reconnect. A fresh snapshot
+  on connection/reconnection recovers events missed while disconnected. Hidden
+  tabs disconnect and reconnect when visible again.
+- During a connection failure, the bell temporarily falls back to a 30-second
+  refresh while SSE retries. Normal connected operation is event-driven.
+- Session validity is checked on changes and heartbeats. Reading notifications in
+  another tab and changing notification preferences also refresh the feed.
+- No additional environment variables or Socket.IO server are required.
+
+Run the notification and session regression tests with:
+
+```bash
+node --test --experimental-test-isolation=none tests/notifications.test.cjs tests/session.test.cjs
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

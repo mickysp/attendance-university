@@ -1,16 +1,34 @@
 import { apiRequest, type ApiRequestOptions } from "@/services/api/client";
-import type { NotificationPreferences } from "@/types/notifications";
+import type {
+  NotificationFilter,
+  NotificationPreferences,
+} from "@/types/notifications";
 
 export const notificationsApi = {
-  list(options: ApiRequestOptions = {}) {
-    return apiRequest("/notifications", { ...options, credentials: "include" });
+  list(
+    options: ApiRequestOptions = {},
+    query: { status?: NotificationFilter; page?: number } = {},
+  ) {
+    return apiRequest("/notifications", {
+      ...options,
+      credentials: "include",
+      query,
+    });
   },
-  markAllRead(options: ApiRequestOptions = {}) {
+  markRead(id: string, options: ApiRequestOptions = {}) {
     return apiRequest("/notifications", {
       ...options,
       method: "PATCH",
       credentials: "include",
-      json: { action: "mark-all-read" },
+      json: { action: "mark-read", id },
+    });
+  },
+  markAllRead(readThrough: string, options: ApiRequestOptions = {}) {
+    return apiRequest("/notifications", {
+      ...options,
+      method: "PATCH",
+      credentials: "include",
+      json: { action: "mark-all-read", readThrough },
     });
   },
   updateSettings(

@@ -83,6 +83,7 @@ export async function DELETE(req: Request) {
         action: "delete",
         message: `ลบชั้นเรียน “${existing.className}”`,
         target: existing.className,
+        targetId: String(existing._id),
       });
     }
 
