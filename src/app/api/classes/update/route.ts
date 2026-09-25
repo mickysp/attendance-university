@@ -6,6 +6,15 @@ import { ObjectId } from "mongodb";
 
 import type { ClassDocument, Teacher } from "@/types/classes";
 
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getTeacherSignature = (teachers: Teacher[] = []) =>
+  [...teachers]
+    .map((teacher) => `${teacher._id}|${teacher.name ?? ""}`)
+    .sort()
+    .join(";");
+
 type UpdateClassPayload = {
   className?: string;
   classCodes?: string[];
@@ -213,6 +222,68 @@ export async function PUT(req: Request) {
       }
 
       updateData.description = description.trim();
+    }
+
+    const nextClassName =
+      className !== undefined ? className.trim() : existing.className.trim();
+    const nextClassCodes =
+      classCodes !== undefined
+        ? Array.from(
+            new Set(
+              classCodes
+                .filter((code): code is string => typeof code === "string")
+                .map((code) => code.trim())
+                .filter(Boolean),
+            ),
+          )
+        : existing.classCodes;
+    const nextTeachers =
+      teachers !== undefined
+        ? teachers
+            .filter(
+              (teacher) =>
+                teacher &&
+                typeof teacher === "object" &&
+                typeof teacher._id === "string" &&
+                teacher._id.trim() !== "",
+            )
+            .map((teacher) => ({
+              _id: teacher._id.trim(),
+              name: typeof teacher.name === "string" ? teacher.name.trim() : "",
+            }))
+        : existing.teachers;
+    const nextDescription =
+      description !== undefined
+        ? description.trim()
+        : (existing.description ?? "").trim();
+
+    const duplicateExistingClass = await classes.findOne({
+      _id: { $ne: objectId },
+      className: {
+        $regex: `^${escapeRegExp(nextClassName)}$`,
+        $options: "i",
+      },
+    });
+
+    if (duplicateExistingClass) {
+      const sameCodes =
+        duplicateExistingClass.classCodes.length === nextClassCodes.length &&
+        nextClassCodes.every((code) => duplicateExistingClass.classCodes.includes(code));
+      const sameTeachers =
+        getTeacherSignature(duplicateExistingClass.teachers) ===
+        getTeacherSignature(nextTeachers);
+      const sameDescription =
+        (duplicateExistingClass.description ?? "").trim() === nextDescription;
+
+      if (sameCodes && sameTeachers && sameDescription) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "ข้อมูลวิชานี้มีอยู่ในระบบแล้ว ไม่สามารถบันทึกซ้ำได้",
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const result = await classes.updateOne(

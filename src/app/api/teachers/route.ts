@@ -1,8 +1,24 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 import { ObjectId } from "mongodb";
 
 import type { TeacherDocument, CreateTeacherBody } from "@/types/teachers";
+
+const normalizeTeacherName = (value: string) => {
+  return value
+    .toLowerCase()
+    .replace(
+      /(อ\.?|อาจารย์|ดร\.?|ผศ\.?|รศ\.?|ศ\.?|นาย|นางสาว|นาง|น\.ส\.?|น\.ส|นางสาว|น.ส\.?)/g,
+      "",
+    )
+    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .trim();
+};
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export async function GET(req: Request) {
   try {
@@ -83,14 +99,19 @@ export async function PATCH(req: Request) {
     const db = client.db("attendance");
     const teachers = db.collection<TeacherDocument>("teachers");
 
-    const duplicate = await teachers.findOne({
-      _id: { $ne: new ObjectId(id) },
-      name,
-    });
+    const allTeachers = await teachers
+      .find({ _id: { $ne: new ObjectId(id) } }, { projection: { name: 1 } })
+      .toArray();
+
+    const duplicate = allTeachers.some(
+      (teacher) =>
+        normalizeTeacherName(String(teacher.name ?? "")) ===
+        normalizeTeacherName(name),
+    );
 
     if (duplicate) {
       return NextResponse.json(
-        { success: false, message: "มีอาจารย์ชื่อนี้อยู่แล้ว" },
+        { success: false, message: "มีชื่อนี้ในระบบอยู่แล้ว" },
         { status: 409 },
       );
     }
@@ -105,6 +126,17 @@ export async function PATCH(req: Request) {
         { success: false, message: "ไม่พบอาจารย์ที่ต้องการแก้ไข" },
         { status: 404 },
       );
+    }
+
+    const actor = await currentUser();
+    if (actor) {
+      await recordActivity({
+        actor,
+        category: "accounts",
+        action: "update",
+        message: `แก้ไขอาจารย์ “${name}”`,
+        target: name,
+      });
     }
 
     return NextResponse.json(
@@ -138,6 +170,7 @@ export async function POST(req: Request) {
     const teachers = db.collection<TeacherDocument>("teachers");
 
     const insertData: TeacherDocument[] = [];
+    const seenNames = new Set<string>();
 
     for (const item of teacherList) {
       const name = typeof item?.name === "string" ? item.name.trim() : "";
@@ -146,16 +179,31 @@ export async function POST(req: Request) {
         continue;
       }
 
+      const normalized = normalizeTeacherName(name);
+      if (seenNames.has(normalized)) {
+        return NextResponse.json(
+          { success: false, message: "มีชื่อนี้ในระบบแล้ว" },
+          { status: 409 },
+        );
+      }
+      seenNames.add(normalized);
+
       const exists = await teachers.findOne({
-        name,
+        name: { $regex: `^${escapeRegExp(name)}$`, $options: "i" },
       });
 
       if (exists) {
-        continue;
-      }
+        const existingTeachers = await teachers.find({}).toArray();
+        const duplicate = existingTeachers.some(
+          (teacher) => normalizeTeacherName(String(teacher.name ?? "")) === normalized,
+        );
 
-      if (insertData.some((teacher) => teacher.name === name)) {
-        continue;
+        if (duplicate) {
+          return NextResponse.json(
+            { success: false, message: "มีชื่อนี้ในระบบแล้ว" },
+            { status: 409 },
+          );
+        }
       }
 
       insertData.push({
@@ -165,18 +213,37 @@ export async function POST(req: Request) {
     }
 
     if (insertData.length === 0) {
+      const hasNameInput = teacherList.some(
+        (item) => typeof item?.name === "string" && item.name.trim(),
+      );
+
       return NextResponse.json(
         {
           success: false,
-          message: "ไม่มีข้อมูลใหม่ให้เพิ่ม",
+          message: hasNameInput ? "มีชื่อนี้ในระบบแล้ว" : "ไม่มีข้อมูลใหม่ให้เพิ่ม",
         },
         {
-          status: 400,
+          status: hasNameInput ? 409 : 400,
         },
       );
     }
 
     const result = await teachers.insertMany(insertData);
+
+    const actor = await currentUser();
+    if (actor) {
+      await Promise.all(
+        insertData.map((teacher) =>
+          recordActivity({
+            actor,
+            category: "accounts",
+            action: "create",
+            message: `เพิ่มอาจารย์ “${teacher.name}”`,
+            target: teacher.name,
+          }),
+        ),
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -212,16 +279,37 @@ export async function DELETE(req: Request) {
 
   try {
     const client = await clientPromise;
-    const result = await client
-      .db("attendance")
-      .collection<TeacherDocument>("teachers")
-      .deleteOne({ _id: new ObjectId(id) });
+    const teachers = client.db("attendance").collection<TeacherDocument>("teachers");
+    const existingTeacher = await teachers.findOne(
+      { _id: new ObjectId(id) },
+      { projection: { name: 1 } },
+    );
+
+    if (!existingTeacher) {
+      return NextResponse.json(
+        { success: false, message: "ไม่พบอาจารย์ที่ต้องการลบ" },
+        { status: 404 },
+      );
+    }
+
+    const result = await teachers.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json(
         { success: false, message: "ไม่พบอาจารย์ที่ต้องการลบ" },
         { status: 404 },
       );
+    }
+
+    const actor = await currentUser();
+    if (actor) {
+      await recordActivity({
+        actor,
+        category: "accounts",
+        action: "delete",
+        message: `ลบอาจารย์ “${existingTeacher.name}”`,
+        target: existingTeacher.name,
+      });
     }
 
     return NextResponse.json({ success: true, message: "ลบอาจารย์สำเร็จ" });

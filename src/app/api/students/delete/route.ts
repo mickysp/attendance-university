@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 import type { StudentDocument, StudentClassDocument } from "@/types/students";
 
 export async function DELETE(req: Request) {
@@ -49,6 +51,18 @@ export async function DELETE(req: Request) {
     const deleteStudentResult = await studentsCol.deleteOne({
       _id: objectId,
     });
+
+    const actor = await currentUser();
+    if (actor) {
+      await recordActivity({
+        actor,
+        category: "students",
+        action: "delete",
+        message: `ลบนักศึกษา “${student.fullName}”`,
+        target: student.fullName,
+        targetId: String(student._id),
+      });
+    }
 
     return NextResponse.json(
       {

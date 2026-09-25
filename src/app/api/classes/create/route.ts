@@ -5,6 +5,15 @@ import { recordActivity } from "@/lib/activity-log";
 
 import type { IncomingClass, ClassDocument } from "@/types/classes";
 
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getTeacherSignature = (teachers: ClassDocument["teachers"] = []) =>
+  [...teachers]
+    .map((teacher) => `${teacher._id}|${teacher.name ?? ""}`)
+    .sort()
+    .join(";");
+
 export async function POST(req: Request) {
   try {
     const body: IncomingClass | IncomingClass[] = await req.json();
@@ -135,6 +144,37 @@ export async function POST(req: Request) {
           },
           { status: 400 },
         );
+      }
+
+      const fullDuplicate = await classes.findOne({
+        className: {
+          $regex: `^${escapeRegExp(className.trim())}$`,
+          $options: "i",
+        },
+      });
+
+      if (fullDuplicate) {
+        const sameCodes =
+          fullDuplicate.classCodes.length === normalizedClassCodes.length &&
+          normalizedClassCodes.every((code) =>
+            fullDuplicate.classCodes.includes(code),
+          );
+        const sameTeachers =
+          getTeacherSignature(fullDuplicate.teachers) ===
+          getTeacherSignature(normalizedTeachers);
+        const sameDescription =
+          (fullDuplicate.description ?? "").trim() ===
+          (typeof description === "string" ? description.trim() : "");
+
+        if (sameCodes && sameTeachers && sameDescription) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "วิชานี้มีอยู่ในระบบแล้ว ไม่สามารถสร้างซ้ำได้",
+            },
+            { status: 400 },
+          );
+        }
       }
 
       const newClass: ClassDocument = {

@@ -7,6 +7,17 @@ import { AcademicCapIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useAlert } from "@/context/AlertContext";
 import { useConfirm } from "@/context/swal";
 
+const normalizeTeacherName = (value: string) => {
+  return value
+    .toLowerCase()
+    .replace(
+      /(อ\.?|อาจารย์|ดร\.?|ผศ\.?|รศ\.?|ศ\.?|นาย|นางสาว|นาง|น\.ส\.?|น\.ส|นางสาว|น.ส\.?)/g,
+      "",
+    )
+    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .trim();
+};
+
 export default function TeacherForm({ id }: { id?: string }) {
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -16,12 +27,57 @@ export default function TeacherForm({ id }: { id?: string }) {
   const [loading, setLoading] = useState(Boolean(id));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [existingTeacherNames, setExistingTeacherNames] = useState<string[]>([]);
   const [retry, setRetry] = useState(0);
   const busy = useRef(false);
   const title = id ? "แก้ไขอาจารย์" : "เพิ่มอาจารย์";
 
+  const trimmedName = name.trim();
+  const isDuplicateName = (() => {
+    if (!trimmedName) return false;
+    const currentName = normalizeTeacherName(originalName);
+    if (id && normalizeTeacherName(trimmedName) === currentName) return false;
+    return existingTeacherNames.some(
+      (teacherName) =>
+        normalizeTeacherName(teacherName) === normalizeTeacherName(trimmedName),
+    );
+  })();
+
   useEffect(() => {
-    if (!id) return;
+    const abortController = new AbortController();
+
+    const loadTeacherNames = async () => {
+      try {
+        const res = await teachersApi.list({
+          cache: "no-store",
+          signal: abortController.signal,
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success)
+          throw new Error(result.message || "โหลดรายชื่ออาจารย์ไม่สำเร็จ");
+
+        if (abortController.signal.aborted) return;
+
+        setExistingTeacherNames(
+          Array.isArray(result.data)
+            ? result.data
+                .map((item: { name?: string }) =>
+                  typeof item?.name === "string" ? item.name.trim() : "",
+                )
+                .filter(Boolean)
+            : [],
+        );
+      } catch {
+        if (!abortController.signal.aborted) {
+          setExistingTeacherNames([]);
+        }
+      }
+    };
+
+    void loadTeacherNames();
+
+    if (!id) return () => abortController.abort();
+
     const controller = new AbortController();
     const load = async () => {
       setLoading(true);
@@ -48,7 +104,10 @@ export default function TeacherForm({ id }: { id?: string }) {
       }
     };
     void load();
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      abortController.abort();
+    };
   }, [id, retry]);
 
   const leave = () => {
@@ -65,7 +124,7 @@ export default function TeacherForm({ id }: { id?: string }) {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!name.trim() || busy.current) return;
+    if (!trimmedName || isDuplicateName || busy.current) return;
     void showConfirm(
       id ? "บันทึกการแก้ไขอาจารย์?" : "เพิ่มอาจารย์?",
       async () => {
@@ -75,7 +134,7 @@ export default function TeacherForm({ id }: { id?: string }) {
         try {
           const res = await teachersApi.save({
             ...(id ? { id } : {}),
-            name: name.trim(),
+            name: trimmedName,
           });
           const result = await res.json();
           if (!res.ok || !result.success)
@@ -93,7 +152,7 @@ export default function TeacherForm({ id }: { id?: string }) {
         }
       },
       "info",
-      `ยืนยันการบันทึกข้อมูลอาจารย์ ${name.trim()}`,
+      `ยืนยันการบันทึกข้อมูลอาจารย์ ${trimmedName}`,
     );
   };
 
@@ -145,7 +204,7 @@ export default function TeacherForm({ id }: { id?: string }) {
             </div>
           ) : (
             <form onSubmit={submit}>
-              <div className="rounded-xl border border-gray-100 bg-[var(--card)] p-4 sm:p-6">
+              <div className="rounded-xl border border-gray-100 bg-(--card) p-4 sm:p-6">
                 <div className="mb-6 flex items-center gap-3">
                   <div className="rounded-xl bg-blue-50 p-3 text-blue-500">
                     <AcademicCapIcon className="h-6 w-6" />
@@ -173,8 +232,16 @@ export default function TeacherForm({ id }: { id?: string }) {
                     onChange={(event) => setName(event.target.value)}
                     disabled={saving}
                     placeholder="กรอกชื่อ-นามสกุลอาจารย์"
-                    className="form-input w-full"
+                    aria-invalid={isDuplicateName}
+                    className={`form-input w-full ${
+                      isDuplicateName ? "border-red-300 bg-red-50 text-red-700" : ""
+                    }`}
                   />
+                  {isDuplicateName && (
+                    <p className="mt-2 text-sm text-red-600">
+                      มีชื่อนี้ในระบบแล้ว
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -191,10 +258,11 @@ export default function TeacherForm({ id }: { id?: string }) {
                   type="submit"
                   disabled={
                     saving ||
-                    !name.trim() ||
-                    Boolean(id && name.trim() === originalName)
+                    !trimmedName ||
+                    isDuplicateName ||
+                    Boolean(id && trimmedName === originalName.trim())
                   }
-                  className="min-h-11 cursor-pointer rounded-md bg-[var(--primary)] px-6 py-2 text-sm text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
+                  className="min-h-11 cursor-pointer rounded-md bg-(--primary) px-6 py-2 text-sm text-white hover:bg-(--primary-hover) disabled:opacity-50"
                 >
                   {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
                 </button>

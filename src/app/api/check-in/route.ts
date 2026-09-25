@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 import type {
   CheckInConfigFields,
   CheckInConfigDocument,
@@ -106,6 +108,18 @@ export async function POST(req: Request) {
         upsert: true,
       },
     );
+
+    const actor = await currentUser();
+    if (actor) {
+      await recordActivity({
+        actor,
+        category: "attendance",
+        action: "update",
+        message: `ตั้งค่าแบบฟอร์มเช็คชื่อสำหรับ “${subject.className}”`,
+        target: subject.className,
+        targetId: String(subject._id),
+      });
+    }
 
     return NextResponse.json({
       success: true,

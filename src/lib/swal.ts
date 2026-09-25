@@ -182,15 +182,28 @@ const getStatusIconHtml = (status: "success" | "error") => {
   `;
 };
 
+const normalizeTeacherName = (value: string) => {
+  return value
+    .toLowerCase()
+    .replace(
+      /(อ\.?|อาจารย์|ดร\.?|ผศ\.?|รศ\.?|ศ\.?|นาย|นางสาว|นาง|น\.ส\.?|น\.ส|นางสาว|น.ส\.?)/g,
+      "",
+    )
+    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .trim();
+};
+
 export const appSwal = {
   nameForm({
     title,
     initialValue = "",
     onSave,
+    validateName,
   }: {
     title: string;
     initialValue?: string;
     onSave: (name: string) => Promise<void>;
+    validateName?: (name: string) => Promise<string | undefined> | string | undefined;
   }) {
     return Swal.fire({
       ...baseSwalOptions,
@@ -210,8 +223,15 @@ export const appSwal = {
       reverseButtons: true,
       showLoaderOnConfirm: true,
 
-      inputValidator: (value) =>
-        !value.trim() ? "กรุณากรอกชื่อ-นามสกุลอาจารย์" : undefined,
+      inputValidator: async (value) => {
+        const trimmed = value.trim();
+        if (!trimmed) return "กรุณากรอกชื่อ-นามสกุลอาจารย์";
+        if (validateName) {
+          const result = await validateName(trimmed);
+          if (result) return result;
+        }
+        return undefined;
+      },
 
       preConfirm: async (value: string) => {
         try {

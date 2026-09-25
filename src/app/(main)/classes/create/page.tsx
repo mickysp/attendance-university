@@ -32,6 +32,15 @@ export default function CreateClassPage() {
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loadingTeachers, setLoadingTeachers] = useState(true);
+  const [existingClasses, setExistingClasses] = useState<
+    Array<{
+      _id?: string;
+      className?: string;
+      classCodes?: string[];
+      teachers?: Array<{ _id: string; name?: string }>;
+      description?: string;
+    }>
+  >([]);
 
   const [classes, setClasses] = useState<ClassFormValue[]>([
     {
@@ -98,8 +107,66 @@ export default function CreateClassPage() {
       }
     };
 
-    fetchTeachers();
+    const fetchExistingClasses = async () => {
+      try {
+        const res = await classesApi.list();
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.data)) {
+          setExistingClasses(data.data);
+        }
+      } catch {
+        // ignore background fetch errors
+      }
+    };
+
+    void fetchTeachers();
+    void fetchExistingClasses();
   }, [showAlert]);
+
+  const normalizeClassName = (value: string) => value.trim().toLowerCase();
+
+  const normalizeClassCodes = (codes: string[]) =>
+    Array.from(
+      new Set(
+        codes
+          .map((code) => code.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ).sort();
+
+  const getDuplicateClassWarning = (item: ClassFormValue) => {
+    const className = item.className.trim();
+    const classCodes = normalizeClassCodes(item.classCodes);
+
+    if (!className || classCodes.length === 0) {
+      return {
+        name: null,
+        code: null,
+      };
+    }
+
+    const duplicateName = existingClasses.some((existingClass) => {
+      const existingName = existingClass.className?.trim();
+      return (
+        Boolean(existingName) &&
+        normalizeClassName(existingName) === normalizeClassName(className)
+      );
+    });
+
+    const duplicateCode = existingClasses.some((existingClass) => {
+      const existingCodes = normalizeClassCodes(
+        Array.isArray(existingClass.classCodes) ? existingClass.classCodes : [],
+      );
+
+      return existingCodes.some((code) => classCodes.includes(code));
+    });
+
+    return {
+      name: duplicateName ? "วิชานี้ มีในระบบแล้ว" : null,
+      code: duplicateCode ? "รหัสวิชานี้ มีในระบบแล้ว" : null,
+    };
+  };
 
   const handleClassChange = (
     classIndex: number,
@@ -351,6 +418,11 @@ export default function CreateClassPage() {
     return hasClassName && hasTeachers && hasClassCodes;
   });
 
+  const hasDuplicateClassInForm = classes.some((item) => {
+    const warnings = getDuplicateClassWarning(item);
+    return Boolean(warnings.name || warnings.code);
+  });
+
   return (
     <div className="flex h-screen overflow-hidden bg-blue-50">
       <div className="min-h-0 flex-1 overflow-y-auto p-6 pt-[80px] font-noto lg:pt-6">
@@ -405,240 +477,273 @@ export default function CreateClassPage() {
           </div>
 
           <div className="space-y-4">
-            {classes.map((item, classIndex) => (
-              <div
-                key={classIndex}
-                className="rounded-xl border border-gray-50 bg-[var(--card)] p-4"
-              >
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="font-medium text-gray-800">
-                    ข้อมูลวิชาที่ {classIndex + 1}
-                  </h2>
+            {classes.map((item, classIndex) => {
+              const duplicateWarnings = getDuplicateClassWarning(item);
 
-                  {classes.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveClass(classIndex)}
-                      className="cursor-pointer rounded-lg p-2 text-red-500 hover:bg-red-50"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
+              return (
+                <div
+                  key={classIndex}
+                  className="rounded-xl border border-gray-50 bg-[var(--card)] p-4"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-medium text-gray-800">
+                      ข้อมูลวิชาที่ {classIndex + 1}
+                    </h2>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-gray-800">ชื่อวิชา</label>
-
-                    <input
-                      type="text"
-                      value={item.className}
-                      onChange={(e) =>
-                        handleClassChange(
-                          classIndex,
-                          "className",
-                          e.target.value,
-                        )
-                      }
-                      className="form-input-card text-sm"
-                      placeholder="เช่น Web Programming"
-                    />
-                  </div>
-
-                  <div
-                    ref={(el) => {
-                      teacherRefs.current[classIndex] = el;
-                    }}
-                    className="relative"
-                  >
-                    <label className="text-sm text-gray-800">
-                      อาจารย์ผู้สอน
-                    </label>
-
-                    <div
-                      className="form-input-card min-h-[42px] cursor-text text-sm"
-                      onClick={() => {
-                        setOpenTeacherIndex(classIndex);
-                      }}
-                    >
-                      <div className="flex min-h-[26px] flex-wrap items-center gap-2">
-                        {item.teachers.map((teacher) => (
-                          <span
-                            key={teacher._id}
-                            className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-blue-600"
-                          >
-                            <span>{teacher.name}</span>
-
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-
-                                handleRemoveTeacher(classIndex, teacher._id);
-                              }}
-                              className="cursor-pointer rounded-full p-0.5 hover:bg-blue-100"
-                            >
-                              <XMarkIcon className="h-3.5 w-3.5" />
-                            </button>
-                          </span>
-                        ))}
-
-                        <input
-                          type="text"
-                          value={
-                            openTeacherIndex === classIndex ? teacherSearch : ""
-                          }
-                          onFocus={() => {
-                            setOpenTeacherIndex(classIndex);
-                          }}
-                          onChange={(e) => {
-                            setTeacherSearch(e.target.value);
-                            setOpenTeacherIndex(classIndex);
-                          }}
-                          onKeyDown={(e) => {
-                            handleTeacherSearchKeyDown(e, classIndex);
-                          }}
-                          placeholder={
-                            item.teachers.length === 0
-                              ? "เลือกอาจารย์"
-                              : "ค้นหาอาจารย์..."
-                          }
-                          className="min-w-[120px] flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
-                        />
-
-                        <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
-                      </div>
-                    </div>
-
-                    {openTeacherIndex === classIndex && (
-                      <div className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                        {loadingTeachers ? (
-                          <div className="px-4 py-2 text-sm text-gray-400">
-                            กำลังโหลดอาจารย์...
-                          </div>
-                        ) : teachers.length === 0 ? (
-                          <div className="px-4 py-2 text-sm text-gray-400">
-                            ไม่พบข้อมูลอาจารย์
-                          </div>
-                        ) : filteredTeachers.length === 0 ? (
-                          <div className="px-4 py-2 text-sm text-gray-400">
-                            ไม่พบอาจารย์ที่ค้นหา
-                          </div>
-                        ) : (
-                          filteredTeachers.map((teacher) => {
-                            const isSelected = item.teachers.some(
-                              (selectedTeacher) =>
-                                selectedTeacher._id === teacher._id,
-                            );
-
-                            return (
-                              <button
-                                key={teacher._id}
-                                type="button"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                }}
-                                onClick={() => {
-                                  handleToggleTeacher(classIndex, teacher);
-                                }}
-                                className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${
-                                  isSelected
-                                    ? "bg-blue-50 font-medium text-blue-600"
-                                    : "hover:bg-gray-100"
-                                }`}
-                              >
-                                <span>{teacher.name}</span>
-
-                                {isSelected && (
-                                  <span className="text-xs text-blue-600">
-                                    ✓
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
+                    {classes.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveClass(classIndex)}
+                        className="cursor-pointer rounded-lg p-2 text-red-500 hover:bg-red-50"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
                     )}
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm text-gray-800">รหัสวิชา</label>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm text-gray-800">ชื่อวิชา</label>
 
-                      <span className="text-xs text-gray-400">
-                        สามารถเพิ่มได้หลายรหัส
-                      </span>
+                      <input
+                        type="text"
+                        value={item.className}
+                        onChange={(e) =>
+                          handleClassChange(
+                            classIndex,
+                            "className",
+                            e.target.value,
+                          )
+                        }
+                        className={`form-input-card text-sm ${
+                          duplicateWarnings.name
+                            ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
+                            : ""
+                        }`}
+                        placeholder="เช่น Web Programming"
+                      />
+
+                      {duplicateWarnings.name && (
+                        <p className="mt-1 text-xs font-medium text-red-600">
+                          {duplicateWarnings.name}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="mt-2 space-y-2">
-                      {item.classCodes.map((classCode, codeIndex) => (
-                        <div key={codeIndex} className="flex gap-2">
+                    <div
+                      ref={(el) => {
+                        teacherRefs.current[classIndex] = el;
+                      }}
+                      className="relative"
+                    >
+                      <label className="text-sm text-gray-800">
+                        อาจารย์ผู้สอน
+                      </label>
+
+                      <div
+                        className="form-input-card min-h-[42px] cursor-text text-sm"
+                        onClick={() => {
+                          setOpenTeacherIndex(classIndex);
+                        }}
+                      >
+                        <div className="flex min-h-[26px] flex-wrap items-center gap-2">
+                          {item.teachers.map((teacher) => (
+                            <span
+                              key={teacher._id}
+                              className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-blue-600"
+                            >
+                              <span>{teacher.name}</span>
+
+                              <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+
+                                  handleRemoveTeacher(classIndex, teacher._id);
+                                }}
+                                className="cursor-pointer rounded-full p-0.5 hover:bg-blue-100"
+                              >
+                                <XMarkIcon className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          ))}
+
                           <input
                             type="text"
-                            value={classCode}
-                            onChange={(e) =>
-                              handleClassCodeChange(
-                                classIndex,
-                                codeIndex,
-                                e.target.value,
-                              )
+                            value={
+                              openTeacherIndex === classIndex ? teacherSearch : ""
                             }
-                            className="form-input-card flex-1 text-sm"
-                            placeholder="เช่น CS101"
+                            onFocus={() => {
+                              setOpenTeacherIndex(classIndex);
+                            }}
+                            onChange={(e) => {
+                              setTeacherSearch(e.target.value);
+                              setOpenTeacherIndex(classIndex);
+                            }}
+                            onKeyDown={(e) => {
+                              handleTeacherSearchKeyDown(e, classIndex);
+                            }}
+                            placeholder={
+                              item.teachers.length === 0
+                                ? "เลือกอาจารย์"
+                                : "ค้นหาอาจารย์..."
+                            }
+                            className="min-w-[120px] flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
                           />
 
-                          {item.classCodes.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRemoveClassCode(classIndex, codeIndex)
-                              }
-                              className="cursor-pointer rounded-md p-2 text-red-500 hover:bg-red-50"
-                            >
-                              <TrashIcon className="h-5 w-5" />
-                            </button>
+                          <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                        </div>
+                      </div>
+
+                      {openTeacherIndex === classIndex && (
+                        <div className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                          {loadingTeachers ? (
+                            <div className="px-4 py-2 text-sm text-gray-400">
+                              กำลังโหลดอาจารย์...
+                            </div>
+                          ) : teachers.length === 0 ? (
+                            <div className="px-4 py-2 text-sm text-gray-400">
+                              ไม่พบข้อมูลอาจารย์
+                            </div>
+                          ) : filteredTeachers.length === 0 ? (
+                            <div className="px-4 py-2 text-sm text-gray-400">
+                              ไม่พบอาจารย์ที่ค้นหา
+                            </div>
+                          ) : (
+                            filteredTeachers.map((teacher) => {
+                              const isSelected = item.teachers.some(
+                                (selectedTeacher) =>
+                                  selectedTeacher._id === teacher._id,
+                              );
+
+                              return (
+                                <button
+                                  key={teacher._id}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                  onClick={() => {
+                                    handleToggleTeacher(classIndex, teacher);
+                                  }}
+                                  className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${
+                                    isSelected
+                                      ? "bg-blue-50 font-medium text-blue-600"
+                                      : "hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <span>{teacher.name}</span>
+
+                                  {isSelected && (
+                                    <span className="text-xs text-blue-600">
+                                      ✓
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })
                           )}
                         </div>
-                      ))}
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleAddClassCode(classIndex)}
-                      className="mt-2 cursor-pointer text-sm text-blue-600 hover:underline"
-                    >
-                      + เพิ่มรหัสวิชา
-                    </button>
-                  </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm text-gray-800">รหัสวิชา</label>
 
-                  <div>
-                    <label className="text-sm text-gray-800">
-                      รายละเอียดวิชา
-                    </label>
+                        <span className="text-xs text-gray-400">
+                          สามารถเพิ่มได้หลายรหัส
+                        </span>
+                      </div>
 
-                    <textarea
-                      value={item.description}
-                      onChange={(e) =>
-                        handleClassChange(
-                          classIndex,
-                          "description",
-                          e.target.value,
-                        )
-                      }
-                      className="form-input-card text-sm"
-                      rows={4}
-                      placeholder="กรอกรายละเอียดเพิ่มเติม"
-                    />
+                      <div className="mt-2 space-y-2">
+                        {item.classCodes.map((classCode, codeIndex) => {
+                          const isDuplicateCode = Boolean(
+                            duplicateWarnings.code &&
+                              item.classCodes[codeIndex]?.trim().length > 0,
+                          );
+
+                          return (
+                            <div key={codeIndex} className="flex flex-col gap-1">
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={classCode}
+                                  onChange={(e) =>
+                                    handleClassCodeChange(
+                                      classIndex,
+                                      codeIndex,
+                                      e.target.value,
+                                    )
+                                  }
+                                  className={`form-input-card flex-1 text-sm ${
+                                    isDuplicateCode
+                                      ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
+                                      : ""
+                                  }`}
+                                  placeholder="เช่น CS101"
+                                />
+
+                                {item.classCodes.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveClassCode(classIndex, codeIndex)
+                                    }
+                                    className="cursor-pointer rounded-md p-2 text-red-500 hover:bg-red-50"
+                                  >
+                                    <TrashIcon className="h-5 w-5" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {isDuplicateCode && (
+                                <p className="text-xs font-medium text-red-600">
+                                  {duplicateWarnings.code}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAddClassCode(classIndex)}
+                        className="mt-2 cursor-pointer text-sm text-blue-600 hover:underline"
+                      >
+                        + เพิ่มรหัสวิชา
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-800">
+                        รายละเอียดวิชา
+                      </label>
+
+                      <textarea
+                        value={item.description}
+                        onChange={(e) =>
+                          handleClassChange(
+                            classIndex,
+                            "description",
+                            e.target.value,
+                          )
+                        }
+                        className="form-input-card text-sm"
+                        rows={4}
+                        placeholder="กรอกรายละเอียดเพิ่มเติม"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -662,10 +767,10 @@ export default function CreateClassPage() {
               <button
                 type="button"
                 onClick={() => showConfirm("เพิ่มข้อมูลรายวิชา", handleSubmit)}
-                disabled={loading || !isFormValid}
+                disabled={loading || !isFormValid || hasDuplicateClassInForm}
                 className={`order-1 w-full rounded-md px-6 py-2.5 text-sm text-white transition md:order-2 md:w-auto
                   ${
-                    loading || !isFormValid
+                    loading || !isFormValid || hasDuplicateClassInForm
                       ? "bg-gray-400"
                       : "cursor-pointer bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
                   }

@@ -521,7 +521,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
               <div>
                 <h1 className="text-[26px] font-semibold text-gray-800">
-                  ข้อมูลแบบฟอร์มเช็กชื่อ
+                  ข้อมูลแบบฟอร์มเช็คชื่อ
                 </h1>
 
                 <p className="text-sm text-gray-500">

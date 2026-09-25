@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 
 import type {
   UploadStudentsBody,
@@ -320,6 +322,24 @@ export async function POST(req: Request) {
           });
         }
       }
+    }
+
+    const actor = await currentUser();
+    if (actor) {
+      await Promise.all(
+        details
+          .filter((item) => item.status === "created")
+          .map((item) =>
+            recordActivity({
+              actor,
+              category: "students",
+              action: "create",
+              message: `เพิ่มนักศึกษา “${item.fullName}”`,
+              target: item.fullName,
+              targetId: item.studentId,
+            }),
+          ),
+      );
     }
 
     return NextResponse.json(

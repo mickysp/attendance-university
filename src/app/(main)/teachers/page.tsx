@@ -10,6 +10,17 @@ import TeacherSelect from "@/components/teachers/Select";
 import TeacherTable from "@/components/teachers/Table";
 import type { Teacher } from "@/types/teachers";
 
+const normalizeTeacherName = (value: string) => {
+  return value
+    .toLowerCase()
+    .replace(
+      /(อ\.?|อาจารย์|ดร\.?|ผศ\.?|รศ\.?|ศ\.?|นาย|นางสาว|นาง|น\.ส\.?|น\.ส|นางสาว|น.ส\.?)/g,
+      "",
+    )
+    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .trim();
+};
+
 async function readResponse(res: Response) {
   const result = await res.json().catch(() => {
     throw new Error("ระบบตอบกลับไม่ถูกต้อง กรุณาลองอีกครั้ง");
@@ -65,6 +76,33 @@ export default function TeachersPage() {
       const result = await appSwal.nameForm({
         title: teacher ? "แก้ไขอาจารย์" : "เพิ่มอาจารย์",
         initialValue: teacher?.name,
+        validateName: async (name) => {
+          const trimmedName = name.trim();
+          if (!trimmedName) return "กรุณากรอกชื่อ-นามสกุลอาจารย์";
+
+          const response = await teachersApi.list({ cache: "no-store" });
+          const data = await response.json().catch(() => null);
+
+          if (!response.ok || !data?.success || !Array.isArray(data.data)) {
+            return undefined;
+          }
+
+          const existingNames = data.data
+            .map((item: { name?: string }) =>
+              typeof item?.name === "string" ? item.name.trim() : "",
+            )
+            .filter(Boolean);
+
+          const duplicate = existingNames.some(
+            (existingName) =>
+              normalizeTeacherName(existingName) === normalizeTeacherName(trimmedName) &&
+              (!teacher ||
+                normalizeTeacherName(existingName) !==
+                  normalizeTeacherName(teacher.name.trim())),
+          );
+
+          return duplicate ? "มีชื่อนี้ในระบบแล้ว" : undefined;
+        },
         onSave: async (name) => {
           await readResponse(
             await teachersApi.save({

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { currentUser } from "@/lib/admin-auth";
+import { recordActivity } from "@/lib/activity-log";
 import { getBangkokDateKey, getScheduleDateError } from "@/lib/schedule-date";
 
 import type {
@@ -163,6 +165,13 @@ export async function POST(req: Request) {
       : classId;
 
     const now = new Date();
+    const previousSession = await sessionsCol.findOne({
+      classId: classFilter,
+      date,
+      academicYear,
+    });
+    const nextIsOpen = isOpen ?? previousSession?.isOpen ?? true;
+    const targetClassName = className?.trim() || previousSession?.className || "รายวิชา";
 
     const result = await sessionsCol.updateOne(
       {
@@ -197,6 +206,46 @@ export async function POST(req: Request) {
       date,
       academicYear,
     });
+
+    const actor = await currentUser();
+    if (actor) {
+      const settingsChanged =
+        !previousSession ||
+        previousSession.startTime !== startTime ||
+        previousSession.endTime !== endTime ||
+        previousSession.lateAfter !== (lateAfter ?? previousSession.lateAfter ?? 15) ||
+        previousSession.allowCheckIn !==
+          (allowCheckIn ?? previousSession?.allowCheckIn ?? true);
+
+      const stateChanged =
+        previousSession !== null &&
+        previousSession !== undefined &&
+        previousSession.isOpen !== nextIsOpen;
+
+      if (settingsChanged) {
+        await recordActivity({
+          actor,
+          category: "attendance",
+          action: "update",
+          message: `ตั้งเวลาเช็คชื่อวิชา “${targetClassName}”`,
+          target: targetClassName,
+          targetId: String(savedSession?._id ?? previousSession?._id ?? classFilter),
+        });
+      }
+
+      if (stateChanged) {
+        await recordActivity({
+          actor,
+          category: "attendance",
+          action: "update",
+          message: nextIsOpen
+            ? `เปิดเช็คชื่อวิชา “${targetClassName}”`
+            : `สิ้นสุดเช็คชื่อวิชาแล้ว “${targetClassName}”`,
+          target: targetClassName,
+          targetId: String(savedSession?._id ?? previousSession?._id ?? classFilter),
+        });
+      }
+    }
 
     return NextResponse.json(
       {

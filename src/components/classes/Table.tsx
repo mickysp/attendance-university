@@ -166,8 +166,8 @@ export default function Table({
 
     const labels = {
       unused: "ยังไม่เคยใช้งาน",
-      scheduled: "รอเปิดเช็กชื่อ",
-      active: "กำลังเปิดเช็กชื่อ",
+      scheduled: "รอเปิดเช็คชื่อ",
+      active: "กำลังเปิดเช็คชื่อ",
       ended: "สิ้นสุดแล้ว",
     };
 
