@@ -51,6 +51,7 @@ export default function NotificationCenter({
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [markingAllRead, setMarkingAllRead] = useState(false);
   const requestSequence = useRef(0);
   const activeRequest = useRef<AbortController | null>(null);
 
@@ -97,7 +98,6 @@ export default function NotificationCenter({
 
   useEffect(() => {
     void load();
-    // Coalesce bursts (e.g. bulk imports) into one snapshot request.
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = subscribeNotifications(() => {
       if (refreshTimer) return;
@@ -150,6 +150,29 @@ export default function NotificationCenter({
     setPage(1);
     setLoading(true);
     setActionError("");
+  }
+
+  async function markAllAsRead() {
+    if (unreadCount === 0 || markingAllRead) return;
+    setMarkingAllRead(true);
+    setActionError("");
+    try {
+      const response = await notificationsApi.markAllRead(
+        new Date().toISOString(),
+      );
+      const data = await response.json();
+      if (!response.ok || !data.success)
+        throw new Error(data.message || "ทำเครื่องหมายว่าอ่านทั้งหมดไม่สำเร็จ");
+      await load();
+    } catch (cause) {
+      setActionError(
+        cause instanceof Error
+          ? cause.message
+          : "ทำเครื่องหมายว่าอ่านทั้งหมดไม่สำเร็จ",
+      );
+    } finally {
+      setMarkingAllRead(false);
+    }
   }
 
   return (
@@ -210,10 +233,7 @@ export default function NotificationCenter({
           <div className="mb-5 flex items-center justify-between gap-3 border-b border-sky-100 pb-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="shrink-0 rounded-2xl bg-linear-to-br from-sky-500 to-indigo-600 p-2.5 shadow-sm shadow-sky-200/80">
-                <BellIcon
-                  className="h-5 w-5 text-white"
-                  aria-hidden="true"
-                />
+                <BellIcon className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
               <div className="min-w-0">
                 <h2
@@ -236,6 +256,33 @@ export default function NotificationCenter({
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
+          </div>
+
+          <div className="mb-4 flex items-center justify-between gap-3">
+            {unreadCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => void markAllAsRead()}
+                disabled={markingAllRead}
+                className="cursor-pointer text-sm font-medium text-sky-600 underline decoration-sky-300 underline-offset-4 transition hover:text-sky-700 hover:decoration-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {markingAllRead ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-sky-200 border-t-sky-500" />
+                    <span>อ่านทั้งหมด</span>
+                  </span>
+                ) : (
+                  <span>อ่านทั้งหมด</span>
+                )}
+              </button>
+            ) : (
+              <span className="text-sm text-slate-500">อ่านทั้งหมดแล้ว</span>
+            )}
+            <span className="text-xs text-slate-500">
+              {unreadCount > 0
+                ? `${unreadCount} รายการที่ยังไม่ได้อ่าน`
+                : "ไม่มีข้อความใหม่"}
+            </span>
           </div>
 
           <div
@@ -268,7 +315,7 @@ export default function NotificationCenter({
           {actionError && (
             <p
               role="alert"
-              className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600"
+              className="mb-3 rounded-xl border border-red-200 bg-red-100 px-3 py-2 text-sm font-medium text-red-700 shadow-sm shadow-red-100"
             >
               {actionError}
             </p>
@@ -285,8 +332,8 @@ export default function NotificationCenter({
                 <span className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
               </div>
             ) : error ? (
-              <div className="flex h-full min-h-52 flex-col items-center justify-center gap-3 text-center">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="flex h-full min-h-52 flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 text-center">
+                <p className="text-sm font-medium text-red-700">{error}</p>
                 <button
                   type="button"
                   onClick={() => void load()}
@@ -315,15 +362,20 @@ export default function NotificationCenter({
               <ul className="space-y-2">
                 {items.map((item) => {
                   const Icon = categoryIcons[item.category];
+                  const isDeleteAction = item.action === "delete";
+                  const isReadState = !item.unread;
+                  const isDangerTone = isDeleteAction && item.unread;
                   return (
                     <li key={item.id}>
                       <button
                         type="button"
                         onClick={() => void openActivity(item)}
                         disabled={openingId !== null}
-                        className={`flex w-full cursor-pointer gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400 disabled:cursor-wait ${item.unread ? "border-sky-100 bg-linear-to-r from-sky-50 to-indigo-50/70 hover:border-sky-200 hover:from-sky-100 hover:to-indigo-100" : "border-slate-200/80 bg-white/70 hover:border-slate-300 hover:bg-slate-50"}`}
+                        className={`flex w-full cursor-pointer gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-300 disabled:cursor-wait ${isDangerTone ? "border-red-100 bg-linear-to-r from-red-50 to-rose-50 hover:border-red-200 hover:from-red-100 hover:to-rose-100" : item.unread ? "border-sky-100 bg-linear-to-r from-sky-50 to-indigo-50/70 hover:border-sky-200 hover:from-sky-100 hover:to-indigo-100" : "border-slate-200/80 bg-white/70 hover:border-slate-300 hover:bg-slate-50"}`}
                       >
-                        <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ${item.unread ? "bg-linear-to-br from-sky-500 to-indigo-600 text-white ring-sky-200" : "bg-slate-100 text-slate-600 ring-slate-200"}`}>
+                        <span
+                          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ${isDangerTone ? "bg-linear-to-br from-red-500 to-rose-500 text-white ring-red-200" : item.unread ? "bg-linear-to-br from-sky-500 to-indigo-600 text-white ring-sky-200" : "bg-slate-100 text-slate-600 ring-slate-200"}`}
+                        >
                           <Icon className="h-5 w-5" />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -340,14 +392,20 @@ export default function NotificationCenter({
                             {formatter.format(new Date(item.createdAt))}
                           </time>
                           <span
-                            className={`mt-1.5 inline-flex items-center gap-1 text-xs ${item.unread ? "text-sky-700" : "text-slate-500"}`}
+                            className={`mt-1.5 inline-flex items-center gap-1 text-xs ${isDangerTone ? "text-red-600" : item.unread ? "text-sky-700" : "text-slate-500"}`}
                           >
-                            {item.unread ? (
+                            {isDangerTone ? (
+                              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                            ) : item.unread ? (
                               <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                             ) : (
                               <CheckIcon className="h-3.5 w-3.5" />
                             )}
-                            {item.unread ? "ยังไม่อ่าน" : "อ่านแล้ว"}
+                            {isDangerTone
+                              ? "ลบข้อมูล"
+                              : item.unread
+                                ? "ยังไม่อ่าน"
+                                : "อ่านแล้ว"}
                           </span>
                         </span>
                         {openingId === item.id ? (
