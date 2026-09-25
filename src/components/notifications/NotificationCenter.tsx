@@ -226,14 +226,17 @@ export default function NotificationCenter({
           if (event.animationName === "app-dialog-attention")
             event.currentTarget.classList.remove("app-dialog-attention");
         }}
-        className="app-dialog-panel fixed inset-0 m-auto h-[82dvh] max-h-195 min-h-[min(520px,calc(100dvh-1.5rem))] w-[calc(100%-1.5rem)] max-w-4xl overflow-hidden rounded-2xl border border-sky-100 bg-linear-to-br from-white via-sky-50/40 to-indigo-50/80 p-0 font-noto text-left shadow-[0_30px_80px_-20px_rgba(37,99,235,0.28)] backdrop:bg-black/40 sm:w-[calc(100%-3rem)]"
+        className="app-dialog-panel fixed inset-0 m-auto h-[82dvh] max-h-195 min-h-[min(520px,calc(100dvh-1.5rem))] w-[calc(100%-1.5rem)] max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 font-noto text-left shadow-[0_24px_64px_-24px_rgba(15,23,42,0.3)] backdrop:bg-slate-900/35 backdrop:backdrop-blur-[3px] sm:w-[calc(100%-3rem)]"
         aria-labelledby="notification-title"
       >
         <div className="flex h-full min-h-0 flex-col p-5 sm:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3 border-b border-sky-100 pb-4">
+          <div className="mb-5 flex shrink-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="shrink-0 rounded-2xl bg-linear-to-br from-sky-500 to-indigo-600 p-2.5 shadow-sm shadow-sky-200/80">
-                <BellIcon className="h-5 w-5 text-white" aria-hidden="true" />
+              <div className="shrink-0 rounded-xl bg-gray-100 p-2.5">
+                <BellIcon
+                  className="h-5 w-5 text-slate-600"
+                  aria-hidden="true"
+                />
               </div>
               <div className="min-w-0">
                 <h2
@@ -242,7 +245,7 @@ export default function NotificationCenter({
                 >
                   การแจ้งเตือน
                 </h2>
-                <p className="mt-0.5 text-sm text-slate-500">
+                <p className="mt-0.5 text-xs leading-5 text-slate-500">
                   กิจกรรมสำคัญที่เกิดขึ้นในระบบ
                 </p>
               </div>
@@ -251,20 +254,20 @@ export default function NotificationCenter({
               type="button"
               autoFocus
               onClick={() => dialogRef.current?.close()}
-              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-sky-50 hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               aria-label="ปิดการแจ้งเตือน"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2">
             {unreadCount > 0 ? (
               <button
                 type="button"
                 onClick={() => void markAllAsRead()}
                 disabled={markingAllRead}
-                className="cursor-pointer text-sm font-medium text-sky-600 underline decoration-sky-300 underline-offset-4 transition hover:text-sky-700 hover:decoration-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="cursor-pointer rounded-md py-1 text-xs font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {markingAllRead ? (
                   <span className="inline-flex items-center gap-2">
@@ -272,7 +275,10 @@ export default function NotificationCenter({
                     <span>อ่านทั้งหมด</span>
                   </span>
                 ) : (
-                  <span>อ่านทั้งหมด</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <CheckIcon className="h-4 w-4" aria-hidden="true" />
+                    อ่านทั้งหมด
+                  </span>
                 )}
               </button>
             ) : (
@@ -286,7 +292,7 @@ export default function NotificationCenter({
           </div>
 
           <div
-            className="mb-4 flex gap-1 rounded-xl bg-slate-100 p-1 shadow-inner ring-1 ring-slate-200/70"
+            className="mb-2 flex shrink-0 gap-1 border-b border-slate-200"
             aria-label="กรองการแจ้งเตือน"
           >
             {(
@@ -301,11 +307,11 @@ export default function NotificationCenter({
                 type="button"
                 aria-pressed={filter === tab.value}
                 onClick={() => changeFilter(tab.value)}
-                className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:text-sm ${filter === tab.value ? "bg-white text-sky-700 shadow-sm ring-1 ring-sky-100" : "text-slate-500 hover:text-slate-700"}`}
+                className={`-mb-px flex flex-1 cursor-pointer items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 sm:flex-none sm:px-4 sm:text-sm ${filter === tab.value ? "border-blue-500 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
               >
                 {tab.label}
                 <span
-                  className={`rounded-md px-1.5 py-0.5 text-[11px] ${filter === tab.value ? "bg-sky-100 text-sky-700" : "bg-slate-200/80 text-slate-500"}`}
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${filter === tab.value ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"}`}
                 >
                   {tab.count > 99 ? "99+" : tab.count}
                 </span>
@@ -315,13 +321,13 @@ export default function NotificationCenter({
           {actionError && (
             <p
               role="alert"
-              className="mb-3 rounded-xl border border-red-200 bg-red-100 px-3 py-2 text-sm font-medium text-red-700 shadow-sm shadow-red-100"
+              className="mb-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
             >
               {actionError}
             </p>
           )}
           <div
-            className="min-h-0 flex-1 overflow-y-auto pr-1 sm:pr-2"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:var(--input-border)_transparent]"
             aria-busy={loading}
           >
             {loading ? (
@@ -337,14 +343,14 @@ export default function NotificationCenter({
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="cursor-pointer rounded-lg bg-linear-to-r from-sky-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-sky-500 hover:to-indigo-500"
+                  className="cursor-pointer rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
                 >
                   ลองอีกครั้ง
                 </button>
               </div>
             ) : items.length === 0 ? (
               <div className="flex h-full min-h-52 flex-col items-center justify-center text-center">
-                <div className="mb-3 rounded-full bg-linear-to-br from-sky-100 to-indigo-100 p-4 text-sky-600 ring-1 ring-sky-200">
+                <div className="mb-3 rounded-2xl bg-slate-100 p-3 text-slate-400">
                   <CheckIcon className="h-7 w-7" />
                 </div>
                 <p className="font-medium text-slate-800">
@@ -359,53 +365,58 @@ export default function NotificationCenter({
                 </p>
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul>
                 {items.map((item) => {
                   const Icon = categoryIcons[item.category];
                   const isDeleteAction = item.action === "delete";
-                  const isReadState = !item.unread;
-                  const isDangerTone = isDeleteAction && item.unread;
                   return (
-                    <li key={item.id}>
+                    <li
+                      key={item.id}
+                      className="border-b border-slate-200/60 last:border-0"
+                    >
                       <button
                         type="button"
                         onClick={() => void openActivity(item)}
                         disabled={openingId !== null}
-                        className={`flex w-full cursor-pointer gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-300 disabled:cursor-wait ${isDangerTone ? "border-red-100 bg-linear-to-r from-red-50 to-rose-50 hover:border-red-200 hover:from-red-100 hover:to-rose-100" : item.unread ? "border-sky-100 bg-linear-to-r from-sky-50 to-indigo-50/70 hover:border-sky-200 hover:from-sky-100 hover:to-indigo-100" : "border-slate-200/80 bg-white/70 hover:border-slate-300 hover:bg-slate-50"}`}
+                        className={`group flex w-full cursor-pointer gap-3 rounded-lg px-3 py-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 disabled:cursor-wait ${item.unread ? "bg-blue-50/40 hover:bg-blue-50 dark:bg-blue-950/20" : "hover:bg-slate-50"}`}
                       >
-                        <span
-                          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ${isDangerTone ? "bg-linear-to-br from-red-500 to-rose-500 text-white ring-red-200" : item.unread ? "bg-linear-to-br from-sky-500 to-indigo-600 text-white ring-sky-200" : "bg-slate-100 text-slate-600 ring-slate-200"}`}
-                        >
-                          <Icon className="h-5 w-5" />
+                        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                          <Icon
+                            className="h-[18px] w-[18px]"
+                            aria-hidden="true"
+                          />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm leading-6 text-slate-700">
-                            <span className="font-semibold text-slate-900">
+                            <span
+                              className={`${item.unread ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}
+                            >
                               {item.actorName}
                             </span>{" "}
                             {item.message}
                           </span>
-                          <time
-                            dateTime={item.createdAt}
-                            className="mt-1 block text-xs text-slate-500"
-                          >
-                            {formatter.format(new Date(item.createdAt))}
-                          </time>
-                          <span
-                            className={`mt-1.5 inline-flex items-center gap-1 text-xs ${isDangerTone ? "text-red-600" : item.unread ? "text-sky-700" : "text-slate-500"}`}
-                          >
-                            {isDangerTone ? (
-                              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                            ) : item.unread ? (
-                              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                            ) : (
-                              <CheckIcon className="h-3.5 w-3.5" />
+                          <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <time
+                              dateTime={item.createdAt}
+                              className="text-xs text-slate-500"
+                            >
+                              {formatter.format(new Date(item.createdAt))}
+                            </time>
+                            <span
+                              className={`inline-flex items-center gap-1.5 text-[11px] ${item.unread ? "text-blue-600" : "text-slate-400"}`}
+                            >
+                              {item.unread ? (
+                                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                              ) : (
+                                <CheckIcon className="h-3.5 w-3.5" />
+                              )}
+                              {item.unread ? "ยังไม่อ่าน" : "อ่านแล้ว"}
+                            </span>
+                            {isDeleteAction && (
+                              <span className="text-[11px] text-red-500">
+                                ลบข้อมูล
+                              </span>
                             )}
-                            {isDangerTone
-                              ? "ลบข้อมูล"
-                              : item.unread
-                                ? "ยังไม่อ่าน"
-                                : "อ่านแล้ว"}
                           </span>
                         </span>
                         {openingId === item.id ? (
@@ -416,7 +427,7 @@ export default function NotificationCenter({
                         ) : (
                           <ChevronRightIcon
                             aria-hidden="true"
-                            className="mt-2 h-4 w-4 shrink-0 text-slate-400"
+                            className="mt-2 h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-slate-500"
                           />
                         )}
                       </button>
@@ -427,7 +438,7 @@ export default function NotificationCenter({
             )}
           </div>
           {(page > 1 || hasMore) && (
-            <div className="mt-4 flex items-center justify-between border-t border-sky-100 pt-4 text-sm">
+            <div className="mt-2 flex shrink-0 items-center justify-between border-t border-slate-200 pt-3 text-xs">
               <button
                 type="button"
                 disabled={page === 1 || loading}
@@ -439,7 +450,7 @@ export default function NotificationCenter({
               >
                 ก่อนหน้า
               </button>
-              <span className="text-slate-500">หน้า {page}</span>
+              <span className="text-slate-400 tabular-nums">หน้า {page}</span>
               <button
                 type="button"
                 disabled={!hasMore || loading}
@@ -447,7 +458,7 @@ export default function NotificationCenter({
                   setPage(page + 1);
                   setLoading(true);
                 }}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sky-700 hover:bg-sky-50 disabled:cursor-default disabled:opacity-40"
+                className="cursor-pointer rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100 disabled:cursor-default disabled:opacity-40"
               >
                 ถัดไป
               </button>
