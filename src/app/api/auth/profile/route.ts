@@ -68,9 +68,22 @@ export async function PATCH(req: Request) {
       { status: 409 },
     );
   try {
+    const credentialsChanged =
+      username !== user.username || email !== user.email;
     await users.updateOne(
       { _id: user._id },
-      { $set: { prefix, fullname, username, email } },
+      {
+        $set: {
+          prefix,
+          fullname,
+          username,
+          email,
+          ...(credentialsChanged
+            ? { sessionRevokedReason: "credentials_changed" }
+            : {}),
+        },
+        ...(credentialsChanged ? { $inc: { sessionVersion: 1 } } : {}),
+      },
     );
   } catch (error) {
     if (

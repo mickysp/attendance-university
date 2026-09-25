@@ -10,6 +10,9 @@ export interface User {
   role: UserRole;
   createdAt: Date;
   avatarUpdatedAt?: Date;
+  sessionVersion?: number;
+  sessionRevokedReason?: string;
+  disabled?: boolean;
 }
 
 export interface LoginBody {

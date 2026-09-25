@@ -107,6 +107,7 @@ export async function POST(req: Request) {
       email,
       password: await bcrypt.hash(password, 10),
       role: body.role,
+      sessionVersion: 0,
       createdAt: new Date(),
     });
   } catch (error) {
@@ -145,9 +146,17 @@ export async function PATCH(req: Request) {
     return invalid("ไม่สามารถแก้ไขสิทธิ์ของตนเอง");
   const users = (await clientPromise).db("attendance").collection("users");
   const target = await users.findOne({ _id: new ObjectId(body.id) });
+  if (target?.role === body.role)
+    return NextResponse.json({
+      success: true,
+      message: "สิทธิ์ไม่มีการเปลี่ยนแปลง",
+    });
   const result = await users.updateOne(
     { _id: new ObjectId(body.id) },
-    { $set: { role: body.role } },
+    {
+      $set: { role: body.role, sessionRevokedReason: "role_changed" },
+      $inc: { sessionVersion: 1 },
+    },
   );
   if (!result.matchedCount)
     return NextResponse.json(

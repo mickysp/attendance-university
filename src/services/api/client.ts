@@ -13,7 +13,7 @@ type RequestOptions = ApiRequestOptions & {
 };
 
 /** Return the original Response so callers can handle HTTP errors and bodies. */
-export function apiRequest(
+export async function apiRequest(
   path: `/${string}`,
   { query, json, body, ...options }: RequestOptions = {},
 ): Promise<Response> {
@@ -27,7 +27,7 @@ export function apiRequest(
 
   const search = params.toString();
 
-  return fetch(`/api${path}${search ? `?${search}` : ""}`, {
+  const response = await fetch(`/api${path}${search ? `?${search}` : ""}`, {
     ...options,
     ...(json !== undefined
       ? {
@@ -38,4 +38,16 @@ export function apiRequest(
         ? { body }
         : {}),
   });
+  if (response.status === 401 && typeof window !== "undefined") {
+    const data = await response
+      .clone()
+      .json()
+      .catch(() => null);
+    if (data?.reason) {
+      window.dispatchEvent(
+        new CustomEvent("session-invalid", { detail: data.reason }),
+      );
+    }
+  }
+  return response;
 }

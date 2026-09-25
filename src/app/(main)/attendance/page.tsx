@@ -22,7 +22,9 @@ import type {
 
 export default function AttendancePage() {
   const [classes, setClasses] = useState<AttendanceClassOption[]>([]);
-  const [students, setStudents] = useState<StudentAttendance[]>([]);
+  const [summaries, setSummaries] = useState<
+    Record<string, { students: StudentAttendance[]; error?: string }>
+  >({});
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedClass, setSelectedClass] = useState("");
@@ -33,34 +35,83 @@ export default function AttendancePage() {
   );
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [studentsReady, setStudentsReady] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
-    async function loadClasses() {
+    async function loadPage() {
       setLoading(true);
       setError("");
       try {
         const response = await classesApi.list(
-          { year: selectedYear ?? undefined },
+          {},
           { signal: controller.signal, cache: "no-store" },
         );
         const result = await response.json();
         if (!response.ok || !result.success)
           throw new Error(result.message || "โหลดข้อมูลชั้นเรียนไม่สำเร็จ");
-        const availableYears = Array.isArray(result.years) ? result.years : [];
-        setClasses(Array.isArray(result.data) ? result.data : []);
-        setYears(availableYears);
-        if (!selectedYear) {
-          const currentAcademicYear = Number(result.currentAcademicYear);
-          setSelectedYear(
-            Number.isFinite(currentAcademicYear)
-              ? currentAcademicYear
-              : availableYears[0] || null,
-          );
+        const availableClasses: AttendanceClassOption[] = Array.isArray(
+          result.data,
+        )
+          ? result.data
+          : [];
+        const currentAcademicYear = Number(result.currentAcademicYear);
+        const availableYears: number[] = [
+          ...new Set<number>([
+            ...(Array.isArray(result.years) ? result.years : []),
+            ...(Number.isFinite(currentAcademicYear)
+              ? [currentAcademicYear]
+              : []),
+          ]),
+        ].sort((left, right) => right - left);
+        const tasks = availableYears.flatMap((year) =>
+          availableClasses.map((item) => ({ classId: item._id, year })),
+        );
+        const loadedSummaries: typeof summaries = {};
+        let nextTask = 0;
+
+        // Bound concurrent requests while preloading every selectable class/year.
+        async function loadSummaries() {
+          while (nextTask < tasks.length && !controller.signal.aborted) {
+            const task = tasks[nextTask++];
+            const key = `${task.year}:${task.classId}`;
+            try {
+              const response = await attendanceApi.summary(task, {
+                signal: controller.signal,
+                cache: "no-store",
+              });
+              const result = await response.json();
+              if (!response.ok || !result.success)
+                throw new Error(
+                  result.message || "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ",
+                );
+              loadedSummaries[key] = {
+                students: Array.isArray(result.data) ? result.data : [],
+              };
+            } catch (cause) {
+              if (controller.signal.aborted) return;
+              loadedSummaries[key] = {
+                students: [],
+                error:
+                  cause instanceof Error
+                    ? cause.message
+                    : "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ",
+              };
+            }
+          }
         }
+        await Promise.all(
+          Array.from({ length: Math.min(4, tasks.length) }, loadSummaries),
+        );
+        if (controller.signal.aborted) return;
+        setClasses(availableClasses);
+        setYears(availableYears);
+        setSelectedYear(
+          Number.isFinite(currentAcademicYear)
+            ? currentAcademicYear
+            : (availableYears[0] ?? null),
+        );
+        setSummaries(loadedSummaries);
       } catch (cause) {
         if (!controller.signal.aborted)
           setError(
@@ -72,52 +123,14 @@ export default function AttendancePage() {
         if (!controller.signal.aborted) setLoading(false);
       }
     }
-    void loadClasses();
+    void loadPage();
     return () => controller.abort();
-  }, [selectedYear]);
+  }, []);
 
-  useEffect(() => {
-    if (!selectedClass) {
-      setStudents([]);
-      setStudentsReady(false);
-      setLoadingStudents(false);
-      return;
-    }
-    const controller = new AbortController();
-    async function loadStudents() {
-      setLoadingStudents(true);
-      setStudentsReady(false);
-      setStudents([]);
-      setError("");
-      try {
-        const response = await attendanceApi.summary(
-          { classId: selectedClass, year: selectedYear },
-          { signal: controller.signal, cache: "no-store" },
-        );
-        const result = await response.json();
-        if (!response.ok || !result.success)
-          throw new Error(result.message || "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ");
-        if (!controller.signal.aborted) {
-          setStudents(Array.isArray(result.data) ? result.data : []);
-          setStudentsReady(true);
-        }
-      } catch (cause) {
-        if (!controller.signal.aborted) {
-          setStudents([]);
-          setStudentsReady(true);
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "โหลดข้อมูลการเข้าเรียนไม่สำเร็จ",
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoadingStudents(false);
-      }
-    }
-    void loadStudents();
-    return () => controller.abort();
-  }, [selectedClass, selectedYear]);
+  const summary = summaries[`${selectedYear}:${selectedClass}`];
+  const students = useMemo(() => summary?.students ?? [], [summary]);
+  const studentsReady = !loading && Boolean(summary) && !summary.error;
+  const displayError = error || summary?.error;
 
   const majors = useMemo(
     () =>
@@ -165,8 +178,8 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="app-page" aria-busy={loading || loadingStudents}>
-      {(loading || loadingStudents) && (
+    <div className="app-page" aria-busy={loading}>
+      {loading && (
         <div
           className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300"
           role="status"
@@ -201,9 +214,6 @@ export default function AttendancePage() {
               onChange={(value) => {
                 setSelectedYear(value ? Number(value) : null);
                 setSelectedClass("");
-                setStudents([]);
-                setStudentsReady(false);
-                setLoadingStudents(false);
                 resetFilters();
               }}
             />
@@ -229,9 +239,6 @@ export default function AttendancePage() {
               label="วิชา"
               value={selectedClass}
               onChange={(value) => {
-                setStudents([]);
-                setStudentsReady(false);
-                setLoadingStudents(Boolean(value));
                 setSelectedClass(value);
                 resetFilters();
               }}
@@ -270,12 +277,12 @@ export default function AttendancePage() {
           </div>
         </section>
 
-        {error && (
+        {displayError && (
           <div
             className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             role="alert"
           >
-            {error}
+            {displayError}
           </div>
         )}
         {!selectedClass ? (
@@ -379,6 +386,7 @@ function FilterField({
       </span>
       <AttendanceDropdown
         value={value}
+        searchable
         disabled={disabled}
         onChange={onChange}
         options={options}

@@ -69,10 +69,18 @@ export async function POST(req: Request) {
       );
     }
 
+    if (user.disabled) {
+      return NextResponse.json(
+        { success: false, message: "บัญชีของคุณถูกระงับการใช้งาน" },
+        { status: 403 },
+      );
+    }
+
     const accessToken = jwt.sign(
       {
         userId: user._id.toString(),
         role: user.role,
+        sessionVersion: user.sessionVersion ?? 0,
       },
       JWT_SECRET,
       {

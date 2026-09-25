@@ -69,8 +69,6 @@ export default function Sidebar() {
 
         if (data.success) {
           setUser(data.user);
-        } else {
-          router.replace("/login");
         }
       } catch {
       } finally {

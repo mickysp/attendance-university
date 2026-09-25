@@ -63,7 +63,13 @@ export async function POST(req: Request) {
 
     await users.updateOne(
       { _id: user._id },
-      { $set: { password: hashedPassword } },
+      {
+        $set: {
+          password: hashedPassword,
+          sessionRevokedReason: "password_changed",
+        },
+        $inc: { sessionVersion: 1 },
+      },
     );
 
     await resets.deleteMany({ userId: user._id });

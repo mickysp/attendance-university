@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronDownIcon,
-  CheckIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -96,7 +95,6 @@ export default function AdministratorSelect({
                 className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${role === item.value ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
               >
                 {item.label}
-                {role === item.value && <CheckIcon className="h-4 w-4" />}
               </button>
             ))}
           </div>
