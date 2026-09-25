@@ -316,7 +316,7 @@ export default function Sidebar() {
               </div>
 
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Attendy</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Classora</h1>
 
                 <p className="text-xs text-gray-500">Management System</p>
               </div>
@@ -419,7 +419,7 @@ export default function Sidebar() {
 
                 <div>
                   <h1 className="text-lg font-semibold text-gray-900">
-                    Attendy
+                    Classora
                   </h1>
 
                   <p className="text-xs text-gray-500">Management System</p>

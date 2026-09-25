@@ -26,7 +26,7 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Attendy | Attendance University Management",
+  title: "Classora | Attendance University Management",
   icons: {
     icon: "/icon.png",
   },

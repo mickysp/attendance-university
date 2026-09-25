@@ -332,7 +332,7 @@ export default function CheckInStudentPage({
               </div>
               <div>
                 <p className="text-xs font-medium tracking-widest text-slate-400">
-                  ATTENDY
+                  Classora
                 </p>
                 <p className="mt-0.5 text-sm text-slate-600">
                   เช็คชื่อเข้าเรียน
@@ -780,7 +780,7 @@ export default function CheckInStudentPage({
           </div>
         </section>
         <p className="pb-2 text-center text-xs text-slate-400">
-          Attendy · ระบบบันทึกการเข้าเรียน
+          Classora · ระบบบันทึกการเข้าเรียน
         </p>
       </div>
     </main>
