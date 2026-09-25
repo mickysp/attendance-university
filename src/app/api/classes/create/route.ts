@@ -195,18 +195,27 @@ export async function POST(req: Request) {
     const result = await classes.insertMany(insertData);
     const actor = await currentUser();
     if (actor) {
-      await Promise.all(
-        insertData.map((item, index) =>
-          recordActivity({
-            actor,
-            category: "classes",
-            action: "create",
-            message: `สร้างชั้นเรียน “${item.className}”`,
-            target: item.className,
-            targetId: String(result.insertedIds[index]),
-          }),
-        ),
-      );
+      if (insertData.length === 1) {
+        const [item] = insertData;
+        await recordActivity({
+          actor,
+          category: "classes",
+          action: "create",
+          message: `สร้างชั้นเรียน “${item.className}”`,
+          target: item.className,
+          targetId: String(result.insertedIds[0]),
+        });
+      } else {
+        const classNames = insertData.map((item) => item.className).join(", ");
+        await recordActivity({
+          actor,
+          category: "classes",
+          action: "create",
+          message: `สร้างรายวิชา ${result.insertedCount} รายการ (${classNames})`,
+          target: `${result.insertedCount} รายการ`,
+          targetId: String(result.insertedIds[0]),
+        });
+      }
     }
 
     return NextResponse.json(
