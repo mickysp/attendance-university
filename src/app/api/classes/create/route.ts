@@ -213,7 +213,6 @@ export async function POST(req: Request) {
           action: "create",
           message: `สร้างรายวิชา ${result.insertedCount} รายการ (${classNames})`,
           target: `${result.insertedCount} รายการ`,
-          targetId: String(result.insertedIds[0]),
         });
       }
     }

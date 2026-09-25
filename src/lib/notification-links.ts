@@ -14,6 +14,11 @@ export function notificationHref(
 ) {
   if (log.category === "classes") {
     if (log.action === "delete") return "/classes";
+
+    const batchTarget =
+      typeof log.target === "string" && log.target.includes("รายการ");
+    if (log.action === "create" && batchTarget) return "/classes";
+
     // Legacy logs only contain a name. Resolve it only when it is unambiguous.
     const matches = classes.filter((item) =>
       log.targetId
