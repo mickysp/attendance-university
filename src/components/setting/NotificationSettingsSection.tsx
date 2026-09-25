@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useState } from "react";
 import { BellIcon } from "@heroicons/react/24/outline";
@@ -40,6 +42,8 @@ export default function NotificationSettingsSection({
 }: {
   initialSettings: NotificationPreferences;
 }) {
+  const { tr } = useLanguage();
+
   const [settings, setSettings] = useState(initialSettings);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -74,18 +78,14 @@ export default function NotificationSettingsSection({
           <h2
             id="notification-settings-heading"
             className="text-lg font-semibold text-gray-800"
-          >
-            การแจ้งเตือน
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            เลือกกิจกรรมที่ต้องการติดตามในระบบ
-          </p>
+          >{tr("การแจ้งเตือน")}</h2>
+          <p className="mt-1 text-sm text-gray-500">{tr("เลือกกิจกรรมที่ต้องการติดตามในระบบ")}</p>
         </div>
         <span
           aria-live="polite"
           className={`mt-1 text-xs ${message === "บันทึกไม่สำเร็จ" ? "text-red-600" : "text-gray-400"}`}
         >
-          {saving ? "กำลังบันทึก..." : message}
+          {saving ? tr("กำลังบันทึก...") : tr(message)}
         </span>
       </div>
 
@@ -93,8 +93,8 @@ export default function NotificationSettingsSection({
         {options.map((option) => (
           <SettingToggle
             key={option.key}
-            label={option.label}
-            description={option.description}
+            label={tr(option.label)}
+            description={tr(option.description)}
             checked={settings[option.key]}
             disabled={saving}
             onChange={() =>
@@ -103,9 +103,7 @@ export default function NotificationSettingsSection({
           />
         ))}
 
-        <p className="py-4 text-xs leading-5 text-gray-500">
-          แสดงกิจกรรมของทุกคน รวมถึงรายการที่คุณดำเนินการเอง ตามหมวดหมู่ที่เลือก
-        </p>
+        <p className="py-4 text-xs leading-5 text-gray-500">{tr("แสดงกิจกรรมของทุกคน รวมถึงรายการที่คุณดำเนินการเอง ตามหมวดหมู่ที่เลือก")}</p>
       </div>
     </section>
   );
@@ -124,18 +122,20 @@ function SettingToggle({
   disabled: boolean;
   onChange: () => void;
 }) {
+  const { tr } = useLanguage();
+
   return (
     <div className="flex items-center justify-between gap-5 py-4">
       <div>
-        <p className="text-sm font-medium text-gray-800">{label}</p>
-        <p className="mt-0.5 text-xs leading-5 text-gray-500">{description}</p>
+        <p className="text-sm font-medium text-gray-800">{tr(label)}</p>
+        <p className="mt-0.5 text-xs leading-5 text-gray-500">{tr(description)}</p>
       </div>
 
       <button
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-label={label}
+        aria-label={tr(label)}
         disabled={disabled}
         onClick={onChange}
         className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60 ${checked ? "bg-blue-600" : "bg-gray-300"}`}

@@ -1,0 +1,130 @@
+Language
+Change language
+Menu
+Management
+No role
+Sign out
+Signing out...
+Open menu
+Close menu
+Toggle sidebar
+Password reset OTP
+Invalid date
+Check-in cannot be scheduled in the past. Select today or a future date
+You do not have permission to manage users
+Invalid data
+Complete all fields and select valid permissions
+Invalid email address
+Use at least 8 characters, including English letters and numbers
+This username or email is already registered
+You cannot change your own permissions
+Permissions have not changed
+User not found
+User
+You cannot delete your own account
+Please sign in
+Check-in is not open yet
+Check-in has ended
+Invalid session ID
+Session not found
+The class date has not arrived yet
+Check-in has ended. Please use the latest session
+The session is missing its start or end time
+The teacher has closed check-in
+This session is not open yet
+Student not found
+The student is not enrolled in this course
+Already checked in
+Invalid image file
+System configuration error
+User not found
+Incorrect password
+Signed in
+An error occurred while signing in
+Signed out
+Please enter a name and username
+Please complete all fields
+Password must contain at least 8 characters
+Account not found
+OTP has not been verified or has expired
+Password changed
+Please wait for the previous OTP (up to 10 minutes)
+If the account exists, an OTP has been sent
+Unable to verify the session. Please try again
+OTP is invalid or expired
+Verified
+Please select a valid course
+Invalid course ID
+This course already exists and cannot be created again
+An error occurred while creating the course
+Please provide an ID
+Invalid ID format
+Course to delete not found
+An error occurred while deleting the course
+Record to update not found
+Invalid course name
+Invalid course code
+A course must have at least one code
+Invalid teacher data
+A course must have at least one teacher
+Invalid description
+This course already exists and cannot be saved again
+Unable to update course
+Invalid ID
+An error occurred while loading courses
+Unspecified course
+Please enter a major name
+This major already exists
+Major added
+Invalid filter
+Data updated
+Invalid item
+Activity not found
+Invalid read time
+Invalid request
+Unable to connect to live notifications. Please try again
+Start time must be earlier than end time
+Invalid late arrival allowance
+Check-in schedule saved
+No student data found
+Student deleted
+Please select a valid course and academic year
+Incomplete data
+Invalid student ID format
+Invalid name
+Invalid email
+At least one course is required
+Please specify a course
+Invalid section
+Invalid academic year
+This student ID already exists
+Invalid class ID
+Please select a section
+Please specify a major
+No student data
+Major not found
+Invalid student ID
+ID number
+Student ID
+Student ID
+Full name
+Full name
+Full name
+Email
+Please upload a file
+Course name not found
+Unable to read the Excel file. Please check the .xlsx or .xls file
+No worksheet found in the Excel file
+Student ID and name columns, or rows with IDs in the format 123456789-0, were not found
+No valid student data found
+Data imported
+Incomplete data
+Course to withdraw from not found
+Invalid teacher ID
+Please enter a teacher name
+This name already exists
+Teacher to update not found
+Unable to update teacher
+Please enter a name for every teacher
+Teacher to delete not found
+Unable to delete teacher. Please try again

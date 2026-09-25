@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { authApi } from "@/services/api/auth";
 import { useState } from "react";
@@ -9,6 +11,8 @@ type Props = {
 };
 
 export default function ForgotPassword({ initialEmail, onNext }: Props) {
+  const { tr } = useLanguage();
+
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,18 +48,14 @@ export default function ForgotPassword({ initialEmail, onNext }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
       <div>
-        <h1 className="text-xl font-semibold text-gray-800">ลืมรหัสผ่าน?</h1>
-        <p className="mt-2 text-sm leading-relaxed text-gray-500">
-          กรอกอีเมลที่ใช้ในระบบ เพื่อรับรหัส OTP สำหรับตั้งรหัสผ่านใหม่
-        </p>
+        <h1 className="text-xl font-semibold text-gray-800">{tr("ลืมรหัสผ่าน?")}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">{tr("กรอกอีเมลที่ใช้ในระบบ เพื่อรับรหัส OTP สำหรับตั้งรหัสผ่านใหม่")}</p>
       </div>
       <div>
         <label
           htmlFor="recovery-email"
           className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          อีเมล
-        </label>
+        >{tr("อีเมล")}</label>
         <input
           id="recovery-email"
           type="email"
@@ -79,7 +79,7 @@ export default function ForgotPassword({ initialEmail, onNext }: Props) {
             role="alert"
             className="mt-2 text-xs text-red-500"
           >
-            {error}
+            {tr(error)}
           </p>
         )}
       </div>
@@ -89,14 +89,12 @@ export default function ForgotPassword({ initialEmail, onNext }: Props) {
         className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
       >
         {loading
-          ? "กำลังส่งรหัส OTP..."
+          ? tr("กำลังส่งรหัส OTP...")
           : alreadySent
-            ? "กลับไปกรอกรหัส OTP"
-            : "ส่งรหัส OTP"}
+            ? tr("กลับไปกรอกรหัส OTP")
+            : tr("ส่งรหัส OTP")}
       </button>
-      <p className="text-center text-xs leading-relaxed text-gray-500">
-        หากจำอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ
-      </p>
+      <p className="text-center text-xs leading-relaxed text-gray-500">{tr("หากจำอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ")}</p>
     </form>
   );
 }

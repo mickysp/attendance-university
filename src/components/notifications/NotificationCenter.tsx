@@ -1,5 +1,6 @@
 "use client";
 
+
 import {
   BellIcon,
   BookOpenIcon,
@@ -14,6 +15,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { notificationsApi } from "@/services/api/notifications";
 import { subscribeNotifications } from "@/services/api/notifications/subscribe";
+import { useLanguage } from "@/lib/language";
 import type {
   ActivityNotification,
   NotificationsResponse,
@@ -27,16 +29,17 @@ const categoryIcons = {
   attendance: ClipboardDocumentCheckIcon,
 };
 
-const formatter = new Intl.DateTimeFormat("th-TH", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
 export default function NotificationCenter({
   collapsed,
 }: {
   collapsed: boolean;
 }) {
+  const { t, tr, locale } = useLanguage();
+  const formatter = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Bangkok",
+  });
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [items, setItems] = useState<ActivityNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -180,7 +183,8 @@ export default function NotificationCenter({
       <button
         type="button"
         onClick={() => void openDialog()}
-        title={collapsed ? "การแจ้งเตือน" : undefined}
+        title={collapsed ? t.notifications : undefined}
+        aria-label={t.notifications}
         className={`relative flex w-full cursor-pointer items-center rounded-lg py-2.5 text-left text-gray-600 transition hover:bg-gray-100 hover:text-gray-800 ${collapsed ? "justify-center px-2" : "gap-3 px-3"}`}
       >
         <span
@@ -195,7 +199,7 @@ export default function NotificationCenter({
         </span>
         {!collapsed && (
           <>
-            <span className="text-sm font-medium">การแจ้งเตือน</span>
+            <span className="text-sm font-medium">{t.notifications}</span>
             {unreadCount > 0 && (
               <span className="flex min-h-6 min-w-6 items-center justify-center rounded-md bg-red-50 px-1.5 text-xs font-semibold text-red-500">
                 {unreadCount > 99 ? "99+" : unreadCount}
@@ -242,12 +246,8 @@ export default function NotificationCenter({
                 <h2
                   id="notification-title"
                   className="text-lg font-semibold text-slate-800"
-                >
-                  การแจ้งเตือน
-                </h2>
-                <p className="mt-0.5 text-xs leading-5 text-slate-500">
-                  กิจกรรมสำคัญที่เกิดขึ้นในระบบ
-                </p>
+                >{tr("การแจ้งเตือน")}</h2>
+                <p className="mt-0.5 text-xs leading-5 text-slate-500">{tr("กิจกรรมสำคัญที่เกิดขึ้นในระบบ")}</p>
               </div>
             </div>
             <button
@@ -255,7 +255,7 @@ export default function NotificationCenter({
               autoFocus
               onClick={() => dialogRef.current?.close()}
               className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-              aria-label="ปิดการแจ้งเตือน"
+              aria-label={tr("ปิดการแจ้งเตือน")}
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
@@ -272,28 +272,26 @@ export default function NotificationCenter({
                 {markingAllRead ? (
                   <span className="inline-flex items-center gap-2">
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-sky-200 border-t-sky-500" />
-                    <span>อ่านทั้งหมด</span>
+                    <span>{tr("อ่านทั้งหมด")}</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5">
-                    <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                    อ่านทั้งหมด
-                  </span>
+                    <CheckIcon className="h-4 w-4" aria-hidden="true" />{tr("อ่านทั้งหมด")}</span>
                 )}
               </button>
             ) : (
-              <span className="text-sm text-slate-500">อ่านทั้งหมดแล้ว</span>
+              <span className="text-sm text-slate-500">{tr("อ่านทั้งหมดแล้ว")}</span>
             )}
             <span className="text-xs text-slate-500">
               {unreadCount > 0
-                ? `${unreadCount} รายการที่ยังไม่ได้อ่าน`
-                : "ไม่มีข้อความใหม่"}
+                ? tr("{0} รายการที่ยังไม่ได้อ่าน", {0: unreadCount})
+                : tr("ไม่มีข้อความใหม่")}
             </span>
           </div>
 
           <div
             className="mb-2 flex shrink-0 gap-1 border-b border-slate-200"
-            aria-label="กรองการแจ้งเตือน"
+            aria-label={tr("กรองการแจ้งเตือน")}
           >
             {(
               [
@@ -309,7 +307,7 @@ export default function NotificationCenter({
                 onClick={() => changeFilter(tab.value)}
                 className={`-mb-px flex flex-1 cursor-pointer items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 sm:flex-none sm:px-4 sm:text-sm ${filter === tab.value ? "border-blue-500 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
               >
-                {tab.label}
+                {tr(tab.label)}
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${filter === tab.value ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"}`}
                 >
@@ -323,7 +321,7 @@ export default function NotificationCenter({
               role="alert"
               className="mb-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
             >
-              {actionError}
+              {tr(actionError)}
             </p>
           )}
           <div
@@ -339,14 +337,12 @@ export default function NotificationCenter({
               </div>
             ) : error ? (
               <div className="flex h-full min-h-52 flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 text-center">
-                <p className="text-sm font-medium text-red-700">{error}</p>
+                <p className="text-sm font-medium text-red-700">{tr(error)}</p>
                 <button
                   type="button"
                   onClick={() => void load()}
                   className="cursor-pointer rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
-                >
-                  ลองอีกครั้ง
-                </button>
+                >{tr("ลองอีกครั้ง")}</button>
               </div>
             ) : items.length === 0 ? (
               <div className="flex h-full min-h-52 flex-col items-center justify-center text-center">
@@ -355,14 +351,12 @@ export default function NotificationCenter({
                 </div>
                 <p className="font-medium text-slate-800">
                   {filter === "unread"
-                    ? "ไม่มีการแจ้งเตือนที่ยังไม่อ่าน"
+                    ? tr("ไม่มีการแจ้งเตือนที่ยังไม่อ่าน")
                     : filter === "read"
-                      ? "ยังไม่มีการแจ้งเตือนที่อ่านแล้ว"
-                      : "ยังไม่มีกิจกรรมใหม่"}
+                      ? tr("ยังไม่มีการแจ้งเตือนที่อ่านแล้ว")
+                      : tr("ยังไม่มีกิจกรรมใหม่")}
                 </p>
-                <p className="mt-1 text-sm text-slate-500">
-                  คลิกกิจกรรมเพื่อเปิดหน้าที่เกี่ยวข้องและบันทึกว่าอ่านแล้ว
-                </p>
+                <p className="mt-1 text-sm text-slate-500">{tr("คลิกกิจกรรมเพื่อเปิดหน้าที่เกี่ยวข้องและบันทึกว่าอ่านแล้ว")}</p>
               </div>
             ) : (
               <ul>
@@ -393,7 +387,7 @@ export default function NotificationCenter({
                             >
                               {item.actorName}
                             </span>{" "}
-                            {item.message}
+                            {tr(item.message)}
                           </span>
                           <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                             <time
@@ -410,18 +404,16 @@ export default function NotificationCenter({
                               ) : (
                                 <CheckIcon className="h-3.5 w-3.5" />
                               )}
-                              {item.unread ? "ยังไม่อ่าน" : "อ่านแล้ว"}
+                              {item.unread ? tr("ยังไม่อ่าน") : tr("อ่านแล้ว")}
                             </span>
                             {isDeleteAction && (
-                              <span className="text-[11px] text-red-500">
-                                ลบข้อมูล
-                              </span>
+                              <span className="text-[11px] text-red-500">{tr("ลบข้อมูล")}</span>
                             )}
                           </span>
                         </span>
                         {openingId === item.id ? (
                           <span
-                            aria-label="กำลังเปิดกิจกรรม"
+                            aria-label={tr("กำลังเปิดกิจกรรม")}
                             className="mt-2 h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-sky-200 border-t-sky-500"
                           />
                         ) : (
@@ -447,10 +439,8 @@ export default function NotificationCenter({
                   setLoading(true);
                 }}
                 className="cursor-pointer rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100 disabled:cursor-default disabled:opacity-40"
-              >
-                ก่อนหน้า
-              </button>
-              <span className="text-slate-400 tabular-nums">หน้า {page}</span>
+              >{tr("ก่อนหน้า")}</button>
+              <span className="text-slate-400 tabular-nums">{tr("หน้า")}{" "}{page}</span>
               <button
                 type="button"
                 disabled={!hasMore || loading}
@@ -459,9 +449,7 @@ export default function NotificationCenter({
                   setLoading(true);
                 }}
                 className="cursor-pointer rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100 disabled:cursor-default disabled:opacity-40"
-              >
-                ถัดไป
-              </button>
+              >{tr("ถัดไป")}</button>
             </div>
           )}
         </div>

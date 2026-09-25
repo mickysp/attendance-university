@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useEffect, useRef, useState } from "react";
 import { authApi } from "@/services/api/auth";
@@ -27,6 +29,8 @@ export default function ProfileSection({
 }: {
   initialProfile: UserProfile;
 }) {
+  const { tr } = useLanguage();
+
   const { showAlert } = useAlert();
   const inputRef = useRef<HTMLInputElement>(null);
   const prefixRef = useRef<HTMLDivElement>(null);
@@ -174,23 +178,19 @@ export default function ProfileSection({
         <h2
           id="profile-heading"
           className="text-lg font-semibold text-gray-800"
-        >
-          โปรไฟล์ของฉัน
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          แก้ไขข้อมูลบัญชีและรูปโปรไฟล์
-        </p>
+        >{tr("โปรไฟล์ของฉัน")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{tr("แก้ไขข้อมูลบัญชีและรูปโปรไฟล์")}</p>
       </div>
 
       <div>
         <div className="flex flex-col gap-5 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:p-6">
           <button
             type="button"
-            aria-label="ดูรูปโปรไฟล์ขนาดเต็ม"
+            aria-label={tr("ดูรูปโปรไฟล์ขนาดเต็ม")}
             aria-haspopup="dialog"
             disabled={!imageUrl}
             onClick={() => setShowImage(true)}
-            title={imageUrl ? "ดูรูปโปรไฟล์ขนาดเต็ม" : "ยังไม่มีรูปโปรไฟล์"}
+            title={imageUrl ? tr("ดูรูปโปรไฟล์ขนาดเต็ม") : tr("ยังไม่มีรูปโปรไฟล์")}
             className="flex h-24 w-24 shrink-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-full border-4 border-white bg-blue-50 text-blue-600 shadow-sm transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-default disabled:hover:opacity-100"
           >
             {preview || profile.avatarUrl ? (
@@ -198,7 +198,7 @@ export default function ProfileSection({
                 unoptimized
                 loading="eager"
                 src={preview || profile.avatarUrl || ""}
-                alt="รูปโปรไฟล์"
+                alt={tr("รูปโปรไฟล์")}
                 width={96}
                 height={96}
                 className="h-full w-full object-cover"
@@ -215,9 +215,7 @@ export default function ProfileSection({
 
             <p className="mt-0.5 text-sm text-gray-500">{profile.role}</p>
 
-            <p className="mt-2 text-xs text-gray-400">
-              รองรับ JPG, PNG และ WebP ขนาดไม่เกิน 2 MB
-            </p>
+            <p className="mt-2 text-xs text-gray-400">{tr("รองรับ JPG, PNG และ WebP ขนาดไม่เกิน 2 MB")}</p>
 
             <div className="mt-3 flex flex-wrap gap-2">
               <input
@@ -226,7 +224,7 @@ export default function ProfileSection({
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(event) => chooseFile(event.target.files?.[0])}
                 className="sr-only"
-                aria-label="เลือกรูปโปรไฟล์"
+                aria-label={tr("เลือกรูปโปรไฟล์")}
               />
 
               <button
@@ -235,9 +233,7 @@ export default function ProfileSection({
                 disabled={uploading}
                 className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               >
-                <CameraIcon className="h-4 w-4" />
-                เลือกรูป
-              </button>
+                <CameraIcon className="h-4 w-4" />{tr("เลือกรูป")}</button>
 
               {file && (
                 <button
@@ -246,7 +242,7 @@ export default function ProfileSection({
                   disabled={uploading}
                   className="cursor-pointer rounded-md bg-[var(--primary)] px-3 py-2 text-sm text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
                 >
-                  {uploading ? "กำลังอัปโหลด..." : "อัปโหลดรูป"}
+                  {uploading ? tr("กำลังอัปโหลด...") : tr("อัปโหลดรูป")}
                 </button>
               )}
 
@@ -257,9 +253,7 @@ export default function ProfileSection({
                   disabled={uploading}
                   className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-red-200 px-3 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
                 >
-                  <TrashIcon className="h-4 w-4" />
-                  ลบรูป
-                </button>
+                  <TrashIcon className="h-4 w-4" />{tr("ลบรูป")}</button>
               )}
             </div>
           </div>
@@ -273,16 +267,14 @@ export default function ProfileSection({
             <div
               ref={prefixRef}
               className="relative text-sm font-medium text-gray-700"
-            >
-              คำนำหน้า
-              <button
+            >{tr("คำนำหน้า")}<button
                 type="button"
-                aria-label="เลือกคำนำหน้า"
+                aria-label={tr("เลือกคำนำหน้า")}
                 aria-expanded={openPrefix}
                 onClick={() => setOpenPrefix(!openPrefix)}
                 className="form-input-card mt-1 flex min-h-11 cursor-pointer items-center justify-between gap-2 text-left text-sm font-normal text-gray-700"
               >
-                <span>{profile.prefix || "เลือกคำนำหน้า"}</span>
+                <span>{tr(profile.prefix) || tr("เลือกคำนำหน้า")}</span>
                 <ChevronDownIcon className="h-4 w-4 text-gray-400" />
               </button>
               {openPrefix && (
@@ -297,7 +289,7 @@ export default function ProfileSection({
                       }}
                       className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm ${profile.prefix === item ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
                     >
-                      {item}
+                      {tr(item)}
                       {profile.prefix === item && (
                         <CheckIcon className="h-4 w-4" />
                       )}
@@ -307,9 +299,7 @@ export default function ProfileSection({
               )}
             </div>
 
-            <label className="text-sm font-medium text-gray-700">
-              ชื่อ-นามสกุล
-              <input
+            <label className="text-sm font-medium text-gray-700">{tr("ชื่อ-นามสกุล")}<input
                 required
                 value={profile.fullname}
                 onChange={(event) =>
@@ -319,9 +309,7 @@ export default function ProfileSection({
               />
             </label>
 
-            <label className="text-sm font-medium text-gray-700">
-              ชื่อผู้ใช้
-              <input
+            <label className="text-sm font-medium text-gray-700">{tr("ชื่อผู้ใช้")}<input
                 required
                 value={profile.username}
                 onChange={(event) =>
@@ -331,9 +319,7 @@ export default function ProfileSection({
               />
             </label>
 
-            <label className="text-sm font-medium text-gray-700">
-              อีเมล
-              <input
+            <label className="text-sm font-medium text-gray-700">{tr("อีเมล")}<input
                 required
                 type="email"
                 value={profile.email}
@@ -345,9 +331,7 @@ export default function ProfileSection({
             </label>
           </div>
 
-          <p className="mt-3 text-xs text-gray-400">
-            หากเปลี่ยนชื่อผู้ใช้ ให้ใช้ชื่อใหม่ในการเข้าสู่ระบบครั้งถัดไป
-          </p>
+          <p className="mt-3 text-xs text-gray-400">{tr("หากเปลี่ยนชื่อผู้ใช้ ให้ใช้ชื่อใหม่ในการเข้าสู่ระบบครั้งถัดไป")}</p>
 
           <div className="mt-5 flex justify-end border-t border-gray-100 pt-4">
             <button
@@ -355,7 +339,7 @@ export default function ProfileSection({
               disabled={!changed || saving}
               className="cursor-pointer rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
-              {saving ? "กำลังบันทึก..." : "บันทึก"}
+              {saving ? tr("กำลังบันทึก...") : tr("บันทึก")}
             </button>
           </div>
         </form>

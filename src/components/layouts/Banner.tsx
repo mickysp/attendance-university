@@ -1,3 +1,5 @@
+import LanguageSwitcher from "./LanguageSwitcher";
+
 export default function AuthLayout({
   children,
 }: {
@@ -14,6 +16,9 @@ export default function AuthLayout({
         lg:grid-cols-[60%_40%]
       "
     >
+      <div className="absolute right-4 top-4 z-30 sm:right-6 sm:top-6">
+        <LanguageSwitcher />
+      </div>
       <div
         className="
           hidden

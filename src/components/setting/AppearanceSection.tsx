@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
@@ -18,6 +20,8 @@ const themeOptions = [
 const subscribe = () => () => {};
 
 export default function AppearanceSection() {
+  const { tr } = useLanguage();
+
   const { theme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     subscribe,
@@ -34,18 +38,14 @@ export default function AppearanceSection() {
         <h2
           id="appearance-heading"
           className="text-lg font-semibold text-gray-800"
-        >
-          การแสดงผล
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          เลือกธีมที่ต้องการใช้บนอุปกรณ์นี้
-        </p>
+        >{tr("การแสดงผล")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{tr("เลือกธีมที่ต้องการใช้บนอุปกรณ์นี้")}</p>
       </div>
 
       <div
         className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6"
         role="group"
-        aria-label="เลือกธีม"
+        aria-label={tr("เลือกธีม")}
       >
         {themeOptions.map((option) => {
           const Icon = option.icon;
@@ -60,7 +60,7 @@ export default function AppearanceSection() {
               className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-wait ${selected ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-gray-50"}`}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="flex-1 text-sm font-medium">{option.label}</span>
+              <span className="flex-1 text-sm font-medium">{tr(option.label)}</span>
               {selected && (
                 <CheckIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
               )}

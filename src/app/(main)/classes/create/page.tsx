@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { teachersApi } from "@/services/api/teachers";
 import { classesApi } from "@/services/api/classes";
@@ -17,6 +19,8 @@ import type { Teacher } from "@/types/teachers";
 import type { ClassFormValue } from "@/types/classes";
 
 export default function CreateClassPage() {
+  const { tr } = useLanguage();
+
   const router = useRouter();
 
   const { showAlert } = useAlert();
@@ -150,7 +154,7 @@ export default function CreateClassPage() {
       const existingName = existingClass.className?.trim();
       return (
         Boolean(existingName) &&
-        normalizeClassName(existingName) === normalizeClassName(className)
+        normalizeClassName(existingName ?? "") === normalizeClassName(className)
       );
     });
 
@@ -451,9 +455,7 @@ export default function CreateClassPage() {
                 max-[376px]:text-[18px]
                 md:text-[26px]
                 "
-              >
-                เพิ่มรายวิชา
-              </h1>
+              >{tr("เพิ่มรายวิชา")}</h1>
             </div>
 
             <div
@@ -466,9 +468,7 @@ export default function CreateClassPage() {
               max-[376px]:py-1.5
               "
             >
-              <span className="text-sm text-gray-500 max-[375px]:text-xs">
-                จำนวนวิชาที่เพิ่ม
-              </span>
+              <span className="text-sm text-gray-500 max-[375px]:text-xs">{tr("จำนวนวิชาที่เพิ่ม")}</span>
 
               <span className="text-sm font-semibold text-blue-600 max-[375px]:text-xs">
                 {completedCount}
@@ -486,8 +486,7 @@ export default function CreateClassPage() {
                   className="rounded-xl border border-gray-50 bg-[var(--card)] p-4"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="font-medium text-gray-800">
-                      ข้อมูลวิชาที่ {classIndex + 1}
+                    <h2 className="font-medium text-gray-800">{tr("ข้อมูลวิชาที่")}{" "}{classIndex + 1}
                     </h2>
 
                     {classes.length > 1 && (
@@ -503,7 +502,7 @@ export default function CreateClassPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm text-gray-800">ชื่อวิชา</label>
+                      <label className="text-sm text-gray-800">{tr("ชื่อวิชา")}</label>
 
                       <input
                         type="text"
@@ -520,12 +519,12 @@ export default function CreateClassPage() {
                             ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
                             : ""
                         }`}
-                        placeholder="เช่น Web Programming"
+                        placeholder={tr("เช่น Web Programming")}
                       />
 
                       {duplicateWarnings.name && (
                         <p className="mt-1 text-xs font-medium text-red-600">
-                          {duplicateWarnings.name}
+                          {tr(duplicateWarnings.name)}
                         </p>
                       )}
                     </div>
@@ -536,9 +535,7 @@ export default function CreateClassPage() {
                       }}
                       className="relative"
                     >
-                      <label className="text-sm text-gray-800">
-                        อาจารย์ผู้สอน
-                      </label>
+                      <label className="text-sm text-gray-800">{tr("อาจารย์ผู้สอน")}</label>
 
                       <div
                         className="form-input-card min-h-[42px] cursor-text text-sm"
@@ -590,8 +587,8 @@ export default function CreateClassPage() {
                             }}
                             placeholder={
                               item.teachers.length === 0
-                                ? "เลือกอาจารย์"
-                                : "ค้นหาอาจารย์..."
+                                ? tr("เลือกอาจารย์")
+                                : tr("ค้นหาอาจารย์...")
                             }
                             className="min-w-[120px] flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
                           />
@@ -603,17 +600,11 @@ export default function CreateClassPage() {
                       {openTeacherIndex === classIndex && (
                         <div className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
                           {loadingTeachers ? (
-                            <div className="px-4 py-2 text-sm text-gray-400">
-                              กำลังโหลดอาจารย์...
-                            </div>
+                            <div className="px-4 py-2 text-sm text-gray-400">{tr("กำลังโหลดอาจารย์...")}</div>
                           ) : teachers.length === 0 ? (
-                            <div className="px-4 py-2 text-sm text-gray-400">
-                              ไม่พบข้อมูลอาจารย์
-                            </div>
+                            <div className="px-4 py-2 text-sm text-gray-400">{tr("ไม่พบข้อมูลอาจารย์")}</div>
                           ) : filteredTeachers.length === 0 ? (
-                            <div className="px-4 py-2 text-sm text-gray-400">
-                              ไม่พบอาจารย์ที่ค้นหา
-                            </div>
+                            <div className="px-4 py-2 text-sm text-gray-400">{tr("ไม่พบอาจารย์ที่ค้นหา")}</div>
                           ) : (
                             filteredTeachers.map((teacher) => {
                               const isSelected = item.teachers.some(
@@ -654,11 +645,9 @@ export default function CreateClassPage() {
 
                     <div>
                       <div className="flex items-center justify-between">
-                        <label className="text-sm text-gray-800">รหัสวิชา</label>
+                        <label className="text-sm text-gray-800">{tr("รหัสวิชา")}</label>
 
-                        <span className="text-xs text-gray-400">
-                          สามารถเพิ่มได้หลายรหัส
-                        </span>
+                        <span className="text-xs text-gray-400">{tr("สามารถเพิ่มได้หลายรหัส")}</span>
                       </div>
 
                       <div className="mt-2 space-y-2">
@@ -686,7 +675,7 @@ export default function CreateClassPage() {
                                       ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
                                       : ""
                                   }`}
-                                  placeholder="เช่น CS101"
+                                  placeholder={tr("เช่น CS101")}
                                 />
 
                                 {item.classCodes.length > 1 && (
@@ -704,7 +693,7 @@ export default function CreateClassPage() {
 
                               {isDuplicateCode && (
                                 <p className="text-xs font-medium text-red-600">
-                                  {duplicateWarnings.code}
+                                  {tr(duplicateWarnings.code)}
                                 </p>
                               )}
                             </div>
@@ -716,15 +705,11 @@ export default function CreateClassPage() {
                         type="button"
                         onClick={() => handleAddClassCode(classIndex)}
                         className="mt-2 cursor-pointer text-sm text-blue-600 hover:underline"
-                      >
-                        + เพิ่มรหัสวิชา
-                      </button>
+                      >{tr("+ เพิ่มรหัสวิชา")}</button>
                     </div>
 
                     <div>
-                      <label className="text-sm text-gray-800">
-                        รายละเอียดวิชา
-                      </label>
+                      <label className="text-sm text-gray-800">{tr("รายละเอียดวิชา")}</label>
 
                       <textarea
                         value={item.description}
@@ -737,7 +722,7 @@ export default function CreateClassPage() {
                         }
                         className="form-input-card text-sm"
                         rows={4}
-                        placeholder="กรอกรายละเอียดเพิ่มเติม"
+                        placeholder={tr("กรอกรายละเอียดเพิ่มเติม")}
                       />
                     </div>
                   </div>
@@ -751,18 +736,14 @@ export default function CreateClassPage() {
               type="button"
               onClick={handleAddClass}
               className="w-fit cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-            >
-              + เพิ่มวิชา
-            </button>
+            >{tr("+ เพิ่มวิชา")}</button>
 
             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
               <button
                 type="button"
                 onClick={() => router.push("/classes")}
                 className="order-2 w-full cursor-pointer rounded-md border border-gray-300 px-6 py-2.5 text-sm text-gray-600 hover:bg-gray-100 md:order-1 md:w-auto"
-              >
-                ยกเลิก
-              </button>
+              >{tr("ยกเลิก")}</button>
 
               <button
                 type="button"
@@ -776,7 +757,7 @@ export default function CreateClassPage() {
                   }
                   `}
               >
-                {loading ? "กำลังบันทึก..." : "บันทึก"}
+                {loading ? tr("กำลังบันทึก...") : tr("บันทึก")}
               </button>
             </div>
           </div>

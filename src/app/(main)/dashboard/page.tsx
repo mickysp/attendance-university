@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage, getLocale } from "@/lib/language";
+
 
 import {
   BookOpenIcon,
@@ -18,6 +20,8 @@ import type {
 } from "@/types/dashboard";
 
 export default function DashboardPage() {
+  const { tr } = useLanguage();
+
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState(getCurrentAcademicYear);
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
@@ -126,23 +130,19 @@ export default function DashboardPage() {
       <div className="flex min-h-full flex-col gap-5 sm:gap-6">
         <header className="app-page-header">
           <div>
-            <h1 className="app-page-title">แดชบอร์ด</h1>
-            <p className="app-page-description">
-              ภาพรวมการเข้าเรียนและนักศึกษาที่ควรติดตาม
-            </p>
+            <h1 className="app-page-title">{tr("แดชบอร์ด")}</h1>
+            <p className="app-page-description">{tr("ภาพรวมการเข้าเรียนและนักศึกษาที่ควรติดตาม")}</p>
           </div>
           <div className="w-full sm:w-40">
-            <span className="mb-1.5 block text-xs font-medium text-gray-500">
-              ปีการศึกษา
-            </span>
+            <span className="mb-1.5 block text-xs font-medium text-gray-500">{tr("ปีการศึกษา")}</span>
             <AttendanceDropdown
               value={String(selectedYear)}
               options={years.map((year) => ({
                 value: String(year),
                 label: String(year),
               }))}
-              placeholder="เลือกปี"
-              ariaLabel="เลือกปีการศึกษา"
+              placeholder={tr("เลือกปี")}
+              ariaLabel={tr("เลือกปีการศึกษา")}
               allowEmpty={false}
               onChange={(value) => value && setSelectedYear(Number(value))}
             />
@@ -154,7 +154,7 @@ export default function DashboardPage() {
             role="alert"
             className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
-            {error}
+            {tr(error)}
           </div>
         )}
 
@@ -162,7 +162,7 @@ export default function DashboardPage() {
           <>
             <section
               className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-              aria-label="ข้อมูลสรุป"
+              aria-label={tr("ข้อมูลสรุป")}
             >
               {cards.map((card) => {
                 const Icon = card.icon;
@@ -177,11 +177,11 @@ export default function DashboardPage() {
                       <Icon className="h-6 w-6" />
                     </span>
                     <div>
-                      <p className="text-sm text-gray-500">{card.label}</p>
+                      <p className="text-sm text-gray-500">{tr(card.label)}</p>
                       <p className="mt-1 text-2xl font-semibold text-gray-800">
-                        {card.value.toLocaleString("th-TH")}{" "}
+                        {card.value.toLocaleString(getLocale())}{" "}
                         <span className="text-sm font-normal text-gray-400">
-                          {card.suffix}
+                          {tr(card.suffix)}
                         </span>
                       </p>
                     </div>
@@ -213,6 +213,8 @@ export default function DashboardPage() {
 }
 
 function RiskSummaryCard({ count, total }: { count: number; total: number }) {
+  const { tr } = useLanguage();
+
   const rate = total > 0 ? Math.round((count / total) * 100) : 0;
   const hasRisk = count > 0;
 
@@ -229,14 +231,12 @@ function RiskSummaryCard({ count, total }: { count: number; total: number }) {
           <span
             className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${hasRisk ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}
           >
-            {hasRisk ? "ควรตรวจสอบ" : "สถานะปกติ"}
+            {hasRisk ? tr("ควรตรวจสอบ") : tr("สถานะปกติ")}
           </span>
-          <p className="mt-3 text-sm font-medium text-gray-600">
-            นักศึกษาที่ควรติดตาม
-          </p>
+          <p className="mt-3 text-sm font-medium text-gray-600">{tr("นักศึกษาที่ควรติดตาม")}</p>
           <p className="mt-1 text-3xl font-semibold text-gray-900">
-            {count.toLocaleString("th-TH")}{" "}
-            <span className="text-sm font-normal text-gray-500">คน</span>
+            {count.toLocaleString(getLocale())}{" "}
+            <span className="text-sm font-normal text-gray-500">{tr("คน")}</span>
           </p>
         </div>
         <span
@@ -267,6 +267,8 @@ function RiskSummaryCard({ count, total }: { count: number; total: number }) {
 }
 
 function AttendanceDistribution({ overview }: { overview: DashboardOverview }) {
+  const { tr } = useLanguage();
+
   const items = [
     {
       label: "มาเรียน",
@@ -292,15 +294,11 @@ function AttendanceDistribution({ overview }: { overview: DashboardOverview }) {
     <section className="app-card overflow-hidden">
       <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">
-            สถานะการเข้าเรียนทั้งระบบ
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            สัดส่วนจากรายการเช็กชื่อทั้งหมดในปีการศึกษานี้
-          </p>
+          <h2 className="text-lg font-semibold text-gray-800">{tr("สถานะการเข้าเรียนทั้งระบบ")}</h2>
+          <p className="mt-1 text-sm text-gray-500">{tr("สัดส่วนจากรายการเช็กชื่อทั้งหมดในปีการศึกษานี้")}</p>
         </div>
         <div className="rounded-xl bg-blue-50 px-4 py-2 text-right">
-          <p className="text-xs text-blue-600">อัตราเข้าเรียนเฉลี่ย</p>
+          <p className="text-xs text-blue-600">{tr("อัตราเข้าเรียนเฉลี่ย")}</p>
           <p className="text-xl font-semibold text-blue-700">
             {overview.average.percent.toFixed(0)}%
           </p>
@@ -322,17 +320,15 @@ function AttendanceDistribution({ overview }: { overview: DashboardOverview }) {
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${item.color}`}
                     />
-                    {item.label}
+                    {tr(item.label)}
                   </span>
                   <span className={`text-sm font-semibold ${item.text}`}>
                     {rate.toFixed(0)}%
                   </span>
                 </div>
                 <p className="mt-3 text-2xl font-semibold text-gray-800">
-                  {item.value.toLocaleString("th-TH")}{" "}
-                  <span className="text-xs font-normal text-gray-400">
-                    ครั้ง
-                  </span>
+                  {item.value.toLocaleString(getLocale())}{" "}
+                  <span className="text-xs font-normal text-gray-400">{tr("ครั้ง")}</span>
                 </p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-200">
                   <div
@@ -350,6 +346,8 @@ function AttendanceDistribution({ overview }: { overview: DashboardOverview }) {
 }
 
 function PageLoading() {
+  const { tr } = useLanguage();
+
   return (
     <div
       className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300"
@@ -357,13 +355,15 @@ function PageLoading() {
     >
       <div className="flex flex-col items-center gap-4">
         <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
-        <p className="text-base text-white">กำลังโหลด...</p>
+        <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
       </div>
     </div>
   );
 }
 
 function MonthlyChart({ data }: { data: DashboardWeeklyItem[] }) {
+  const { tr } = useLanguage();
+
   const maximum = Math.max(
     1,
     ...data.map((item) => item.present + item.late + item.leave),
@@ -371,12 +371,8 @@ function MonthlyChart({ data }: { data: DashboardWeeklyItem[] }) {
   return (
     <section className="app-card overflow-hidden">
       <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800">
-          แนวโน้มการเข้าเรียน
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          จำนวนการเช็คชื่อแยกตามเดือน
-        </p>
+        <h2 className="text-lg font-semibold text-gray-800">{tr("แนวโน้มการเข้าเรียน")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{tr("จำนวนการเช็คชื่อแยกตามเดือน")}</p>
       </div>
       {data.length === 0 ? (
         <SmallEmpty text="ยังไม่มีข้อมูลแนวโน้ม" />
@@ -391,8 +387,7 @@ function MonthlyChart({ data }: { data: DashboardWeeklyItem[] }) {
                     {formatMonth(item.week)}
                   </span>
                   <span className="text-gray-500">
-                    {total.toLocaleString("th-TH")} รายการ
-                  </span>
+                    {total.toLocaleString(getLocale())}{" "}{tr("รายการ")}</span>
                 </div>
                 <div className="flex h-3 overflow-hidden rounded-full bg-gray-100">
                   <span
@@ -412,9 +407,9 @@ function MonthlyChart({ data }: { data: DashboardWeeklyItem[] }) {
             );
           })}
           <div className="flex flex-wrap gap-4 border-t border-gray-100 pt-4 text-xs text-gray-500">
-            <Legend color="bg-emerald-500" label="มาเรียน" />
-            <Legend color="bg-amber-400" label="มาสาย" />
-            <Legend color="bg-sky-400" label="ลา" />
+            <Legend color="bg-emerald-500" label={tr("มาเรียน")} />
+            <Legend color="bg-amber-400" label={tr("มาสาย")} />
+            <Legend color="bg-sky-400" label={tr("ลา")} />
           </div>
         </div>
       )}
@@ -427,15 +422,13 @@ function RankingList({
 }: {
   data: DashboardRanking["ranking"]["percent"]["top"];
 }) {
+  const { tr } = useLanguage();
+
   return (
     <section className="app-card overflow-hidden">
       <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800">
-          เข้าเรียนสม่ำเสมอ
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          5 อันดับตามอัตราการเข้าเรียน
-        </p>
+        <h2 className="text-lg font-semibold text-gray-800">{tr("เข้าเรียนสม่ำเสมอ")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{tr("5 อันดับตามอัตราการเข้าเรียน")}</p>
       </div>
       {data.length === 0 ? (
         <SmallEmpty text="ยังไม่มีข้อมูลอันดับ" />
@@ -453,7 +446,7 @@ function RankingList({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-gray-800">
-                  {student.name || "ไม่ระบุชื่อ"}
+                  {student.name || tr("ไม่ระบุชื่อ")}
                 </p>
                 <p className="text-xs text-gray-500">{student.studentId}</p>
               </div>
@@ -473,15 +466,13 @@ function RecentActivity({
 }: {
   data: DashboardOverview["recentActivity"];
 }) {
+  const { tr } = useLanguage();
+
   return (
     <section className="app-card overflow-hidden">
       <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800">
-          การเช็กชื่อล่าสุด
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          ความเคลื่อนไหวล่าสุดจากทุกวิชา
-        </p>
+        <h2 className="text-lg font-semibold text-gray-800">{tr("การเช็กชื่อล่าสุด")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{tr("ความเคลื่อนไหวล่าสุดจากทุกวิชา")}</p>
       </div>
       {data.length === 0 ? (
         <SmallEmpty text="ยังไม่มีกิจกรรมการเช็กชื่อ" />
@@ -517,6 +508,8 @@ function RecentActivity({
 }
 
 function RiskTable({ data }: { data: DashboardOverview["riskStudents"] }) {
+  const { tr } = useLanguage();
+
   return (
     <section className="overflow-hidden rounded-2xl border border-amber-100 bg-white">
       <div className="flex flex-col gap-3 border-b border-amber-100 bg-gradient-to-r from-amber-50/80 to-white px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -525,45 +518,30 @@ function RiskTable({ data }: { data: DashboardOverview["riskStudents"] }) {
             <ExclamationTriangleIcon className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">
-              นักศึกษาที่ควรติดตาม
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              อัตราการเข้าเรียนต่ำกว่า 60% ควรตรวจสอบและให้คำแนะนำ
-            </p>
+            <h2 className="text-lg font-semibold text-gray-800">{tr("นักศึกษาที่ควรติดตาม")}</h2>
+            <p className="mt-1 text-sm text-gray-500">{tr("อัตราการเข้าเรียนต่ำกว่า 60% ควรตรวจสอบและให้คำแนะนำ")}</p>
           </div>
         </div>
         <span className="w-fit rounded-full border border-amber-200 bg-white px-3 py-1.5 text-xs font-semibold text-amber-700">
-          {data.length.toLocaleString("th-TH")} คน
-        </span>
+          {data.length.toLocaleString(getLocale())}{" "}{tr("คน")}</span>
       </div>
       {data.length === 0 ? (
         <div className="flex min-h-48 flex-col items-center justify-center p-6 text-center">
           <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
             <ShieldCheckIcon className="h-6 w-6" />
           </span>
-          <p className="text-sm font-medium text-gray-700">
-            นักศึกษาทุกคนอยู่ในเกณฑ์ปกติ
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            ยังไม่มีรายชื่อที่ต้องติดตามในปีการศึกษานี้
-          </p>
+          <p className="text-sm font-medium text-gray-700">{tr("นักศึกษาทุกคนอยู่ในเกณฑ์ปกติ")}</p>
+          <p className="mt-1 text-xs text-gray-500">{tr("ยังไม่มีรายชื่อที่ต้องติดตามในปีการศึกษานี้")}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[620px] text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="px-6 py-3 text-left font-medium">
-                  รหัสนักศึกษา
-                </th>
-                <th className="px-6 py-3 text-left font-medium">
-                  ชื่อ-นามสกุล
-                </th>
-                <th className="px-6 py-3 text-center font-medium">เข้าเรียน</th>
-                <th className="px-6 py-3 text-center font-medium">
-                  อัตราการเข้าเรียน
-                </th>
+                <th className="px-6 py-3 text-left font-medium">{tr("รหัสนักศึกษา")}</th>
+                <th className="px-6 py-3 text-left font-medium">{tr("ชื่อ-นามสกุล")}</th>
+                <th className="px-6 py-3 text-center font-medium">{tr("เข้าเรียน")}</th>
+                <th className="px-6 py-3 text-center font-medium">{tr("อัตราการเข้าเรียน")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -602,24 +580,28 @@ function RiskTable({ data }: { data: DashboardOverview["riskStudents"] }) {
 }
 
 function SmallEmpty({ text }: { text: string }) {
+  const { tr } = useLanguage();
+
   return (
     <div className="flex min-h-48 flex-col items-center justify-center p-6 text-center text-gray-400">
       <ChartBarIcon className="mb-3 h-9 w-9" />
-      <p className="text-sm">{text}</p>
+      <p className="text-sm">{tr(text)}</p>
     </div>
   );
 }
 function Legend({ color, label }: { color: string; label: string }) {
+  const { tr } = useLanguage();
+
   return (
     <span className="flex items-center gap-1.5">
       <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
-      {label}
+      {tr(label)}
     </span>
   );
 }
 function formatMonth(value: string) {
   const [year, month] = value.split("-").map(Number);
-  return new Intl.DateTimeFormat("th-TH", {
+  return new Intl.DateTimeFormat(getLocale(), {
     month: "short",
     year: "numeric",
   }).format(new Date(year, month - 1, 1));
@@ -628,7 +610,7 @@ function formatMonth(value: string) {
 function formatShortDate(value: string) {
   const date = new Date(`${value}T00:00:00+07:00`);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("th-TH", {
+  return new Intl.DateTimeFormat(getLocale(), {
     day: "numeric",
     month: "short",
   }).format(date);

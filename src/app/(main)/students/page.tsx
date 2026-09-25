@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { classesApi } from "@/services/api/classes";
 import { majorsApi } from "@/services/api/majors";
@@ -54,6 +56,8 @@ type ImportRow = { section: string; file: File | null };
 type ImportResult = { section: string; message: string; success: boolean };
 
 export default function StudentsPage() {
+  const { tr } = useLanguage();
+
   const router = useRouter();
   const { showConfirm } = useConfirm();
   const { showAlert } = useAlert();
@@ -420,7 +424,7 @@ export default function StudentsPage() {
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
             <div className="flex flex-col items-center gap-4">
               <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
-              <p className="text-base text-white">กำลังโหลด...</p>
+              <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
             </div>
           </div>
         )}
@@ -432,12 +436,8 @@ export default function StudentsPage() {
           >
             <div className="flex flex-col gap-4 px-4 pt-5 sm:px-6 sm:pt-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <h1 className="text-[26px] font-semibold text-gray-800">
-                  นักศึกษา
-                </h1>
-                <p className="text-sm text-gray-400 mt-1">
-                  แสดงข้อมูลนักศึกษาในระบบ
-                </p>
+                <h1 className="text-[26px] font-semibold text-gray-800">{tr("นักศึกษา")}</h1>
+                <p className="text-sm text-gray-400 mt-1">{tr("แสดงข้อมูลนักศึกษาในระบบ")}</p>
               </div>
 
               {hasInitialData && (
@@ -446,9 +446,7 @@ export default function StudentsPage() {
                     ref={yearRef}
                     className="relative flex items-center justify-between gap-2 sm:justify-start"
                   >
-                    <span className="text-sm text-gray-500 whitespace-nowrap">
-                      ปีการศึกษา:
-                    </span>
+                    <span className="text-sm text-gray-500 whitespace-nowrap">{tr("ปีการศึกษา:")}</span>
 
                     <button
                       type="button"
@@ -460,7 +458,7 @@ export default function StudentsPage() {
                           selectedYear ? "text-gray-800" : "text-gray-400"
                         }
                       >
-                        {selectedYear || "เลือกปี"}
+                        {selectedYear || tr("เลือกปี")}
                       </span>
 
                       <ChevronDownIcon className="w-4 h-4 text-blue-500 ml-2" />
@@ -469,9 +467,7 @@ export default function StudentsPage() {
                     {openYear && (
                       <div className="absolute right-0 top-[40px] z-20 bg-white border border-gray-200 rounded-md shadow max-h-48 overflow-y-auto w-[100px] cursor-pointer">
                         {years.length === 0 ? (
-                          <div className="px-3 py-2 text-sm text-gray-400">
-                            ไม่มีข้อมูลปี
-                          </div>
+                          <div className="px-3 py-2 text-sm text-gray-400">{tr("ไม่มีข้อมูลปี")}</div>
                         ) : (
                           years.map((y) => (
                             <button
@@ -506,9 +502,7 @@ export default function StudentsPage() {
                   <button
                     onClick={() => router.push("/students/create")}
                     className="h-[40px] w-full px-5 rounded-md text-[14px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] cursor-pointer sm:w-auto"
-                  >
-                    + เพิ่มนักศึกษา
-                  </button>
+                  >{tr("+ เพิ่มนักศึกษา")}</button>
                 </div>
               )}
             </div>
@@ -541,9 +535,7 @@ export default function StudentsPage() {
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
                   <EmptyStateIcon kind="students" />
 
-                  <p className="mb-4 whitespace-nowrap text-sm text-gray-500">
-                    ยังไม่มีข้อมูลนักศึกษา
-                  </p>
+                  <p className="mb-4 whitespace-nowrap text-sm text-gray-500">{tr("ยังไม่มีข้อมูลนักศึกษา")}</p>
 
                   <button
                     onClick={openImportDialog}
@@ -559,18 +551,14 @@ export default function StudentsPage() {
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
                   <EmptyStateIcon kind="students" />
 
-                  <p className="whitespace-nowrap text-sm text-gray-500">
-                    ยังไม่มีข้อมูลรายนักศึกษาล่าสุด
-                  </p>
+                  <p className="whitespace-nowrap text-sm text-gray-500">{tr("ยังไม่มีข้อมูลรายนักศึกษาล่าสุด")}</p>
                 </div>
               )}
 
               {hasInitialData && data.length > 0 && (
                 <>
                   <div className="mt-2 mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-base font-semibold text-gray-600">
-                      นักศึกษา ทั้งหมด {filteredData.length} รายการ
-                    </p>
+                    <p className="text-base font-semibold text-gray-600">{tr("นักศึกษา ทั้งหมด")}{" "}{filteredData.length}{" "}{tr("รายการ")}</p>
                     {selectedListClass && selectedClassHasStudents && (
                       <button
                         type="button"
@@ -580,8 +568,8 @@ export default function StudentsPage() {
                       >
                         <TrashIcon className="h-4 w-4" />
                         {deletingClass
-                          ? "กำลังลบ..."
-                          : "ลบรายชื่อทั้งหมดในวิชานี้"}
+                          ? tr("กำลังลบ...")
+                          : tr("ลบรายชื่อทั้งหมดในวิชานี้")}
                       </button>
                     )}
                   </div>
@@ -651,21 +639,19 @@ export default function StudentsPage() {
               <h2
                 id="import-dialog-title"
                 className="text-lg font-semibold text-gray-800"
-              >
-                นำเข้ารายชื่อนักศึกษา
-              </h2>
+              >{tr("นำเข้ารายชื่อนักศึกษา")}</h2>
             </div>
 
             <div className="border border-gray-50 bg-[var(--card)] rounded-xl p-4 space-y-4">
               <div ref={classRef} className="relative">
-                <label className="text-sm text-gray-800">วิชา</label>
+                <label className="text-sm text-gray-800">{tr("วิชา")}</label>
 
                 <div className="relative">
                   <input
-                    aria-label="ค้นหาและเลือกวิชา"
+                    aria-label={tr("ค้นหาและเลือกวิชา")}
                     disabled={importLoading}
                     value={openClass ? classSearch : selectedClass?.name || ""}
-                    placeholder="เลือกหรือพิมพ์ค้นหาวิชา"
+                    placeholder={tr("เลือกหรือพิมพ์ค้นหาวิชา")}
                     onFocus={() => {
                       setClassSearch("");
                       setOpenClass(true);
@@ -696,8 +682,8 @@ export default function StudentsPage() {
                     {filteredClasses.length === 0 ? (
                       <div className="px-4 py-2 text-sm text-gray-400">
                         {classes.length
-                          ? "ไม่พบวิชาที่ค้นหา"
-                          : "ไม่พบข้อมูลวิชา"}
+                          ? tr("ไม่พบวิชาที่ค้นหา")
+                          : tr("ไม่พบข้อมูลวิชา")}
                       </div>
                     ) : (
                       filteredClasses.map((c) => {
@@ -729,14 +715,14 @@ export default function StudentsPage() {
               </div>
 
               <div ref={majorRef} className="relative">
-                <label className="text-sm text-gray-800">สาขา</label>
+                <label className="text-sm text-gray-800">{tr("สาขา")}</label>
 
                 <div className="relative">
                   <input
-                    aria-label="ค้นหาและเลือกสาขา"
+                    aria-label={tr("ค้นหาและเลือกสาขา")}
                     disabled={importLoading}
                     value={openMajor ? majorSearch : selectedMajor}
-                    placeholder="เลือกหรือพิมพ์ค้นหาสาขา"
+                    placeholder={tr("เลือกหรือพิมพ์ค้นหาสาขา")}
                     onFocus={() => {
                       setMajorSearch("");
                       setOpenMajor(true);
@@ -767,8 +753,8 @@ export default function StudentsPage() {
                     {filteredMajors.length === 0 ? (
                       <div className="px-4 py-2 text-sm text-gray-400">
                         {majors.length
-                          ? "ไม่พบสาขาที่ค้นหา"
-                          : "ไม่พบข้อมูลสาขา"}
+                          ? tr("ไม่พบสาขาที่ค้นหา")
+                          : tr("ไม่พบข้อมูลสาขา")}
                       </div>
                     ) : (
                       filteredMajors.map((m) => {
@@ -801,16 +787,9 @@ export default function StudentsPage() {
 
               <div className="space-y-3">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-800">
-                    ไฟล์รายชื่อตาม Section
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500">
-                    กรอกหมายเลข Section และเลือกไฟล์ .xlsx หรือ .xls แยกกัน
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    รองรับคอลัมน์รหัสประจำตัว, ชื่อ และ kkumail
-                    โดยมีข้อมูลวิชาอยู่เหนือหัวตารางได้
-                  </p>
+                  <h3 className="text-sm font-medium text-gray-800">{tr("ไฟล์รายชื่อตาม Section")}</h3>
+                  <p className="mt-1 text-xs text-gray-500">{tr("กรอกหมายเลข Section และเลือกไฟล์ .xlsx หรือ .xls แยกกัน")}</p>
+                  <p className="mt-1 text-xs text-gray-500">{tr("รองรับคอลัมน์รหัสประจำตัว, ชื่อ และ kkumail โดยมีข้อมูลวิชาอยู่เหนือหัวตารางได้")}</p>
                 </div>
                 {importRows.map((row, index) => (
                   <div
@@ -831,7 +810,7 @@ export default function StudentsPage() {
                           inputMode="numeric"
                           pattern="[1-9][0-9]*"
                           value={row.section}
-                          placeholder="เช่น 4"
+                          placeholder={tr("เช่น 4")}
                           disabled={importLoading}
                           onChange={(event) => {
                             const section = event.target.value.replace(
@@ -868,15 +847,13 @@ export default function StudentsPage() {
                             setImportResults([]);
                           }}
                           className="shrink-0 cursor-pointer px-2 py-2 text-sm text-red-500 hover:text-red-600 disabled:opacity-50"
-                        >
-                          ลบ
-                        </button>
+                        >{tr("ลบ")}</button>
                       )}
                     </div>
                     <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-3 text-sm text-gray-600 hover:bg-gray-50">
                       <DocumentArrowUpIcon className="h-5 w-5 shrink-0 text-gray-400" />
                       <span className="min-w-0 truncate">
-                        {row.file?.name || "เลือกไฟล์ Excel (.xlsx, .xls)"}
+                        {row.file?.name || tr("เลือกไฟล์ Excel (.xlsx, .xls)")}
                       </span>
                       <input
                         type="file"
@@ -923,9 +900,7 @@ export default function StudentsPage() {
                     setImportResults([]);
                   }}
                   className="cursor-pointer text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
-                >
-                  + เพิ่ม Section
-                </button>
+                >{tr("+ เพิ่ม Section")}</button>
               </div>
             </div>
 
@@ -941,7 +916,7 @@ export default function StudentsPage() {
                       result.success ? "text-green-700" : "text-red-600"
                     }
                   >
-                    Section {result.section}: {result.message}
+                    Section {result.section}: {tr(result.message)}
                   </p>
                 ))}
               </div>
@@ -955,7 +930,7 @@ export default function StudentsPage() {
                 onClick={() => setOpenImport(false)}
                 className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 cursor-pointer"
               >
-                {importResults.length ? "ปิด" : "ยกเลิก"}
+                {importResults.length ? tr("ปิด") : tr("ยกเลิก")}
               </button>
 
               <button
@@ -1050,12 +1025,12 @@ export default function StudentsPage() {
                 }`}
               >
                 {importLoading
-                  ? "กำลังนำเข้า..."
+                  ? tr("กำลังนำเข้า...")
                   : importResults.some((result) => !result.success)
-                    ? "ลองนำเข้าส่วนที่ไม่สำเร็จ"
+                    ? tr("ลองนำเข้าส่วนที่ไม่สำเร็จ")
                     : allImportsComplete
-                      ? "นำเข้าสำเร็จ"
-                      : "นำเข้ารายชื่อ"}
+                      ? tr("นำเข้าสำเร็จ")
+                      : tr("นำเข้ารายชื่อ")}
               </button>
             </div>
           </div>

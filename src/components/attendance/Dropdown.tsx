@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useEffect, useId, useRef, useState } from "react";
@@ -26,6 +28,8 @@ export default function AttendanceDropdown({
   searchable = false,
   ariaLabel,
 }: Props) {
+  const { tr } = useLanguage();
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -75,7 +79,7 @@ export default function AttendanceDropdown({
             aria-expanded={open && !disabled}
             aria-controls={listId}
             aria-autocomplete="list"
-            placeholder={placeholder}
+            placeholder={tr(placeholder)}
             value={open && query !== null ? query : selected?.label || ""}
             onFocus={(event) => {
               setQuery(null);
@@ -158,7 +162,7 @@ export default function AttendanceDropdown({
           <span
             className={`truncate ${selected ? "text-gray-800" : "text-gray-400"}`}
           >
-            {selected?.label || placeholder}
+            {selected?.label || tr(placeholder)}
           </span>
           <ChevronDownIcon
             className={`h-4 w-4 shrink-0 text-blue-500 transition-transform ${open ? "rotate-180" : ""}`}
@@ -182,7 +186,7 @@ export default function AttendanceDropdown({
             )}
             {filteredOptions.length === 0 ? (
               <p role="status" className="px-4 py-3 text-sm text-gray-400">
-                {query?.trim() ? "ไม่พบข้อมูลที่ตรงกับคำค้นหา" : "ไม่มีข้อมูล"}
+                {query?.trim() ? tr("ไม่พบข้อมูลที่ตรงกับคำค้นหา") : tr("ไม่มีข้อมูล")}
               </p>
             ) : (
               filteredOptions.map((option) => (

@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { classesApi } from "@/services/api/classes";
 import { useRouter } from "next/navigation";
@@ -11,6 +13,8 @@ import Select from "@/components/classes/Select";
 import type { ClassResponse } from "@/types/classes";
 
 export default function ClassesPage() {
+  const { tr } = useLanguage();
+
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -124,7 +128,7 @@ export default function ClassesPage() {
                 "
               />
 
-              <p className="text-base text-white">กำลังโหลด...</p>
+              <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
             </div>
           </div>
         )}
@@ -153,13 +157,9 @@ export default function ClassesPage() {
               "
             >
               <div>
-                <h1 className="text-[26px] font-semibold text-gray-800">
-                  ชั้นเรียน
-                </h1>
+                <h1 className="text-[26px] font-semibold text-gray-800">{tr("ชั้นเรียน")}</h1>
 
-                <p className="mt-1 text-sm text-gray-400">
-                  จัดการข้อมูลรายวิชาที่มีอยู่ในระบบ
-                </p>
+                <p className="mt-1 text-sm text-gray-400">{tr("จัดการข้อมูลรายวิชาที่มีอยู่ในระบบ")}</p>
               </div>
 
               <button
@@ -181,9 +181,7 @@ export default function ClassesPage() {
                   md:mt-0
                   md:w-auto
                 "
-              >
-                + เพิ่มวิชา
-              </button>
+              >{tr("+ เพิ่มวิชา")}</button>
             </div>
 
             <div className="shrink-0 px-6 pb-4">
@@ -191,9 +189,7 @@ export default function ClassesPage() {
                 <Select data={classes} value={filter} onChange={setFilter} />
               </div>
 
-              <div className="mt-6 text-base font-semibold text-gray-600">
-                ชั้นเรียน ทั้งหมด {filteredClasses.length} รายการ
-              </div>
+              <div className="mt-6 text-base font-semibold text-gray-600">{tr("ชั้นเรียน ทั้งหมด")}{" "}{filteredClasses.length}{" "}{tr("รายการ")}</div>
             </div>
 
             <div className="px-6 pb-6">
@@ -244,9 +240,7 @@ export default function ClassesPage() {
               >
                 <EmptyStateIcon kind="classes" />
 
-                <p className="mb-4 whitespace-nowrap text-sm text-gray-500">
-                  ยังไม่มีข้อมูลรายวิชาล่าสุด
-                </p>
+                <p className="mb-4 whitespace-nowrap text-sm text-gray-500">{tr("ยังไม่มีข้อมูลรายวิชาล่าสุด")}</p>
 
                 <button
                   type="button"
@@ -266,9 +260,7 @@ export default function ClassesPage() {
                     transition
                     hover:bg-[var(--primary-hover)]
                   "
-                >
-                  + เพิ่มวิชา
-                </button>
+                >{tr("+ เพิ่มวิชา")}</button>
               </div>
             </div>
           </div>

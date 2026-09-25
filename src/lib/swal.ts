@@ -1,3 +1,4 @@
+import { translate as tr } from "@/lib/language";
 import Swal from "sweetalert2";
 import type { SweetAlertOptions } from "sweetalert2";
 
@@ -31,19 +32,19 @@ const baseSwalOptions: SweetAlertOptions = {
 const getDefaultDescription = (variant: ConfirmVariant) => {
   switch (variant) {
     case "delete":
-      return "การลบข้อมูลนี้ไม่สามารถกู้คืนได้";
+      return tr("การลบข้อมูลนี้ไม่สามารถกู้คืนได้");
 
     case "warning":
-      return "การดำเนินการนี้อาจมีผลกระทบกับข้อมูล";
+      return tr("การดำเนินการนี้อาจมีผลกระทบกับข้อมูล");
 
     case "edit":
-      return "คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่";
+      return tr("คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่");
 
     case "withdraw":
-      return "คุณต้องการถอนรายวิชานี้ใช่หรือไม่";
+      return tr("คุณต้องการถอนรายวิชานี้ใช่หรือไม่");
 
     default:
-      return "คุณต้องการบันทึกข้อมูลใช่หรือไม่";
+      return tr("คุณต้องการบันทึกข้อมูลใช่หรือไม่");
   }
 };
 
@@ -211,21 +212,21 @@ export const appSwal = {
   }) {
     return Swal.fire({
       ...baseSwalOptions,
-      titleText: title,
+      titleText: tr(title),
       text: onSaveMany
-        ? "กรอกชื่อ-นามสกุล และกดเพิ่มอาจารย์อีกคนเพื่อบันทึกหลายคนพร้อมกัน"
-        : "กรอกชื่อ-นามสกุลอาจารย์ให้ครบถ้วนก่อนบันทึก",
+        ? tr("กรอกชื่อ-นามสกุล และกดเพิ่มอาจารย์อีกคนเพื่อบันทึกหลายคนพร้อมกัน")
+        : tr("กรอกชื่อ-นามสกุลอาจารย์ให้ครบถ้วนก่อนบันทึก"),
       iconHtml:
         '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-5 9 5-9 5-9-5Zm3 2v6c3 3 9 3 12 0v-6M21 9v7" /></svg>',
       input: "text",
-      inputLabel: "ชื่อ-นามสกุลอาจารย์",
-      inputPlaceholder: "กรอกชื่อ-นามสกุลอาจารย์",
+      inputLabel: tr("ชื่อ-นามสกุลอาจารย์"),
+      inputPlaceholder: tr("กรอกชื่อ-นามสกุลอาจารย์"),
       inputValue: initialValue,
       inputAttributes: { autocomplete: "name" },
       showCloseButton: false,
       showCancelButton: true,
-      cancelButtonText: "ยกเลิก",
-      confirmButtonText: "บันทึก",
+      cancelButtonText: tr("ยกเลิก"),
+      confirmButtonText: tr("บันทึก"),
       reverseButtons: true,
       showLoaderOnConfirm: true,
       didOpen: () => {
@@ -239,7 +240,7 @@ export const appSwal = {
         const add = document.createElement("button");
         add.type = "button";
         add.className = "app-swal-add-teacher";
-        add.textContent = "+ เพิ่มอาจารย์อีกคน";
+        add.textContent = tr("+ เพิ่มอาจารย์อีกคน");
         let nextId = 1;
         add.onclick = () => {
           if (Swal.isLoading()) return;
@@ -248,19 +249,19 @@ export const appSwal = {
           row.className = "app-swal-teacher-row";
           const label = document.createElement("label");
           label.className = "app-swal-input-label";
-          label.textContent = "ชื่อ-นามสกุลอาจารย์";
+          label.textContent = tr("ชื่อ-นามสกุลอาจารย์");
           const field = document.createElement("input");
           field.id = `app-swal-teacher-${nextId++}`;
           field.className = "swal2-input app-swal-input";
-          field.placeholder = "กรอกชื่อ-นามสกุลอาจารย์";
+          field.placeholder = tr("กรอกชื่อ-นามสกุลอาจารย์");
           field.autocomplete = "name";
           field.dataset.teacherName = "true";
           label.htmlFor = field.id;
           const remove = document.createElement("button");
           remove.type = "button";
           remove.className = "app-swal-remove-teacher";
-          remove.textContent = "ลบ";
-          remove.setAttribute("aria-label", "ลบช่องอาจารย์นี้");
+          remove.textContent = tr("ลบ");
+          remove.setAttribute("aria-label", tr("ลบช่องอาจารย์นี้"));
           remove.onclick = () => {
             if (Swal.isLoading()) return;
             row.remove();
@@ -277,10 +278,10 @@ export const appSwal = {
 
       inputValidator: async (value) => {
         const trimmed = value.trim();
-        if (!trimmed) return "กรุณากรอกชื่อ-นามสกุลอาจารย์";
+        if (!trimmed) return tr("กรุณากรอกชื่อ-นามสกุลอาจารย์");
         if (validateName) {
           const result = await validateName(trimmed);
-          if (result) return result;
+          if (result) return tr(result);
         }
         return undefined;
       },
@@ -302,7 +303,7 @@ export const appSwal = {
             ];
             if (names.some((name) => !name)) {
               Swal.showValidationMessage(
-                "กรุณากรอกชื่อ-นามสกุลอาจารย์ให้ครบทุกคน",
+                tr("กรุณากรอกชื่อ-นามสกุลอาจารย์ให้ครบทุกคน"),
               );
               return false;
             }
@@ -310,7 +311,7 @@ export const appSwal = {
               new Set(names.map(normalizeTeacherName)).size !== names.length
             ) {
               Swal.showValidationMessage(
-                "มีชื่ออาจารย์ซ้ำในรายการที่กำลังเพิ่ม",
+                tr("มีชื่ออาจารย์ซ้ำในรายการที่กำลังเพิ่ม"),
               );
               return false;
             }
@@ -323,13 +324,13 @@ export const appSwal = {
           }
           return true;
         } catch (error) {
-          Swal.showValidationMessage("บันทึกไม่สำเร็จ");
+          Swal.showValidationMessage(tr("บันทึกไม่สำเร็จ"));
           const message = Swal.getValidationMessage();
           if (message)
             message.textContent =
               error instanceof Error
-                ? error.message
-                : "บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง";
+                ? tr(error.message)
+                : tr("บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง");
           return false;
         } finally {
           controls?.forEach((control) => {
@@ -364,12 +365,12 @@ export const appSwal = {
   }) {
     return Swal.fire({
       ...baseSwalOptions,
-      titleText: title,
-      text: text ?? description ?? getDefaultDescription(variant),
+      titleText: tr(title),
+      text: tr(text ?? description ?? getDefaultDescription(variant)),
       html,
       showCancelButton: true,
-      cancelButtonText: "ยกเลิก",
-      confirmButtonText: "ยืนยัน",
+      cancelButtonText: tr("ยกเลิก"),
+      confirmButtonText: tr("ยืนยัน"),
       reverseButtons: true,
       iconHtml: getIconHtml(variant),
       customClass: {
@@ -397,10 +398,10 @@ export const appSwal = {
       ...baseSwalOptions,
       showCloseButton: false,
       iconHtml: getStatusIconHtml("success"),
-      title,
-      text,
+      titleText: tr(title),
+      text: tr(text),
       html,
-      confirmButtonText: "ตกลง",
+      confirmButtonText: tr("ตกลง"),
       customClass: {
         popup: "app-swal-popup app-swal-popup-success",
         title: "app-swal-title app-swal-title-success",
@@ -416,9 +417,9 @@ export const appSwal = {
       ...baseSwalOptions,
       showCloseButton: false,
       iconHtml: getStatusIconHtml("error"),
-      title: "เกิดข้อผิดพลาด",
-      html: text,
-      confirmButtonText: "ตกลง",
+      title: tr("เกิดข้อผิดพลาด"),
+      text: tr(text),
+      confirmButtonText: tr("ตกลง"),
       customClass: {
         popup: "app-swal-popup app-swal-popup-error",
         title: "app-swal-title",
@@ -435,8 +436,8 @@ export const appSwal = {
     html,
     variant = "warning",
     showCancelButton = false,
-    confirmButtonText = "ตกลง",
-    cancelButtonText = "ยกเลิก",
+    confirmButtonText = tr("ตกลง"),
+    cancelButtonText = tr("ยกเลิก"),
   }: {
     title: string;
     text?: string;
@@ -448,8 +449,8 @@ export const appSwal = {
   }) {
     return Swal.fire({
       ...baseSwalOptions,
-      title,
-      text,
+      titleText: tr(title),
+      text: tr(text),
       html,
       iconHtml: getIconHtml(variant),
       showCancelButton,

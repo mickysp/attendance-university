@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage, getLocale } from "@/lib/language";
+
 
 import {
   AcademicCapIcon,
@@ -21,6 +23,8 @@ import type {
 } from "@/types/attendance";
 
 export default function AttendancePage() {
+  const { tr } = useLanguage();
+
   const [classes, setClasses] = useState<AttendanceClassOption[]>([]);
   const [summaries, setSummaries] = useState<
     Record<string, { students: StudentAttendance[]; error?: string }>
@@ -186,30 +190,26 @@ export default function AttendancePage() {
         >
           <div className="flex flex-col items-center gap-4">
             <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
-            <p className="text-base text-white">กำลังโหลด...</p>
+            <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
           </div>
         </div>
       )}
       <div className="flex min-h-full flex-col gap-5 sm:gap-6">
         <header className="app-page-header">
           <div>
-            <h1 className="app-page-title">เวลาเข้าเรียน</h1>
-            <p className="app-page-description">
-              ตรวจสอบการเช็กชื่อ คะแนน และประวัติการเข้าเรียนรายนักศึกษา
-            </p>
+            <h1 className="app-page-title">{tr("เวลาเข้าเรียน")}</h1>
+            <p className="app-page-description">{tr("ตรวจสอบการเช็กชื่อ คะแนน และประวัติการเข้าเรียนรายนักศึกษา")}</p>
           </div>
           <div className="w-full sm:w-48">
-            <span className="mb-1.5 block text-xs font-medium text-gray-500">
-              ปีการศึกษา
-            </span>
+            <span className="mb-1.5 block text-xs font-medium text-gray-500">{tr("ปีการศึกษา")}</span>
             <AttendanceDropdown
               value={selectedYear ? String(selectedYear) : ""}
               options={years.map((year) => ({
                 value: String(year),
                 label: String(year),
               }))}
-              placeholder="เลือกปี"
-              ariaLabel="เลือกปีการศึกษา"
+              placeholder={tr("เลือกปี")}
+              ariaLabel={tr("เลือกปีการศึกษา")}
               allowEmpty={false}
               onChange={(value) => {
                 setSelectedYear(value ? Number(value) : null);
@@ -225,18 +225,14 @@ export default function AttendancePage() {
             <h2
               id="attendance-filter-title"
               className="text-lg font-semibold text-gray-800"
-            >
-              เลือกข้อมูลที่ต้องการตรวจสอบ
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              เริ่มจากเลือกวิชา แล้วกรองรายชื่อตามสาขาหรือ Section
-            </p>
+            >{tr("เลือกข้อมูลที่ต้องการตรวจสอบ")}</h2>
+            <p className="mt-1 text-sm text-gray-500">{tr("เริ่มจากเลือกวิชา แล้วกรองรายชื่อตามสาขาหรือ Section")}</p>
           </div>
           <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-3">
             <FilterField
               number="1"
               icon={BookOpenIcon}
-              label="วิชา"
+              label={tr("วิชา")}
               value={selectedClass}
               onChange={(value) => {
                 setSelectedClass(value);
@@ -246,19 +242,19 @@ export default function AttendancePage() {
                 value: item._id,
                 label: getClassLabel(item),
               }))}
-              placeholder="เลือกวิชา"
+              placeholder={tr("เลือกวิชา")}
             />
             <FilterField
               number="2"
               icon={AcademicCapIcon}
-              label="สาขา"
+              label={tr("สาขา")}
               value={selectedMajor}
               onChange={(value) => {
                 setSelectedMajor(value);
                 setSelectedSection("");
               }}
               options={majors.map((major) => ({ value: major, label: major }))}
-              placeholder="ทุกสาขา"
+              placeholder={tr("ทุกสาขา")}
               disabled={!selectedClass || students.length === 0}
             />
             <FilterField
@@ -271,7 +267,7 @@ export default function AttendancePage() {
                 value: section,
                 label: `Section ${section}`,
               }))}
-              placeholder="ทุก Section"
+              placeholder={tr("ทุก Section")}
               disabled={!selectedClass || students.length === 0}
             />
           </div>
@@ -282,20 +278,20 @@ export default function AttendancePage() {
             className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             role="alert"
           >
-            {displayError}
+            {tr(displayError)}
           </div>
         )}
         {!selectedClass ? (
           <EmptyAttendanceState
             kind="classes"
-            title="เลือกวิชาเพื่อเริ่มตรวจสอบ"
-            description="ระบบจะแสดงรายชื่อนักศึกษาและสรุปการเข้าเรียนของวิชาที่เลือก"
+            title={tr("เลือกวิชาเพื่อเริ่มตรวจสอบ")}
+            description={tr("ระบบจะแสดงรายชื่อนักศึกษาและสรุปการเข้าเรียนของวิชาที่เลือก")}
           />
         ) : studentsReady && students.length === 0 ? (
           <EmptyAttendanceState
             kind="students"
-            title="ยังไม่มีข้อมูลนักศึกษา"
-            description="วิชานี้ยังไม่มีนักศึกษาหรือข้อมูลการเข้าเรียนในปีการศึกษาที่เลือก"
+            title={tr("ยังไม่มีข้อมูลนักศึกษา")}
+            description={tr("วิชานี้ยังไม่มีนักศึกษาหรือข้อมูลการเข้าเรียนในปีการศึกษาที่เลือก")}
           />
         ) : studentsReady ? (
           <>
@@ -311,13 +307,9 @@ export default function AttendancePage() {
             <section className="app-card min-h-[420px]">
               <div className="flex flex-col gap-4 border-b border-gray-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    รายชื่อนักศึกษา
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    พบ {visibleStudents.length.toLocaleString("th-TH")} จาก{" "}
-                    {students.length.toLocaleString("th-TH")} คน
-                  </p>
+                  <h2 className="text-lg font-semibold text-gray-800">{tr("รายชื่อนักศึกษา")}</h2>
+                  <p className="mt-1 text-sm text-gray-500">{tr("พบ")}{" "}{visibleStudents.length.toLocaleString(getLocale())}{" "}{tr("จาก")}{" "}{" "}
+                    {students.length.toLocaleString(getLocale())}{" "}{tr("คน")}</p>
                 </div>
                 <div className="relative w-full lg:max-w-sm">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -325,7 +317,7 @@ export default function AttendancePage() {
                     type="search"
                     value={keyword}
                     onChange={(event) => setKeyword(event.target.value)}
-                    placeholder="ค้นหาชื่อหรือรหัสนักศึกษา"
+                    placeholder={tr("ค้นหาชื่อหรือรหัสนักศึกษา")}
                     className="app-field pl-9 pr-9"
                   />
                   {keyword && (
@@ -333,7 +325,7 @@ export default function AttendancePage() {
                       type="button"
                       onClick={() => setKeyword("")}
                       className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-700"
-                      aria-label="ล้างคำค้นหา"
+                      aria-label={tr("ล้างคำค้นหา")}
                     >
                       <XMarkIcon className="h-4 w-4" />
                     </button>
@@ -375,6 +367,8 @@ function FilterField({
   placeholder,
   disabled = false,
 }: FilterFieldProps) {
+  const { tr } = useLanguage();
+
   return (
     <div className="min-w-0">
       <span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -382,7 +376,7 @@ function FilterField({
           {number}
         </span>
         <Icon className="h-4 w-4 text-gray-400" />
-        {label}
+        {tr(label)}
       </span>
       <AttendanceDropdown
         value={value}
@@ -390,8 +384,8 @@ function FilterField({
         disabled={disabled}
         onChange={onChange}
         options={options}
-        placeholder={placeholder}
-        ariaLabel={`เลือก${label}`}
+        placeholder={tr(placeholder)}
+        ariaLabel={tr("เลือก{0}", {0: label})}
       />
     </div>
   );
@@ -406,11 +400,13 @@ function EmptyAttendanceState({
   title: string;
   description: string;
 }) {
+  const { tr } = useLanguage();
+
   return (
     <section className="app-card flex min-h-[420px] flex-col items-center justify-center px-6 text-center">
       <EmptyStateIcon kind={kind} />
-      <h2 className="text-base font-semibold text-gray-700">{title}</h2>
-      <p className="mt-1 max-w-lg text-sm text-gray-500">{description}</p>
+      <h2 className="text-base font-semibold text-gray-700">{tr(title)}</h2>
+      <p className="mt-1 max-w-lg text-sm text-gray-500">{tr(description)}</p>
     </section>
   );
 }

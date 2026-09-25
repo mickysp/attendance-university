@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { classesApi } from "@/services/api/classes";
 import Link from "next/link";
@@ -23,6 +25,8 @@ export default function Table({
   data: ClassResponse[];
   onDeleteSuccess: (id: string) => void;
 }) {
+  const { tr } = useLanguage();
+
   const router = useRouter();
 
   const { showAlert } = useAlert();
@@ -177,7 +181,7 @@ export default function Table({
       <span
         className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${styles[safeStatus]}`}
       >
-        {labels[safeStatus]}
+        {tr(labels[safeStatus])}
       </span>
     );
   };
@@ -187,9 +191,7 @@ export default function Table({
       <div className="flex h-[60vh] flex-col items-center justify-center px-4 text-center">
         <EmptyStateIcon />
 
-        <p className="whitespace-nowrap text-sm text-gray-500">
-          ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง
-        </p>
+        <p className="whitespace-nowrap text-sm text-gray-500">{tr("ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง")}</p>
       </div>
     );
   }
@@ -205,9 +207,7 @@ export default function Table({
           >
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">
-                  รหัสวิชา / Section
-                </span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("รหัสวิชา / Section")}</span>
 
                 <div className="min-w-0 max-w-[65%] text-right text-sm">
                   {renderClassCodes(item.classCodes)}
@@ -215,7 +215,7 @@ export default function Table({
               </div>
 
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">ชื่อวิชา</span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("ชื่อวิชา")}</span>
 
                 <div className="min-w-0 max-w-[65%] text-right text-sm text-gray-700">
                   <div className="break-words">{item.className || "-"}</div>
@@ -223,9 +223,7 @@ export default function Table({
               </div>
 
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">
-                  อาจารย์ผู้สอน
-                </span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("อาจารย์ผู้สอน")}</span>
 
                 <div className="min-w-0 max-w-[65%] text-right text-sm">
                   {renderTeachers(item.teachers)}
@@ -233,7 +231,7 @@ export default function Table({
               </div>
 
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">สถานะ</span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("สถานะ")}</span>
 
                 <div className="text-right">{renderStatus(item.status)}</div>
               </div>
@@ -242,44 +240,42 @@ export default function Table({
             <div className="my-4 border-t border-gray-100" />
 
             <div className="flex items-center justify-between gap-2">
-              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
+              <span className="shrink-0 text-sm text-gray-500">{tr("จัดการ")}</span>
 
               <div className="@container/actions flex min-w-0 flex-1 flex-nowrap justify-end gap-2 whitespace-nowrap [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0 [&>button]:justify-center">
                 <Link
                   href={`/classes/form/${encodeURIComponent(item._id)}`}
-                  aria-label="เช็คชื่อ"
-                  title="เช็คชื่อ"
+                  aria-label={tr("เช็คชื่อ")}
+                  title={tr("เช็คชื่อ")}
                   className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
                 >
                   <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
-                  <span className="hidden @[260px]/actions:inline">
-                    เช็คชื่อ
-                  </span>
+                  <span className="hidden @[260px]/actions:inline">{tr("เช็คชื่อ")}</span>
                 </Link>
 
                 <button
                   type="button"
-                  aria-label="แก้ไข"
-                  title="แก้ไข"
+                  aria-label={tr("แก้ไข")}
+                  title={tr("แก้ไข")}
                   onClick={() => handleEdit(item._id)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <PencilSquareIcon className="h-4 w-4 shrink-0" />
 
-                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
+                  <span className="hidden @[260px]/actions:inline">{tr("แก้ไข")}</span>
                 </button>
 
                 <button
                   type="button"
-                  aria-label="ลบ"
-                  title="ลบ"
+                  aria-label={tr("ลบ")}
+                  title={tr("ลบ")}
                   onClick={() => handleDelete(item._id)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50"
                 >
                   <TrashIcon className="h-4 w-4 shrink-0" />
 
-                  <span className="hidden @[260px]/actions:inline">ลบ</span>
+                  <span className="hidden @[260px]/actions:inline">{tr("ลบ")}</span>
                 </button>
               </div>
             </div>
@@ -301,21 +297,13 @@ export default function Table({
 
             <thead className="text-gray-600">
               <tr>
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  รหัสวิชา / Section
-                </th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("รหัสวิชา / Section")}</th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  ชื่อวิชา
-                </th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("ชื่อวิชา")}</th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  อาจารย์ผู้สอน
-                </th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("อาจารย์ผู้สอน")}</th>
 
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  สถานะ
-                </th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("สถานะ")}</th>
 
                 <th
                   className="
@@ -326,9 +314,7 @@ export default function Table({
                     font-semibold
                     app-table-sticky-end
                   "
-                >
-                  จัดการ
-                </th>
+                >{tr("จัดการ")}</th>
               </tr>
             </thead>
 
@@ -381,7 +367,7 @@ export default function Table({
                       >
                         <ClipboardDocumentCheckIcon className="h-4 w-4 shrink-0" />
 
-                        <span>เช็คชื่อ</span>
+                        <span>{tr("เช็คชื่อ")}</span>
                       </Link>
 
                       <button
@@ -398,7 +384,7 @@ export default function Table({
                       >
                         <PencilSquareIcon className="h-4 w-4 shrink-0" />
 
-                        <span>แก้ไข</span>
+                        <span>{tr("แก้ไข")}</span>
                       </button>
 
                       <button
@@ -415,7 +401,7 @@ export default function Table({
                       >
                         <TrashIcon className="h-4 w-4 shrink-0" />
 
-                        <span>ลบ</span>
+                        <span>{tr("ลบ")}</span>
                       </button>
                     </div>
                   </td>
@@ -429,7 +415,7 @@ export default function Table({
       {data.length > 10 && (
         <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <span>แสดง</span>
+            <span>{tr("แสดง")}</span>
 
             <div ref={pageSizeRef} className="relative">
               <button
@@ -466,7 +452,7 @@ export default function Table({
               )}
             </div>
 
-            <span>จากทั้งหมด {data.length} รายการ</span>
+            <span>{tr("จากทั้งหมด")}{" "}{data.length}{" "}{tr("รายการ")}</span>
           </div>
 
           <div className="flex items-center justify-center gap-1.5">
@@ -475,9 +461,7 @@ export default function Table({
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
               className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
-            >
-              ก่อนหน้า
-            </button>
+            >{tr("ก่อนหน้า")}</button>
 
             {getVisiblePages().map((p) => (
               <button
@@ -499,9 +483,7 @@ export default function Table({
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
               className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
-            >
-              ถัดไป
-            </button>
+            >{tr("ถัดไป")}</button>
           </div>
         </div>
       )}

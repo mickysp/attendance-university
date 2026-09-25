@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -30,6 +32,8 @@ export default function TeacherTable({
   onEditTeacher,
   onRetry,
 }: TeacherTableProps) {
+  const { tr } = useLanguage();
+
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [openPageSize, setOpenPageSize] = useState(false);
   const [requestedPage, setPage] = useState(1);
@@ -75,9 +79,7 @@ export default function TeacherTable({
 
   if (loading)
     return (
-      <div role="status" className="py-16 text-center text-sm text-gray-500">
-        กำลังโหลดรายชื่ออาจารย์...
-      </div>
+      <div role="status" className="py-16 text-center text-sm text-gray-500">{tr("กำลังโหลดรายชื่ออาจารย์...")}</div>
     );
   if (error)
     return (
@@ -85,14 +87,12 @@ export default function TeacherTable({
         role="alert"
         className="rounded-xl border border-red-100 bg-red-50 p-6 text-center text-sm text-red-600"
       >
-        <p>{error}</p>
+        <p>{tr(error)}</p>
         <button
           type="button"
           onClick={onRetry}
           className="mt-3 cursor-pointer underline"
-        >
-          ลองอีกครั้ง
-        </button>
+        >{tr("ลองอีกครั้ง")}</button>
       </div>
     );
   if (!teachers.length)
@@ -101,8 +101,8 @@ export default function TeacherTable({
         <EmptyStateIcon kind={filterKey.trim() ? "search" : "teachers"} />
         <p className="whitespace-nowrap text-sm text-gray-500">
           {filterKey.trim()
-            ? "ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง"
-            : "ยังไม่มีข้อมูลอาจารย์ในระบบ"}
+            ? tr("ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง")
+            : tr("ยังไม่มีข้อมูลอาจารย์ในระบบ")}
         </p>
       </div>
     );
@@ -116,38 +116,36 @@ export default function TeacherTable({
             className="rounded-xl border border-gray-200 bg-white p-4"
           >
             <div className="flex items-start justify-between gap-4">
-              <span className="shrink-0 text-sm text-gray-500">
-                ชื่อ-นามสกุล
-              </span>
+              <span className="shrink-0 text-sm text-gray-500">{tr("ชื่อ-นามสกุล")}</span>
               <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">
                 {teacher.name}
               </span>
             </div>
             <div className="my-4 border-t border-gray-100" />
             <div className="flex items-center justify-between gap-2">
-              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
+              <span className="shrink-0 text-sm text-gray-500">{tr("จัดการ")}</span>
               <div className="@container/actions flex min-w-0 flex-1 justify-end gap-2 [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0">
                 <button
                   type="button"
-                  aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
-                  title="แก้ไขอาจารย์"
+                  aria-label={tr("แก้ไขอาจารย์ {0}", {0: teacher.name})}
+                  title={tr("แก้ไขอาจารย์")}
                   disabled={deletingId !== null}
                   onClick={() => onEditTeacher(teacher)}
                   className="flex cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                 >
                   <PencilSquareIcon className="h-4 w-4 shrink-0" />
-                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
+                  <span className="hidden @[260px]/actions:inline">{tr("แก้ไข")}</span>
                 </button>
                 <button
                   type="button"
-                  aria-label={`ลบอาจารย์ ${teacher.name}`}
-                  title="ลบอาจารย์"
+                  aria-label={tr("ลบอาจารย์ {0}", {0: teacher.name})}
+                  title={tr("ลบอาจารย์")}
                   disabled={deletingId !== null}
                   onClick={() => onDeleteTeacher(teacher)}
                   className="flex cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
                 >
                   <TrashIcon className="h-4 w-4 shrink-0" />
-                  <span className="hidden @[260px]/actions:inline">ลบ</span>
+                  <span className="hidden @[260px]/actions:inline">{tr("ลบ")}</span>
                 </button>
               </div>
             </div>
@@ -159,12 +157,8 @@ export default function TeacherTable({
           <table className="app-data-table w-full table-fixed text-sm">
             <thead className="text-gray-600">
               <tr>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  ชื่อ-นามสกุล
-                </th>
-                <th className="sticky top-0 z-10 w-[120px] bg-gray-50 px-3 py-3 text-left font-semibold sm:w-[190px]">
-                  จัดการ
-                </th>
+                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("ชื่อ-นามสกุล")}</th>
+                <th className="sticky top-0 z-10 w-[120px] bg-gray-50 px-3 py-3 text-left font-semibold sm:w-[190px]">{tr("จัดการ")}</th>
               </tr>
             </thead>
             <tbody>
@@ -180,25 +174,25 @@ export default function TeacherTable({
                     <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
                       <button
                         type="button"
-                        aria-label={`แก้ไขอาจารย์ ${teacher.name}`}
-                        title="แก้ไขอาจารย์"
+                        aria-label={tr("แก้ไขอาจารย์ {0}", {0: teacher.name})}
+                        title={tr("แก้ไขอาจารย์")}
                         disabled={deletingId !== null}
                         onClick={() => onEditTeacher(teacher)}
                         className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                       >
                         <PencilSquareIcon className="h-4 w-4 shrink-0" />
-                        <span className="hidden sm:inline">แก้ไข</span>
+                        <span className="hidden sm:inline">{tr("แก้ไข")}</span>
                       </button>
                       <button
                         type="button"
-                        aria-label={`ลบอาจารย์ ${teacher.name}`}
-                        title="ลบอาจารย์"
+                        aria-label={tr("ลบอาจารย์ {0}", {0: teacher.name})}
+                        title={tr("ลบอาจารย์")}
                         disabled={deletingId !== null}
                         onClick={() => onDeleteTeacher(teacher)}
                         className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-red-500 hover:bg-red-50 disabled:opacity-50"
                       >
                         <TrashIcon className="h-4 w-4 shrink-0" />
-                        <span className="hidden sm:inline">ลบ</span>
+                        <span className="hidden sm:inline">{tr("ลบ")}</span>
                       </button>
                     </div>
                   </td>
@@ -211,13 +205,13 @@ export default function TeacherTable({
       {teachers.length > 10 && (
         <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <span>แสดง</span>
+            <span>{tr("แสดง")}</span>
 
             <div ref={pageSizeRef} className="relative">
               <button
                 type="button"
                 onClick={() => setOpenPageSize(!openPageSize)}
-                aria-label="จำนวนรายการต่อหน้า"
+                aria-label={tr("จำนวนรายการต่อหน้า")}
                 aria-expanded={openPageSize}
                 className="form-input-card flex min-w-[60px] cursor-pointer items-center justify-between gap-2 px-3 py-1 text-sm"
               >
@@ -250,7 +244,7 @@ export default function TeacherTable({
               )}
             </div>
 
-            <span>จากทั้งหมด {teachers.length} รายการ</span>
+            <span>{tr("จากทั้งหมด")}{" "}{teachers.length}{" "}{tr("รายการ")}</span>
           </div>
 
           <div className="flex items-center justify-center gap-1.5">
@@ -259,9 +253,7 @@ export default function TeacherTable({
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
               className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
-            >
-              ก่อนหน้า
-            </button>
+            >{tr("ก่อนหน้า")}</button>
 
             {getVisiblePages().map((p) => (
               <button
@@ -284,9 +276,7 @@ export default function TeacherTable({
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
               className="cursor-pointer rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-40"
-            >
-              ถัดไป
-            </button>
+            >{tr("ถัดไป")}</button>
           </div>
         </div>
       )}

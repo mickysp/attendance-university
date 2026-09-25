@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { teachersApi } from "@/services/api/teachers";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -19,6 +21,8 @@ const normalizeTeacherName = (value: string) => {
 };
 
 export default function TeacherForm({ id }: { id?: string }) {
+  const { tr } = useLanguage();
+
   const router = useRouter();
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
@@ -189,7 +193,7 @@ export default function TeacherForm({ id }: { id?: string }) {
           <div className="mb-6 flex items-start gap-3">
             <button
               type="button"
-              aria-label="กลับหน้ารายชื่ออาจารย์"
+              aria-label={tr("กลับหน้ารายชื่ออาจารย์")}
               disabled={saving}
               onClick={leave}
               className="mt-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
@@ -198,12 +202,12 @@ export default function TeacherForm({ id }: { id?: string }) {
             </button>
             <div>
               <h1 className="text-[26px] font-semibold text-gray-800">
-                {title}
+                {tr(title)}
               </h1>
               <p className="mt-1 text-sm text-gray-400">
                 {id
-                  ? "ปรับปรุงข้อมูลอาจารย์ในระบบ"
-                  : "เพิ่มรายชื่ออาจารย์สำหรับเลือกผู้สอนในรายวิชา"}
+                  ? tr("ปรับปรุงข้อมูลอาจารย์ในระบบ")
+                  : tr("เพิ่มรายชื่ออาจารย์สำหรับเลือกผู้สอนในรายวิชา")}
               </p>
             </div>
           </div>
@@ -211,22 +215,18 @@ export default function TeacherForm({ id }: { id?: string }) {
             <p
               role="status"
               className="py-16 text-center text-sm text-gray-500"
-            >
-              กำลังโหลดข้อมูลอาจารย์...
-            </p>
+            >{tr("กำลังโหลดข้อมูลอาจารย์...")}</p>
           ) : error ? (
             <div
               role="alert"
               className="rounded-xl bg-red-50 p-6 text-center text-sm text-red-600"
             >
-              <p>{error}</p>
+              <p>{tr(error)}</p>
               <button
                 type="button"
                 onClick={() => setRetry((value) => value + 1)}
                 className="mt-3 cursor-pointer underline"
-              >
-                ลองอีกครั้ง
-              </button>
+              >{tr("ลองอีกครั้ง")}</button>
             </div>
           ) : (
             <form onSubmit={submit}>
@@ -236,11 +236,11 @@ export default function TeacherForm({ id }: { id?: string }) {
                     <AcademicCapIcon className="h-6 w-6" />
                   </div>
                   <div>
-                    <h2 className="font-medium text-gray-800">ข้อมูลอาจารย์</h2>
+                    <h2 className="font-medium text-gray-800">{tr("ข้อมูลอาจารย์")}</h2>
                     <p className="mt-1 text-sm text-gray-400">
                       {id
-                        ? "กรอกชื่อ-นามสกุลให้ครบถ้วน"
-                        : "กรอกชื่อ-นามสกุลให้ครบถ้วน สามารถเพิ่มอาจารย์หลายคนแล้วบันทึกพร้อมกันได้"}
+                        ? tr("กรอกชื่อ-นามสกุลให้ครบถ้วน")
+                        : tr("กรอกชื่อ-นามสกุลให้ครบถ้วน สามารถเพิ่มอาจารย์หลายคนแล้วบันทึกพร้อมกันได้")}
                     </p>
                   </div>
                 </div>
@@ -249,8 +249,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                   <label
                     htmlFor="teacher-name"
                     className="mb-2 block text-sm font-medium text-gray-600"
-                  >
-                    ชื่อ-นามสกุลอาจารย์ <span className="text-red-500">*</span>
+                  >{tr("ชื่อ-นามสกุลอาจารย์")}<span className="text-red-500">*</span>
                   </label>
                   <input
                     id="teacher-name"
@@ -259,7 +258,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     disabled={saving}
-                    placeholder="กรอกชื่อ-นามสกุลอาจารย์"
+                    placeholder={tr("กรอกชื่อ-นามสกุลอาจารย์")}
                     aria-invalid={isDuplicateName}
                     className={`form-input w-full ${
                       isDuplicateName
@@ -269,7 +268,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                   />
                   {isDuplicateName && (
                     <p className="mt-2 text-sm text-red-600">
-                      {duplicateMessage(name)}
+                      {tr(duplicateMessage(name))}
                     </p>
                   )}
                 </div>
@@ -282,8 +281,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                           <label
                             htmlFor={`teacher-name-${teacher.key}`}
                             className="mb-2 block text-sm font-medium text-gray-600"
-                          >
-                            ชื่อ-นามสกุลอาจารย์ คนที่ {index + 2}{" "}
+                          >{tr("ชื่อ-นามสกุลอาจารย์ คนที่")}{" "}{index + 2}{" "}
                             <span className="text-red-500">*</span>
                           </label>
                           <div className="flex items-center gap-3">
@@ -302,7 +300,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                                 )
                               }
                               disabled={saving}
-                              placeholder="กรอกชื่อ-นามสกุลอาจารย์"
+                              placeholder={tr("กรอกชื่อ-นามสกุลอาจารย์")}
                               aria-invalid={Boolean(message)}
                               aria-describedby={
                                 message
@@ -314,7 +312,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                             <button
                               type="button"
                               disabled={saving}
-                              aria-label={`ลบอาจารย์ คนที่ ${index + 2}`}
+                              aria-label={tr("ลบอาจารย์ คนที่ {0}", {0: index + 2})}
                               onClick={() =>
                                 setAdditionalTeachers((items) =>
                                   items.filter(
@@ -323,16 +321,14 @@ export default function TeacherForm({ id }: { id?: string }) {
                                 )
                               }
                               className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50"
-                            >
-                              ลบ
-                            </button>
+                            >{tr("ลบ")}</button>
                           </div>
                           {message && (
                             <p
                               id={`teacher-error-${teacher.key}`}
                               className="mt-2 text-sm text-red-600"
                             >
-                              {message}
+                              {tr(message)}
                             </p>
                           )}
                         </div>
@@ -349,12 +345,8 @@ export default function TeacherForm({ id }: { id?: string }) {
                         ]);
                       }}
                       className="min-h-11 cursor-pointer rounded-md border border-blue-200 px-4 py-2 text-sm text-blue-500 hover:bg-blue-50 disabled:opacity-50"
-                    >
-                      + เพิ่มอาจารย์อีกคน
-                    </button>
-                    <p className="text-sm text-gray-400">
-                      ทั้งหมด {names.length} คน
-                    </p>
+                    >{tr("+ เพิ่มอาจารย์อีกคน")}</button>
+                    <p className="text-sm text-gray-400">{tr("ทั้งหมด")}{" "}{names.length}{" "}{tr("คน")}</p>
                   </div>
                 )}
               </div>
@@ -365,9 +357,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                   disabled={saving}
                   onClick={leave}
                   className="min-h-11 cursor-pointer rounded-md border border-gray-200 px-6 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  ยกเลิก
-                </button>
+                >{tr("ยกเลิก")}</button>
                 <button
                   type="submit"
                   disabled={
@@ -377,7 +367,7 @@ export default function TeacherForm({ id }: { id?: string }) {
                   }
                   className="min-h-11 cursor-pointer rounded-md bg-(--primary) px-6 py-2 text-sm text-white hover:bg-(--primary-hover) disabled:opacity-50"
                 >
-                  {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+                  {saving ? tr("กำลังบันทึก...") : tr("บันทึกข้อมูล")}
                 </button>
               </div>
             </form>

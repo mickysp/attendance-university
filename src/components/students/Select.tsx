@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useState, useRef, useEffect } from "react";
 import {
@@ -38,6 +40,8 @@ export default function StudentFilter({
   keyword,
   onChange,
 }: Props) {
+  const { tr } = useLanguage();
+
   const section = "";
 
   const [openClass, setOpenClass] = useState(false);
@@ -85,7 +89,7 @@ export default function StudentFilter({
 
         <input
           type="text"
-          placeholder="ค้นหาจากชื่อ หรือรหัสนักศึกษา"
+          placeholder={tr("ค้นหาจากชื่อ หรือรหัสนักศึกษา")}
           value={keyword}
           onChange={(e) => {
             handleChange(
@@ -128,7 +132,7 @@ export default function StudentFilter({
                   data.find((item) => item._id === selectedClassId)
                     ?.className || "",
                 )
-              : "ทุกวิชา"}
+              : tr("ทุกวิชา")}
           </span>
           <ChevronDownIcon className="w-4 h-4 text-blue-500" />
         </button>
@@ -142,9 +146,7 @@ export default function StudentFilter({
                 setOpenBranch(false);
               }}
               className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
-            >
-              ทั้งหมด
-            </button>
+            >{tr("ทั้งหมด")}</button>
 
             {classOptions.map((c) => {
               const isSelected = selectedClassId === c._id;
@@ -190,8 +192,8 @@ export default function StudentFilter({
             {selectedBranch
               ? truncate(selectedBranch)
               : branchLocked
-                ? "ยังไม่มีสาขา"
-                : "ทุกสาขา"}
+                ? tr("ยังไม่มีสาขา")
+                : tr("ทุกสาขา")}
           </span>
           {!branchLocked && (
             <ChevronDownIcon className="w-4 h-4 text-blue-500" />
@@ -206,9 +208,7 @@ export default function StudentFilter({
                 setOpenBranch(false);
               }}
               className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 cursor-pointer"
-            >
-              ทุกสาขา
-            </button>
+            >{tr("ทุกสาขา")}</button>
 
             {branchOptions.map((b) => {
               const isSelected = selectedBranch === b;
@@ -240,9 +240,7 @@ export default function StudentFilter({
           handleChange("", "", "", "");
         }}
         className="self-center whitespace-nowrap text-sm text-blue-500 hover:underline cursor-pointer"
-      >
-        ล้างค่า
-      </button>
+      >{tr("ล้างค่า")}</button>
     </div>
   );
 }

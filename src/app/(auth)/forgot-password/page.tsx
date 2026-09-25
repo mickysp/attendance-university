@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useState } from "react";
 import Link from "next/link";
@@ -10,6 +12,8 @@ import ResetPassword from "@/components/features/auth/ResetPassword";
 const steps = ["อีเมล", "ยืนยัน OTP", "รหัสผ่านใหม่"];
 
 export default function ForgotPasswordPage() {
+  const { tr } = useLanguage();
+
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -20,12 +24,10 @@ export default function ForgotPasswordPage() {
         href="/login"
         className="inline-flex items-center gap-2 rounded text-sm text-gray-500 transition hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
       >
-        <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
-        กลับเข้าสู่ระบบ
-      </Link>
+        <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />{tr("กลับเข้าสู่ระบบ")}</Link>
 
       <ol
-        aria-label="ขั้นตอนการตั้งรหัสผ่านใหม่"
+        aria-label={tr("ขั้นตอนการตั้งรหัสผ่านใหม่")}
         className="my-7 grid grid-cols-3"
       >
         {steps.map((label, index) => {
@@ -51,12 +53,12 @@ export default function ForgotPasswordPage() {
                 ) : (
                   index + 1
                 )}
-                {complete && <span className="sr-only">เสร็จแล้ว</span>}
+                {complete && <span className="sr-only">{tr("เสร็จแล้ว")}</span>}
               </span>
               <span
                 className={`text-xs ${current ? "font-medium text-blue-600" : "text-gray-500"}`}
               >
-                {label}
+                {tr(label)}
               </span>
             </li>
           );

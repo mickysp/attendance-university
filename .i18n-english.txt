@@ -1,0 +1,594 @@
+Email
+Verify OTP
+New password
+Back to sign in
+Password reset steps
+Done
+Action failed
+Unable to load data
+Please select a title
+Please enter a full name
+Please enter a username
+This username is already taken
+Please enter a valid email address
+This email is already registered
+At least 8 characters, including English letters and numbers
+User added
+Unable to add user
+Permissions updated
+Unable to update permissions
+User deleted
+Unable to delete user
+Loading...
+Administrators
+Manage user accounts and permissions
+Add user
+Total users
+items
+Close window
+Enter details to create a new user account
+Title
+Select title
+Full name
+Username
+Username for signing in
+Password
+At least 8 characters
+Hide password
+Show password
+Permissions
+New user permissions
+Cancel
+Save
+Unable to load classes
+Unable to load attendance
+Attendance
+Review individual attendance, scores, and history
+Academic year
+Select year
+Select academic year
+Choose records to review
+Select a course, then filter by major or section
+courses
+Select course
+Major
+All majors
+All sections
+Select a course to get started
+Student lists and attendance summaries will appear for the selected course
+No student data yet
+This course has no students or attendance records for the selected academic year
+Student list
+Showing
+of
+people
+Search by name or student ID
+Clear search
+Unnamed course
+Title / Prefix
+First name
+Last name
+Student ID
+Email
+Section
+Photo
+Note
+Location
+Mr. / Ms.
+Enter first name
+Enter last name
+Enter student ID
+e.g. 1
+Upload photo
+Enter additional notes
+Enter location
+Change course?
+Unsaved changes will be discarded
+Select an image or drag it here
+Maximum file size: 10 MB
+Unable to load courses
+Unable to load courses. Please try again
+Unable to load
+Unable to load settings. Please try again
+Settings saved for this course
+An error occurred while saving
+Check-in form settings
+Select a course and choose the fields students must fill in. Changes apply only to the selected course
+Select course
+Settings are saved separately for each course
+Course
+Loading courses...
+Select a course to configure
+No courses yet. Add a course before configuring settings
+Form fields
+Choose the fields students should fill in when checking in
+Using defaults · Save to customize this course
+Using course-specific settings
+Select a course to get started
+Try again
+Loading course settings...
+Save changes
+Selected course
+Saving...
+Discard changes
+Do you want to discard your changes?
+Unable to load teachers
+This course already exists
+This course code already exists
+Please enter a name for every course
+Please fill in every course code
+Please select at least one teacher for each course
+An error occurred while adding courses
+Course added
+Add course
+Courses to add
+Course details #
+Course name
+e.g. Web Programming
+Teachers
+Select teacher
+Search teachers...
+Loading teachers...
+No teachers found
+No matching teachers
+Course code
+You can add multiple codes
+e.g. CS101
++ Add course code
+Course description
+Enter additional details
++ Add course
+Add course details
+January
+February
+March
+April
+May
+June
+July
+August
+September
+October
+November
+December
+Unable to load course details
+Invalid course data
+Course not found
+Please select a date
+Please select a start time
+Unable to save schedule
+Schedule saved
+An error occurred while saving the schedule
+Check-in link not found
+Link copied
+Unable to copy link
+QR code not found
+Unable to create QR code image
+Unknown course
+Back
+Check-in form details
+Students can scan to check in
+No course data found
+Teachers:
+Course code:
+Description:
+Schedule check-in
+The previous schedule is used as a default. Review the date and time, then save to create a new check-in session
+Date
+Class start time
+Class end time
+Late arrival allowance
+minutes
+Starts:
+Late until:
+Check-in link
+Copy link
+Enlarge QR code
+Check-in QR code
+Click to enlarge QR code
+Close QR code window
+Scan the QR code to open check-in
+Save QR code
+Classes
+Manage courses in the system
+Total classes
+No courses yet
+An error occurred
+Please enter a course name
+Please enter at least one course code
+Please select at least one teacher
+Duplicate course codes. Please review your entries
+Save changes?
+Unable to edit course
+Course updated
+An error occurred while updating the course
+Do you want to save these changes?
+Edit course
+No teacher found
+(optional)
+Unable to load dashboard
+Total classes
+Total students
+Total check-ins
+Dashboard
+Attendance overview and students who need attention
+Summary
+Needs review
+On track
+Students needing attention
+Present
+Late
+On leave
+Overall attendance status
+Share of all check-ins in this academic year
+Average attendance rate
+No attendance status data yet
+times
+Attendance trends
+Monthly check-in totals
+No trend data yet
+Consistent attendance
+Top 5 by attendance rate
+No ranking data yet
+Unnamed
+Recent check-ins
+Latest activity across all courses
+No check-in activity yet
+Attendance below 60%. Please review and offer guidance
+All students are on track
+No students need attention this academic year
+Student ID
+Attendance
+Attendance rate
+Unable to load settings
+Unable to load notification settings
+Settings
+Manage your profile and appearance preferences
+Some student entries are invalid
+Students added
+Unable to connect to the server
+Add students
+Students to add
+Select major
+Student details #
+e.g. 650123456-7
+Use the format 123456789-0
+e.g. Mr. John Smith
+Please enter a valid full name in Thai or English
+Invalid email format, e.g. example@email.com
+e.g. 1, 4, 10
+Section must be a positive whole number
++ Add student
+Add students?
+Please select a course from the search results
+Please select a major from the search results
+Section number must be a positive whole number
+Please use a different number for each section
+Unable to delete student list
+Unable to load students
+Students
+View students in the system
+Academic year:
+No academic years available
+No students yet
+Total students
+Deleting...
+Delete all students in this course
+Import students
+Search and select a course
+Select or search for a course
+No matching courses
+No courses found
+Search and select a major
+Select or search for a major
+No matching majors
+No majors found
+Student files by section
+Enter a section number and select a separate .xlsx or .xls file for each section
+Supports student ID, name, and kkumail columns. Course details may appear above the table header
+e.g. 4
+Delete
+Select Excel file (.xlsx, .xls)
+Only .xlsx and .xls files are supported
++ Add section
+Close
+Import failed
+selected
+Importing...
+Retry failed imports
+Import complete
+Import students
+Invalid server response. Please try again
+Action failed. Please try again
+Invalid teacher list format
+Unable to load teachers
+Edit teacher
+Add teachers
+Please enter the teacher's full name
+This name already exists
+Teacher updated
+Teachers added
+Teacher deleted
+Unable to delete teacher
+Remove this teacher from the list for new courses. Existing course teacher records will be kept
+Teachers
+Manage teachers in the system
+Total teachers
+Unable to load course data
+Your device does not support location services
+Location retrieved
+Unable to retrieve location. Please allow location access
+Please complete all fields
+Confirm check-in?
+You have already checked in
+You have already checked in
+Course not found
+Unable to load the course form. Please try again
+Check-in successful
+Your attendance has been recorded
+Class check-in
+Check-in instructions
+Enter all required student details
+Attach an identity verification photo that meets the form requirements
+Allow location access, then retrieve your current location
+Select "Confirm check-in" and wait for confirmation
+Photo check-in requirements
+Take a photo of yourself as shown in the example, with your face clearly visible and a screen in the picture. Failure to comply will be treated as
+not checking in
+If cheating is detected,
+2 raw points will be deducted (not averaged)
+Student details
+Complete your details and review them before confirming check-in
+Mr.
+Ms.
+Mrs.
+First name
+Last name
+e.g. 123456789-0
+Select section
+Additional notes
+Enter notes (optional)
+Confirm attendance
+Provide the information required by this course
+Take an identity verification photo
+Example check-in photo
+Location
+Retrieving location...
+Get current location
+Your location will be used to verify attendance
+Confirm check-in
+Check your name and student ID before confirming
+Classora · Attendance system
+Page not found
+Back to home
+All
+Search users
+Search by name, username, or email
+Filter by permissions
+Clear filters
+No users in the system yet
++ Add user
+No matching records. Please try again
+Current permissions
+Actions
+Show
+Items per page
+of
+Previous
+Next
+Absent
+No matching results
+No data
+Absent
+Not checked in
+Check-in date
+Score
+Status
+View details
+Class ID not found
+Details
+Attendance details
+Total score
+Check-in history
+Loading data...
+No check-in history
+No attendance records for this student yet
+View check-in location
+Check-in photo
+No photo
+Check-in form preview
+Enter full name
+Enter email
+Take photo
+Location (GPS)
+Check location
+Search courses
+Search by course name or code
+Filter by teacher
+Selected teacher
+Delete course?
+Unable to delete course
+Course deleted
+Do you want to delete this record?
+Not yet used
+Check-in scheduled
+Check-in open
+Ended
+Course code / Section
+Check in
+Edit
+Unable to send OTP. Please try again
+Unable to connect. Please try again
+Forgot password?
+Enter your registered email to receive an OTP for resetting your password
+Sending OTP...
+Back to OTP entry
+Send OTP
+If you cannot remember your email, contact an administrator
+Please enter your password
+Unable to connect. Check your internet connection and try again
+Your credentials have not been verified. Please contact an administrator
+Sign-in is unavailable. Please try again later. Your credentials have not been verified
+Invalid server response. Please try again or contact an administrator
+Unable to sign in. Please try again
+No supported access role found. Please contact an administrator
+The server took too long to respond. Your credentials have not been verified. Please try again
+Sign in to Classora
+Keep me signed in
+Verifying account...
+Opening your workspace...
+Sign in
+Waiting for a server response. Your account has not yet been verified
+Verifying username and password
+Signed in. Opening your workspace...
+If you are not redirected, click to open your workspace
+If you do not have an account, ask your teacher to add you
+Unable to change password. Please try again
+Password reset complete
+You can now sign in with your new password
+Reset password
+Choose a new password for your account
+Hide new password
+Show new password
+Use at least 8 characters
+Confirm new password
+Enter your new password again
+Hide password confirmation
+Show password confirmation
+Passwords do not match
+Start again to request an OTP
+Save new password
+Please sign in again to continue
+Signing out
+Unable to verify OTP. Please try again
+If this email is registered, you will receive a new OTP
+Check your email
+If this email is registered, an OTP will be sent to
+6-digit OTP
+The code expires in 10 minutes. Please also check your spam folder
+Verifying...
+Verify OTP
+Change email
+Sending...
+Request a new code after 10 minutes
+Switch to Thai
+Thai
+Thai
+Unable to load notifications
+Unable to open activity
+Unable to open activity. Please try again
+Unable to mark all as read
+Notifications
+Recent activity in your system
+Close notifications
+Mark all as read
+All caught up
+No new messages
+Filter notifications
+Unread
+Read
+No unread notifications
+No read notifications yet
+No new activity yet
+Select an activity to open its page and mark it as read
+Deleted
+Opening activity
+Page
+Light
+Dark
+System
+Appearance
+Choose a theme for this device
+Choose theme
+User accounts
+Administrator additions, deletions, and permission changes
+Class creation, updates, and deletions
+Student additions, updates, and imports
+Check-ins
+Important attendance updates
+Saved
+Unable to save
+Choose the activities you want to follow
+Show everyone's activity, including your own, in the selected categories
+Profile photo
+Close profile photo
+Unable to load profile photo. Please close and try again
+Full-size profile photo
+Choose a JPG, PNG, or WebP image up to 2 MB
+Please enter valid profile details
+Profile saved
+Profile photo uploaded
+Unable to upload photo
+Profile photo removed
+Unable to remove photo
+My profile
+Edit your account details and profile photo
+View full-size profile photo
+No profile photo yet
+Supports JPG, PNG, and WebP up to 2 MB
+Choose profile photo
+Choose photo
+Uploading...
+Upload photo
+Remove photo
+If you change your username, use the new name next time you sign in
+Search by name or student ID
+All courses
+No majors yet
+Unknown course
+Delete record?
+Record deleted
+Updated
+Withdraw from course?
+Course withdrawn
+This course has no students yet
+No students match the filters
+Edit student details
+Start with Mr., Mrs., or Ms. and include a first and last name
+No course data
+Student details
+Withdraw
+Duplicate name in the new teacher list
+Unable to load teacher details
+Discard entries?
+Unsaved entries will be discarded
+Save teacher changes?
+Add teachers?
+Unable to save data
+Data saved
+Back to teachers
+Update teacher details
+Add teachers to assign to courses
+Loading teacher details...
+Teacher details
+Enter the full name
+Enter full names. You can add several teachers and save them together
+Teacher's full name
+Enter teacher's full name
+Teacher's full name #
++ Add another teacher
+Save details
+Search teacher names
+Search teachers
+Loading teachers...
+No teachers in the system yet
+Delete teacher
+Your permissions have changed
+Your password has changed
+Your sign-in details have changed
+Your account has been deleted
+Your account has been suspended
+Your session has expired. Please sign in again
+Your session has been revoked. Please sign in again
+This deletion cannot be undone
+This action may affect your data
+Do you want to withdraw from this course?
+Do you want to save your changes?
+Enter full names and select Add another teacher to save several teachers together
+Enter the teacher's full name before saving
+Remove this teacher field
+Please enter a full name for every teacher
+Duplicate teacher names in this list
+Unable to save. Please try again
+Confirm
+OK

@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useEffect, useId, useRef, useState } from "react";
 import {
@@ -17,6 +19,8 @@ type Props = {
 };
 
 export default function ClassFilter({ data, value, onChange }: Props) {
+  const { tr } = useLanguage();
+
   const { keyword, teacherId } = value;
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -48,8 +52,8 @@ export default function ClassFilter({ data, value, onChange }: Props) {
         <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          aria-label="ค้นหารายวิชา"
-          placeholder="ค้นหาได้จากรายวิชา และรหัสวิชา"
+          aria-label={tr("ค้นหารายวิชา")}
+          placeholder={tr("ค้นหาได้จากรายวิชา และรหัสวิชา")}
           value={keyword}
           onChange={(event) => update(event.target.value)}
           className="w-full rounded-md border border-gray-200 py-[9px] pl-9 pr-9 text-[14px] text-gray-700 outline-none focus:ring-1 focus:ring-gray-200"
@@ -57,7 +61,7 @@ export default function ClassFilter({ data, value, onChange }: Props) {
         {keyword && (
           <button
             type="button"
-            aria-label="ล้างคำค้นหา"
+            aria-label={tr("ล้างคำค้นหา")}
             onClick={() => update("")}
             className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-blue-500"
           >
@@ -82,7 +86,7 @@ export default function ClassFilter({ data, value, onChange }: Props) {
         <button
           ref={triggerRef}
           type="button"
-          aria-label="กรองตามอาจารย์"
+          aria-label={tr("กรองตามอาจารย์")}
           aria-expanded={open}
           aria-controls={dropdownId}
           onClick={() => setOpen(!open)}
@@ -93,8 +97,8 @@ export default function ClassFilter({ data, value, onChange }: Props) {
           >
             {teacherId
               ? teachers.find((teacher) => teacher._id === teacherId)?.name ||
-                "อาจารย์ที่เลือก"
-              : "ทั้งหมด"}
+                tr("อาจารย์ที่เลือก")
+              : tr("ทั้งหมด")}
           </span>
           <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
         </button>
@@ -131,9 +135,7 @@ export default function ClassFilter({ data, value, onChange }: Props) {
           setOpen(false);
         }}
         className="cursor-pointer whitespace-nowrap text-[13px] text-blue-500 hover:underline"
-      >
-        ล้างค่า
-      </button>
+      >{tr("ล้างค่า")}</button>
     </div>
   );
 }

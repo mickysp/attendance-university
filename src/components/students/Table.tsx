@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { studentsApi } from "@/services/api/students";
 import { useState, useEffect, useRef } from "react";
@@ -46,6 +48,8 @@ export default function StudentTable({
     section: string,
   ) => void;
 }) {
+  const { tr } = useLanguage();
+
   const [loading, setLoading] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -301,8 +305,8 @@ export default function StudentTable({
         <EmptyStateIcon kind="search" />
         <p className="whitespace-nowrap text-sm text-gray-500">
           {selectedClassId && !classHasStudents
-            ? "วิชานี้ยังไม่มีรายชื่อนักศึกษา"
-            : "ไม่พบรายชื่อนักศึกษาที่ตรงกับตัวกรอง"}
+            ? tr("วิชานี้ยังไม่มีรายชื่อนักศึกษา")
+            : tr("ไม่พบรายชื่อนักศึกษาที่ตรงกับตัวกรอง")}
         </p>
       </div>
     );
@@ -318,23 +322,19 @@ export default function StudentTable({
           >
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">
-                  รหัสนักศึกษา
-                </span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("รหัสนักศึกษา")}</span>
                 <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">
                   {student.studentId}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">
-                  ชื่อ-นามสกุล
-                </span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("ชื่อ-นามสกุล")}</span>
                 <span className="min-w-0 max-w-[65%] break-words text-right text-sm text-gray-700">
                   {student.fullName}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
-                <span className="shrink-0 text-sm text-gray-500">อีเมล</span>
+                <span className="shrink-0 text-sm text-gray-500">{tr("อีเมล")}</span>
                 <span className="min-w-0 max-w-[65%] break-all text-right text-sm text-gray-700">
                   {student.email || "-"}
                 </span>
@@ -348,7 +348,7 @@ export default function StudentTable({
                         key={label}
                         className={`max-w-full break-words rounded-md px-2 py-1 text-xs ${getSectionBadgeColor(label)}`}
                       >
-                        {label}
+                        {tr(label)}
                       </span>
                     ))
                   ) : (
@@ -359,12 +359,12 @@ export default function StudentTable({
             </div>
             <div className="my-4 border-t border-gray-100" />
             <div className="flex items-center justify-between gap-2">
-              <span className="shrink-0 text-sm text-gray-500">จัดการ</span>
+              <span className="shrink-0 text-sm text-gray-500">{tr("จัดการ")}</span>
               <div className="@container/actions flex min-w-0 flex-1 flex-nowrap justify-end gap-2 whitespace-nowrap [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:shrink-0 [&>button]:justify-center">
                 <button
                   type="button"
-                  aria-label="รายละเอียด"
-                  title="รายละเอียด"
+                  aria-label={tr("รายละเอียด")}
+                  title={tr("รายละเอียด")}
                   onClick={() => {
                     setSelectedStudent(student);
                     setOpenView(true);
@@ -372,29 +372,27 @@ export default function StudentTable({
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-blue-200 px-2.5 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
                 >
                   <EyeIcon className="h-4 w-4 shrink-0" />
-                  <span className="hidden @[260px]/actions:inline">
-                    รายละเอียด
-                  </span>
+                  <span className="hidden @[260px]/actions:inline">{tr("รายละเอียด")}</span>
                 </button>
                 <button
                   type="button"
-                  aria-label="แก้ไข"
-                  title="แก้ไข"
+                  aria-label={tr("แก้ไข")}
+                  title={tr("แก้ไข")}
                   onClick={() => handleEdit(student)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <PencilSquareIcon className="h-4 w-4 shrink-0" />
-                  <span className="hidden @[260px]/actions:inline">แก้ไข</span>
+                  <span className="hidden @[260px]/actions:inline">{tr("แก้ไข")}</span>
                 </button>
                 <button
                   type="button"
-                  aria-label="ลบ"
-                  title="ลบ"
+                  aria-label={tr("ลบ")}
+                  title={tr("ลบ")}
                   onClick={() => handleDelete(student._id)}
                   className="flex cursor-pointer items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-50"
                 >
                   <TrashIcon className="h-4 w-4 shrink-0" />
-                  <span className="hidden @[260px]/actions:inline">ลบ</span>
+                  <span className="hidden @[260px]/actions:inline">{tr("ลบ")}</span>
                 </button>
               </div>
             </div>
@@ -413,21 +411,13 @@ export default function StudentTable({
             </colgroup>
             <thead className="text-gray-600">
               <tr>
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  รหัสนักศึกษา
-                </th>
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  ชื่อ-นามสกุล
-                </th>
-                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
-                  อีเมล
-                </th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("รหัสนักศึกษา")}</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("ชื่อ-นามสกุล")}</th>
+                <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">{tr("อีเมล")}</th>
                 <th className="sticky top-0 z-20 bg-gray-50 px-3 py-3 text-left font-semibold">
                   Section
                 </th>
-                <th className="app-table-sticky-end sticky right-0 top-0 z-30 whitespace-nowrap bg-gray-50 px-3 py-3 text-left font-semibold">
-                  จัดการ
-                </th>
+                <th className="app-table-sticky-end sticky right-0 top-0 z-30 whitespace-nowrap bg-gray-50 px-3 py-3 text-left font-semibold">{tr("จัดการ")}</th>
               </tr>
             </thead>
 
@@ -488,17 +478,13 @@ export default function StudentTable({
                         }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm cursor-pointer"
                       >
-                        <EyeIcon className="w-4 h-4" />
-                        รายละเอียด
-                      </button>
+                        <EyeIcon className="w-4 h-4" />{tr("รายละเอียด")}</button>
 
                       <button
                         onClick={() => handleEdit(s)}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700 text-sm cursor-pointer"
                       >
-                        <PencilSquareIcon className="w-4 h-4" />
-                        แก้ไข
-                      </button>
+                        <PencilSquareIcon className="w-4 h-4" />{tr("แก้ไข")}</button>
 
                       <button
                         onClick={() => {
@@ -506,9 +492,7 @@ export default function StudentTable({
                         }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-red-200 hover:bg-red-50 text-red-500 text-sm cursor-pointer"
                       >
-                        <TrashIcon className="w-4 h-4" />
-                        ลบ
-                      </button>
+                        <TrashIcon className="w-4 h-4" />{tr("ลบ")}</button>
                     </div>
                   </td>
                 </tr>
@@ -532,16 +516,12 @@ export default function StudentTable({
                 <PencilSquareIcon className="w-5 h-5 text-blue-600" />
               </div>
 
-              <h2 className="text-lg font-semibold text-gray-800">
-                แก้ไขข้อมูลนักศึกษา
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-800">{tr("แก้ไขข้อมูลนักศึกษา")}</h2>
             </div>
 
             <div className="space-y-4 overflow-y-auto pr-2 flex-1">
               <div>
-                <label className="text-sm text-gray-800 mb-0.5 block">
-                  รหัสนักศึกษา
-                </label>
+                <label className="text-sm text-gray-800 mb-0.5 block">{tr("รหัสนักศึกษา")}</label>
 
                 <input
                   value={selectedStudent.studentId}
@@ -557,21 +537,17 @@ export default function StudentTable({
                       ? "border-red-400 focus:ring-red-300"
                       : ""
                   }`}
-                  placeholder="เช่น 650123456-7"
+                  placeholder={tr("เช่น 650123456-7")}
                 />
 
                 {selectedStudent.studentId &&
                   !isValidStudentId(selectedStudent.studentId) && (
-                    <p className="text-xs text-red-500 mt-1">
-                      รูปแบบต้องเป็น 123456789-0
-                    </p>
+                    <p className="text-xs text-red-500 mt-1">{tr("รูปแบบต้องเป็น 123456789-0")}</p>
                   )}
               </div>
 
               <div>
-                <label className="text-sm text-gray-800 mb-0.5 block">
-                  ชื่อ-นามสกุล
-                </label>
+                <label className="text-sm text-gray-800 mb-0.5 block">{tr("ชื่อ-นามสกุล")}</label>
 
                 <input
                   value={selectedStudent.fullName}
@@ -587,21 +563,17 @@ export default function StudentTable({
                       ? "border-red-400 focus:ring-red-300"
                       : ""
                   }`}
-                  placeholder="เช่น นายสมชาย ใจดี"
+                  placeholder={tr("เช่น นายสมชาย ใจดี")}
                 />
 
                 {selectedStudent.fullName &&
                   !isValidName(selectedStudent.fullName) && (
-                    <p className="text-xs text-red-500 mt-1">
-                      ต้องขึ้นต้นด้วย นาย / นาง / นางสาว และมีชื่อ-นามสกุล
-                    </p>
+                    <p className="text-xs text-red-500 mt-1">{tr("ต้องขึ้นต้นด้วย นาย / นาง / นางสาว และมีชื่อ-นามสกุล")}</p>
                   )}
               </div>
 
               <div>
-                <label className="text-sm text-gray-800 mb-0.5 block">
-                  อีเมล
-                </label>
+                <label className="text-sm text-gray-800 mb-0.5 block">{tr("อีเมล")}</label>
 
                 <input
                   value={selectedStudent.email || ""}
@@ -622,17 +594,15 @@ export default function StudentTable({
 
                 {selectedStudent.email &&
                   !isValidEmail(selectedStudent.email) && (
-                    <p className="text-xs text-red-500 mt-1">
-                      รูปแบบอีเมลไม่ถูกต้อง เช่น example@email.com
-                    </p>
+                    <p className="text-xs text-red-500 mt-1">{tr("รูปแบบอีเมลไม่ถูกต้อง เช่น example@email.com")}</p>
                   )}
               </div>
 
               <div>
-                <p className="text-sm text-gray-800 mb-2">รายวิชา</p>
+                <p className="text-sm text-gray-800 mb-2">{tr("รายวิชา")}</p>
 
                 {editingClasses.length === 0 ? (
-                  <p className="text-sm text-gray-400">ไม่มีข้อมูลรายวิชา</p>
+                  <p className="text-sm text-gray-400">{tr("ไม่มีข้อมูลรายวิชา")}</p>
                 ) : (
                   <div className="space-y-2">
                     {editingClasses.map((c, i) => (
@@ -673,9 +643,7 @@ export default function StudentTable({
               <button
                 onClick={() => setOpenEdit(false)}
                 className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 cursor-pointer"
-              >
-                ยกเลิก
-              </button>
+              >{tr("ยกเลิก")}</button>
 
               <button
                 onClick={handleUpdateStudent}
@@ -687,7 +655,7 @@ export default function StudentTable({
                   : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer"
               }`}
               >
-                {loading ? "กำลังบันทึก..." : "บันทึก"}
+                {loading ? tr("กำลังบันทึก...") : tr("บันทึก")}
               </button>
             </div>
           </div>
@@ -708,29 +676,27 @@ export default function StudentTable({
                 <UserCircleIcon className="w-5 h-5 text-blue-600" />
               </div>
 
-              <h2 className="text-lg font-semibold text-gray-800">
-                รายละเอียดนักศึกษา
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-800">{tr("รายละเอียดนักศึกษา")}</h2>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2">
               <div className="grid grid-cols-2 gap-4 text-sm mb-6">
                 <div>
-                  <p className="text-gray-500">รหัสนักศึกษา</p>
+                  <p className="text-gray-500">{tr("รหัสนักศึกษา")}</p>
                   <p className="font-medium text-gray-800">
                     {selectedStudent.studentId}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-gray-500">ชื่อ-นามสกุล</p>
+                  <p className="text-gray-500">{tr("ชื่อ-นามสกุล")}</p>
                   <p className="font-medium text-gray-800">
                     {selectedStudent.fullName}
                   </p>
                 </div>
 
                 <div className="col-span-2">
-                  <p className="text-gray-500">อีเมล</p>
+                  <p className="text-gray-500">{tr("อีเมล")}</p>
                   <p className="font-medium text-gray-800">
                     {selectedStudent.email || "-"}
                   </p>
@@ -738,7 +704,7 @@ export default function StudentTable({
               </div>
 
               <div>
-                <p className="text-gray-500 text-sm mb-2">รายวิชา</p>
+                <p className="text-gray-500 text-sm mb-2">{tr("รายวิชา")}</p>
 
                 {selectedStudent.classes &&
                 selectedStudent.classes.length > 0 ? (
@@ -771,8 +737,7 @@ export default function StudentTable({
                         <div key={year}>
                           <div className="flex items-center gap-2 mb-3">
                             <div className="h-8 px-3 rounded-full bg-blue-50 border border-blue-100 flex items-center">
-                              <span className="text-sm font-semibold text-blue-700">
-                                ปีการศึกษา {year}
+                              <span className="text-sm font-semibold text-blue-700">{tr("ปีการศึกษา")}{" "}{year}
                               </span>
                             </div>
 
@@ -807,9 +772,7 @@ export default function StudentTable({
                                       );
                                     }}
                                     className="shrink-0 px-4 py-2 rounded-xl bg-red-500 text-white text-sm hover:bg-red-600 transition cursor-pointer"
-                                  >
-                                    ถอนวิชา
-                                  </button>
+                                  >{tr("ถอนวิชา")}</button>
                                 </div>
                               </div>
                             ))}
@@ -818,7 +781,7 @@ export default function StudentTable({
                       ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400">ไม่มีข้อมูลรายวิชา</p>
+                  <p className="text-sm text-gray-400">{tr("ไม่มีข้อมูลรายวิชา")}</p>
                 )}
               </div>
             </div>
@@ -827,9 +790,7 @@ export default function StudentTable({
               <button
                 onClick={() => setOpenView(false)}
                 className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 cursor-pointer"
-              >
-                ปิด
-              </button>
+              >{tr("ปิด")}</button>
             </div>
           </div>
         </div>
@@ -838,7 +799,7 @@ export default function StudentTable({
       {data.length > 10 && (
         <div className="mt-4 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
-            <span>แสดง</span>
+            <span>{tr("แสดง")}</span>
 
             <div ref={pageSizeRef} className="relative">
               <button
@@ -868,7 +829,7 @@ export default function StudentTable({
               )}
             </div>
 
-            <span>จากทั้งหมด {data.length} รายการ</span>
+            <span>{tr("จากทั้งหมด")}{" "}{data.length}{" "}{tr("รายการ")}</span>
           </div>
 
           <div className="flex max-w-full flex-wrap items-center justify-center gap-2 sm:justify-end">
@@ -878,9 +839,7 @@ export default function StudentTable({
               className={`px-3 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
               ${currentPage === 1 ? "opacity-40" : "cursor-pointer"}
               `}
-            >
-              ก่อนหน้า
-            </button>
+            >{tr("ก่อนหน้า")}</button>
 
             {getVisiblePages().map((p) => (
               <button
@@ -901,9 +860,7 @@ export default function StudentTable({
               className={`px-4 py-2 text-[13px] rounded-md border border-gray-100 hover:bg-gray-100 
               ${currentPage === totalPages ? "opacity-40" : "cursor-pointer"}
               `}
-            >
-              ถัดไป
-            </button>
+            >{tr("ถัดไป")}</button>
           </div>
         </div>
       )}

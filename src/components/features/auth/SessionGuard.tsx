@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -10,6 +12,8 @@ import {
 } from "@/lib/session-policy";
 
 export default function SessionGuard() {
+  const { tr } = useLanguage();
+
   const [reason, setReason] = useState<SessionReason | null>(null);
 
   useEffect(() => {
@@ -111,20 +115,18 @@ export default function SessionGuard() {
           />
         </div>
         <h2 id="session-title" className="app-swal-title">
-          {sessionMessages[reason]}
+          {tr(sessionMessages[reason])}
         </h2>
         <p
           id="session-description"
           className="app-swal-text app-session-description"
-        >
-          กรุณาเข้าสู่ระบบอีกครั้งเพื่อดำเนินการต่อ
-        </p>
+        >{tr("กรุณาเข้าสู่ระบบอีกครั้งเพื่อดำเนินการต่อ")}</p>
         <div className="app-session-status">
           <span
             aria-hidden="true"
             className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-500 motion-reduce:animate-none"
           />
-          <span>กำลังออกจากระบบ</span>
+          <span>{tr("กำลังออกจากระบบ")}</span>
         </div>
         <div aria-hidden="true" className="app-session-progress">
           <div className="app-session-progress-fill" />

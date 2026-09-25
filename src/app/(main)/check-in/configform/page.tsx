@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { checkInApi } from "@/services/api/check-in";
 import { classesApi } from "@/services/api/classes";
@@ -38,6 +40,8 @@ const fieldPlaceholders: Record<keyof CheckInConfigFields, string> = {
 };
 
 export default function CheckInFormPage() {
+  const { tr } = useLanguage();
+
   const [classes, setClasses] = useState<ClassResponse[]>([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [loadedClassId, setLoadedClassId] = useState("");
@@ -105,7 +109,7 @@ export default function CheckInFormPage() {
         <div className="w-full">
           <div className="mb-2 flex items-center justify-between">
             <label className="text-xs text-gray-800 lg:text-base">
-              {fieldLabels[key]}
+              {tr(fieldLabels[key])}
             </label>
 
             <button
@@ -126,7 +130,7 @@ export default function CheckInFormPage() {
 
           <textarea
             disabled
-            placeholder={fieldPlaceholders[key]}
+            placeholder={tr(fieldPlaceholders[key])}
             rows={3}
             className="w-full resize-none rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-2 text-xs text-gray-400 placeholder:text-xs lg:px-3 lg:text-sm lg:placeholder:text-sm"
           />
@@ -139,7 +143,7 @@ export default function CheckInFormPage() {
         <div className="w-full">
           <div className="mb-2 flex items-center justify-between">
             <label className="text-xs text-gray-800 lg:text-base">
-              {fieldLabels[key]}
+              {tr(fieldLabels[key])}
             </label>
 
             <button
@@ -163,21 +167,15 @@ export default function CheckInFormPage() {
               <Upload className="h-5 w-5 text-blue-500 lg:h-6 lg:w-6" />
             </div>
 
-            <p className="mb-1 text-xs text-gray-600 lg:text-sm">
-              เลือกรูปภาพ หรือ ลากและวางรูปภาพที่นี่
-            </p>
+            <p className="mb-1 text-xs text-gray-600 lg:text-sm">{tr("เลือกรูปภาพ หรือ ลากและวางรูปภาพที่นี่")}</p>
 
-            <p className="mb-4 text-[10px] text-gray-400 lg:text-xs">
-              ไฟล์ต้องมีขนาดไม่เกิน 10 MB
-            </p>
+            <p className="mb-4 text-[10px] text-gray-400 lg:text-xs">{tr("ไฟล์ต้องมีขนาดไม่เกิน 10 MB")}</p>
 
             <button
               disabled
               className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-500 lg:px-4 lg:text-sm"
             >
-              <Upload className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-              อัปโหลดรูปภาพ
-            </button>
+              <Upload className="h-3.5 w-3.5 lg:h-4 lg:w-4" />{tr("อัปโหลดรูปภาพ")}</button>
           </div>
         </div>
       );
@@ -187,7 +185,7 @@ export default function CheckInFormPage() {
       <div className="w-full">
         <div className="mb-2 flex items-center justify-between">
           <label className="text-xs text-gray-800 lg:text-base">
-            {fieldLabels[key]}
+            {tr(fieldLabels[key])}
           </label>
 
           <button
@@ -207,7 +205,7 @@ export default function CheckInFormPage() {
         <input
           type="text"
           disabled
-          placeholder={fieldPlaceholders[key]}
+          placeholder={tr(fieldPlaceholders[key])}
           className="w-full rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-2 text-xs text-gray-400 placeholder:text-[10px] lg:px-3 lg:text-sm lg:placeholder:text-sm"
         />
       </div>
@@ -307,21 +305,16 @@ export default function CheckInFormPage() {
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
             <div className="flex flex-col items-center gap-4">
               <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
-              <p className="text-base text-white">กำลังโหลด...</p>
+              <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
             </div>
           </div>
         )}
 
         <div className="w-full space-y-5 rounded-2xl bg-white p-6 lg:p-8">
           <header className="mb-7">
-            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">
-              ตั้งค่าแบบฟอร์มเช็คชื่อ
-            </h1>
+            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">{tr("ตั้งค่าแบบฟอร์มเช็คชื่อ")}</h1>
 
-            <p className="mt-2 text-sm text-slate-500">
-              เลือกรายวิชา แล้วเปิด–ปิดช่องข้อมูลที่ต้องการให้นักศึกษากรอก
-              การตั้งค่าจะมีผลเฉพาะวิชาที่เลือก
-            </p>
+            <p className="mt-2 text-sm text-slate-500">{tr("เลือกรายวิชา แล้วเปิด–ปิดช่องข้อมูลที่ต้องการให้นักศึกษากรอก การตั้งค่าจะมีผลเฉพาะวิชาที่เลือก")}</p>
           </header>
 
           <section
@@ -332,19 +325,13 @@ export default function CheckInFormPage() {
               <h2
                 id="class-section-heading"
                 className="text-base font-semibold text-slate-800"
-              >
-                เลือกรายวิชา
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                การตั้งค่าจะบันทึกแยกตามรายวิชา
-              </p>
+              >{tr("เลือกรายวิชา")}</h2>
+              <p className="mt-1 text-sm text-slate-500">{tr("การตั้งค่าจะบันทึกแยกตามรายวิชา")}</p>
             </div>
             <label
               id="config-class-label"
               className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              รายวิชา
-            </label>
+            >{tr("รายวิชา")}</label>
             <div ref={classDropdownRef} className="relative">
               <button
                 id="config-class"
@@ -363,8 +350,8 @@ export default function CheckInFormPage() {
                   {selectedClass
                     ? `${selectedClass.classCodes.join(", ")} — ${selectedClass.className}`
                     : classesLoading
-                      ? "กำลังโหลดรายวิชา..."
-                      : "เลือกรายวิชาที่ต้องการตั้งค่า"}
+                      ? tr("กำลังโหลดรายวิชา...")
+                      : tr("เลือกรายวิชาที่ต้องการตั้งค่า")}
                 </span>
                 <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
               </button>
@@ -390,9 +377,7 @@ export default function CheckInFormPage() {
               )}
             </div>
             {!classesLoading && !classes.length && !loadError && (
-              <p className="mt-3 text-sm text-slate-500">
-                ยังไม่มีรายวิชา กรุณาเพิ่มรายวิชาก่อนตั้งค่า
-              </p>
+              <p className="mt-3 text-sm text-slate-500">{tr("ยังไม่มีรายวิชา กรุณาเพิ่มรายวิชาก่อนตั้งค่า")}</p>
             )}
           </section>
 
@@ -404,40 +389,30 @@ export default function CheckInFormPage() {
               <h2
                 id="fields-section-heading"
                 className="text-base font-semibold text-slate-800"
-              >
-                ช่องข้อมูลในแบบฟอร์ม
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                เลือกช่องที่ต้องการให้นักศึกษากรอกเมื่อเช็คชื่อ
-              </p>
+              >{tr("ช่องข้อมูลในแบบฟอร์ม")}</h2>
+              <p className="mt-1 text-sm text-slate-500">{tr("เลือกช่องที่ต้องการให้นักศึกษากรอกเมื่อเช็คชื่อ")}</p>
               {configReady && (
                 <p className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
                   {usesDefault
-                    ? "ใช้ค่าเริ่มต้น · บันทึกเพื่อกำหนดค่าเฉพาะวิชา"
-                    : "กำลังใช้การตั้งค่าเฉพาะวิชา"}
+                    ? tr("ใช้ค่าเริ่มต้น · บันทึกเพื่อกำหนดค่าเฉพาะวิชา")
+                    : tr("กำลังใช้การตั้งค่าเฉพาะวิชา")}
                 </p>
               )}
               {!selectedClassId && !classesLoading && (
-                <p className="mt-3 text-sm text-slate-500">
-                  เลือกรายวิชาเพื่อเริ่มตั้งค่า
-                </p>
+                <p className="mt-3 text-sm text-slate-500">{tr("เลือกรายวิชาเพื่อเริ่มตั้งค่า")}</p>
               )}
               {loadError && (
                 <p role="alert" className="mt-3 text-sm text-red-600">
-                  {loadError}{" "}
+                  {tr(loadError)}{" "}
                   <button
                     type="button"
                     onClick={() => setRetry((value) => value + 1)}
                     className="underline"
-                  >
-                    ลองอีกครั้ง
-                  </button>
+                  >{tr("ลองอีกครั้ง")}</button>
                 </p>
               )}
               {configLoading && (
-                <p role="status" className="mt-3 text-sm text-slate-500">
-                  กำลังโหลดการตั้งค่ารายวิชา...
-                </p>
+                <p role="status" className="mt-3 text-sm text-slate-500">{tr("กำลังโหลดการตั้งค่ารายวิชา...")}</p>
               )}
             </div>
 
@@ -483,7 +458,7 @@ export default function CheckInFormPage() {
                         : "bg-blue-500 hover:bg-blue-600 cursor-pointer"
                     }`}
                   >
-                    {saving ? "กำลังบันทึก..." : "บันทึก"}
+                    {saving ? tr("กำลังบันทึก...") : tr("บันทึก")}
                   </button>
 
                   <button
@@ -496,9 +471,7 @@ export default function CheckInFormPage() {
                         "คุณต้องการยกเลิกการแก้ไขข้อมูลใช่หรือไม่",
                       )
                     }
-                  >
-                    ยกเลิก
-                  </button>
+                  >{tr("ยกเลิก")}</button>
                 </div>
               </div>
             </fieldset>

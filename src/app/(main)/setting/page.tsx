@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useEffect, useState } from "react";
 import AppearanceSection from "@/components/setting/AppearanceSection";
@@ -11,6 +13,8 @@ import type { UserProfile } from "@/types/auth";
 import type { NotificationPreferences } from "@/types/notifications";
 
 export default function SettingPage() {
+  const { tr } = useLanguage();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [notificationSettings, setNotificationSettings] =
     useState<NotificationPreferences | null>(null);
@@ -83,7 +87,7 @@ export default function SettingPage() {
     <div className="flex h-screen overflow-hidden bg-blue-50 font-noto">
       <main
         aria-busy={loading}
-        aria-label="ตั้งค่า"
+        aria-label={tr("ตั้งค่า")}
         className="relative min-w-0 flex-1 overflow-y-auto p-4 pt-[80px] sm:p-6 sm:pt-[80px] lg:pt-6"
       >
         {loading ? (
@@ -96,33 +100,27 @@ export default function SettingPage() {
                 aria-hidden="true"
                 className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent motion-reduce:animate-none"
               />
-              <p className="text-base text-white">กำลังโหลด...</p>
+              <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
             </div>
           </div>
         ) : error ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-4 text-center">
             <p role="alert" className="text-sm text-red-600">
-              {error}
+              {tr(error)}
             </p>
             <button
               type="button"
               onClick={retry}
               className="cursor-pointer rounded-lg bg-[var(--primary)] px-5 py-2.5 text-sm text-white hover:bg-[var(--primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
-            >
-              ลองอีกครั้ง
-            </button>
+            >{tr("ลองอีกครั้ง")}</button>
           </div>
         ) : (
           profile &&
           notificationSettings && (
             <div className="flex min-h-full flex-col gap-5 sm:gap-6">
               <header className="rounded-2xl border border-gray-200 bg-white px-5 py-4 sm:px-6 sm:py-5">
-                <h1 className="text-[26px] font-semibold text-gray-800">
-                  ตั้งค่า
-                </h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  จัดการข้อมูลส่วนตัวและรูปแบบการแสดงผล
-                </p>
+                <h1 className="text-[26px] font-semibold text-gray-800">{tr("ตั้งค่า")}</h1>
+                <p className="mt-1 text-sm text-gray-500">{tr("จัดการข้อมูลส่วนตัวและรูปแบบการแสดงผล")}</p>
               </header>
               <ProfileSection initialProfile={profile} />
               <AppearanceSection />

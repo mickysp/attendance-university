@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { teachersApi } from "@/services/api/teachers";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -32,6 +34,8 @@ async function readResponse(res: Response) {
 }
 
 export default function TeachersPage() {
+  const { tr } = useLanguage();
+
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -175,7 +179,7 @@ export default function TeachersPage() {
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-300/80 backdrop-blur-[1px]">
             <div className="flex flex-col items-center gap-4">
               <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
-              <p className="text-base text-white">กำลังโหลด...</p>
+              <p className="text-base text-white">{tr("กำลังโหลด...")}</p>
             </div>
           </div>
         )}
@@ -183,30 +187,22 @@ export default function TeachersPage() {
         <div className="flex min-w-0 flex-col rounded-2xl bg-white">
           <div className="flex shrink-0 flex-col px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-[26px] font-semibold text-gray-800">
-                อาจารย์
-              </h1>
-              <p className="mt-1 text-sm text-gray-400">
-                จัดการข้อมูลอาจารย์ที่มีอยู่ในระบบ
-              </p>
+              <h1 className="text-[26px] font-semibold text-gray-800">{tr("อาจารย์")}</h1>
+              <p className="mt-1 text-sm text-gray-400">{tr("จัดการข้อมูลอาจารย์ที่มีอยู่ในระบบ")}</p>
             </div>
             <button
               type="button"
               onClick={() => void openTeacherForm()}
               className="mt-4 flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-6 py-2 text-[14px] text-white transition hover:bg-[var(--primary-hover)] disabled:opacity-50 md:mt-0 md:w-auto"
             >
-              <PlusIcon className="h-4 w-4" />
-              เพิ่มอาจารย์
-            </button>
+              <PlusIcon className="h-4 w-4" />{tr("เพิ่มอาจารย์")}</button>
           </div>
 
           <div className="flex min-w-0 flex-col">
             <div className="shrink-0 px-6">
               <TeacherSelect keyword={keyword} onKeywordChange={setKeyword} />
 
-              <p className="mt-6 mb-4 font-semibold text-gray-600">
-                อาจารย์ ทั้งหมด {teachers.length} รายการ
-                {keyword.trim() && ` · พบ ${filtered.length} รายการ`}
+              <p className="mt-6 mb-4 font-semibold text-gray-600">{tr("อาจารย์ ทั้งหมด")}{" "}{teachers.length}{" "}{tr("รายการ")}{" "}{keyword.trim() && tr(" · พบ {0} รายการ", {0: filtered.length})}
               </p>
             </div>
 

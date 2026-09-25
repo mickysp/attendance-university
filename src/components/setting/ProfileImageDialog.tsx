@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -10,6 +12,8 @@ type Props = {
 };
 
 export default function ProfileImageDialog({ src, onClose }: Props) {
+  const { tr } = useLanguage();
+
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -61,15 +65,13 @@ export default function ProfileImageDialog({ src, onClose }: Props) {
           <h2
             id="profile-image-title"
             className="text-lg font-semibold text-gray-800"
-          >
-            รูปโปรไฟล์
-          </h2>
+          >{tr("รูปโปรไฟล์")}</h2>
         </div>
 
         <button
           type="button"
           autoFocus
-          aria-label="ปิดรูปโปรไฟล์"
+          aria-label={tr("ปิดรูปโปรไฟล์")}
           onClick={() => dialogRef.current?.close()}
           className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
         >
@@ -79,16 +81,14 @@ export default function ProfileImageDialog({ src, onClose }: Props) {
 
       <div className="relative flex h-[min(65dvh,640px)] w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50">
         {failed ? (
-          <p role="alert" className="px-4 text-center text-sm text-gray-500">
-            ไม่สามารถโหลดรูปโปรไฟล์ได้ กรุณาปิดแล้วลองอีกครั้ง
-          </p>
+          <p role="alert" className="px-4 text-center text-sm text-gray-500">{tr("ไม่สามารถโหลดรูปโปรไฟล์ได้ กรุณาปิดแล้วลองอีกครั้ง")}</p>
         ) : (
           <Image
             unoptimized
             loading="eager"
             fill
             src={src}
-            alt="รูปโปรไฟล์ขนาดเต็ม"
+            alt={tr("รูปโปรไฟล์ขนาดเต็ม")}
             sizes="(max-width: 768px) 100vw, 720px"
             className="object-contain"
             onError={() => setFailed(true)}

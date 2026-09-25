@@ -18,8 +18,11 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useLanguage } from "@/lib/language";
 
 export default function Sidebar() {
+  const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -155,7 +158,7 @@ export default function Sidebar() {
                 text-white
               "
             >
-              กำลังออกจากระบบ...
+              {t.loggingOut}
             </p>
           </div>
         </div>
@@ -200,30 +203,14 @@ export default function Sidebar() {
             hover:bg-blue-50
             active:scale-95
           "
-          aria-label="Open menu"
+          aria-label={t.openMenu}
         >
           <Bars3Icon className="h-6 w-6 text-blue-700" />
         </button>
 
-        <button
-          type="button"
-          className="
-            relative
-            flex
-            h-10
-            w-10
-            shrink-0
-            cursor-pointer
-            items-center
-            justify-center
-            rounded-lg
-            transition-all
-            duration-200
-            hover:bg-white/60
-            active:scale-95
-          "
-          aria-label="Notifications"
-        ></button>
+        <div className="rounded-lg bg-white">
+          <LanguageSwitcher />
+        </div>
       </header>
 
       <div
@@ -316,7 +303,9 @@ export default function Sidebar() {
               </div>
 
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Classora</h1>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  Classora
+                </h1>
 
                 <p className="text-xs text-gray-500">Management System</p>
               </div>
@@ -340,7 +329,7 @@ export default function Sidebar() {
                 hover:bg-gray-100
                 hover:text-gray-900
               "
-              aria-label="Close menu"
+              aria-label={t.closeMenu}
             >
               <Bars3Icon className="h-5 w-5 rotate-180" />
             </button>
@@ -437,7 +426,7 @@ export default function Sidebar() {
                 transition
                 hover:bg-gray-100
               "
-              aria-label="Toggle sidebar"
+              aria-label={t.toggleSidebar}
             >
               <Bars3Icon className="h-5 w-5 text-gray-700" />
             </button>
@@ -470,16 +459,17 @@ type SidebarMenuProps = {
 };
 
 function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
+  const { language, t } = useLanguage();
   return (
-    <nav className="flex flex-col gap-6 text-sm font-medium">
+    <nav lang={language} className="flex flex-col gap-6 text-sm font-medium">
       {!collapsed && (
-        <p className="px-3 text-xs uppercase text-gray-400">เมนู</p>
+        <p className="px-3 text-xs uppercase text-gray-400">{t.menu}</p>
       )}
 
       <div className="flex flex-col gap-2">
         <SidebarItem
           icon={<HomeIcon />}
-          label="แดชบอร์ด"
+          label={t.dashboard}
           collapsed={collapsed}
           active={pathname === "/dashboard"}
           onClick={() => onNavigate("/dashboard")}
@@ -487,7 +477,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<BookOpenIcon />}
-          label="ชั้นเรียน"
+          label={t.classes}
           collapsed={collapsed}
           active={pathname.startsWith("/classes")}
           onClick={() => onNavigate("/classes")}
@@ -495,7 +485,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<UserGroupIcon />}
-          label="นักศึกษา"
+          label={t.students}
           collapsed={collapsed}
           active={pathname.startsWith("/students")}
           onClick={() => onNavigate("/students")}
@@ -503,7 +493,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<AcademicCapIcon />}
-          label="อาจารย์"
+          label={t.teachers}
           collapsed={collapsed}
           active={pathname.startsWith("/teachers")}
           onClick={() => onNavigate("/teachers")}
@@ -511,7 +501,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<IdentificationIcon />}
-          label="เวลาเข้าเรียน"
+          label={t.attendance}
           collapsed={collapsed}
           active={pathname.startsWith("/attendance")}
           onClick={() => onNavigate("/attendance")}
@@ -519,7 +509,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<ClipboardDocumentCheckIcon />}
-          label="ตั้งค่าแบบฟอร์มเช็คชื่อ"
+          label={t.checkInSettings}
           collapsed={collapsed}
           active={pathname.startsWith("/check-in/configform")}
           onClick={() => onNavigate("/check-in/configform")}
@@ -527,13 +517,15 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
       </div>
 
       {!collapsed && (
-        <p className="mt-2 px-3 text-xs uppercase text-gray-400">การจัดการ</p>
+        <p className="mt-2 px-3 text-xs uppercase text-gray-400">
+          {t.management}
+        </p>
       )}
 
       <div className="flex flex-col gap-2">
         <SidebarItem
           icon={<UserCircleIcon />}
-          label="ผู้ดูแลระบบ"
+          label={t.administrators}
           collapsed={collapsed}
           active={pathname.startsWith("/administrators")}
           onClick={() => onNavigate("/administrators")}
@@ -541,7 +533,7 @@ function SidebarMenu({ pathname, collapsed, onNavigate }: SidebarMenuProps) {
 
         <SidebarItem
           icon={<Cog6ToothIcon />}
-          label="ตั้งค่า"
+          label={t.settings}
           collapsed={collapsed}
           active={pathname.startsWith("/setting")}
           onClick={() => onNavigate("/setting")}
@@ -628,6 +620,7 @@ function UserSection({
   onLogout,
   logoutLoading,
 }: UserSectionProps) {
+  const { t } = useLanguage();
   return (
     <div
       className={`
@@ -636,6 +629,14 @@ function UserSection({
     >
       <div className="mb-3 border-b border-gray-200 pb-3">
         <NotificationCenter collapsed={collapsed} />
+      </div>
+      <div
+        className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-1"}`}
+      >
+        {!collapsed && (
+          <span className="text-xs text-gray-400">{t.language}</span>
+        )}
+        <LanguageSwitcher compact={collapsed} />
       </div>
       <div
         className={`
@@ -676,7 +677,7 @@ function UserSection({
                 unoptimized
                 loading="eager"
                 src={user.avatarUrl}
-                alt="รูปโปรไฟล์"
+                alt={t.profileImage}
                 width={36}
                 height={36}
                 className="h-full w-full object-cover"
@@ -703,7 +704,7 @@ function UserSection({
                   font-medium
                 "
               >
-                {loading ? "กำลังโหลด..." : user.fullname || "ไม่ระบุชื่อ"}
+                {loading ? t.loading : user.fullname || t.unnamed}
               </span>
 
               <span
@@ -714,7 +715,7 @@ function UserSection({
                   text-gray-500
                 "
               >
-                {loading ? "" : user.role || "ไม่ระบุ Role"}
+                {loading ? "" : user.role || t.noRole}
               </span>
             </div>
           )}
@@ -735,7 +736,7 @@ function UserSection({
               hover:text-red-600
               disabled:opacity-50
             "
-            title={logoutLoading ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
+            title={logoutLoading ? t.loggingOut : t.logout}
           >
             {logoutLoading ? (
               <div

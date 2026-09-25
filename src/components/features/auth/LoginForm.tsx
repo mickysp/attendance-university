@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { authApi } from "@/services/api/auth";
 import { useEffect, useRef, useState } from "react";
@@ -8,6 +10,8 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { useAuthStore } from "@/stores/auth";
 
 export default function LoginForm() {
+  const { tr } = useLanguage();
+
   const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -184,15 +188,13 @@ export default function LoginForm() {
           md:mt-4
         "
       >
-        <h1 className="text-lg font-medium leading-relaxed">
-          เข้าสู่ระบบ Attendance
-        </h1>
+        <h1 className="text-lg font-medium leading-relaxed">{tr("เข้าสู่ระบบ Attendance")}</h1>
 
         <div className="w-full">
           <input
             type="text"
             autoComplete="username"
-            aria-label="ชื่อผู้ใช้"
+            aria-label={tr("ชื่อผู้ใช้")}
             disabled={busy}
             className={`
               form-input
@@ -203,7 +205,7 @@ export default function LoginForm() {
               text-sm
               ${usernameError ? "border-red-500" : ""}
             `}
-            placeholder="ชื่อผู้ใช้"
+            placeholder={tr("ชื่อผู้ใช้")}
             value={username}
             onChange={(e) => {
               setUsername(e.target.value);
@@ -213,7 +215,7 @@ export default function LoginForm() {
           />
 
           {usernameError && (
-            <p className="mt-1 text-xs text-red-500">{usernameError}</p>
+            <p className="mt-1 text-xs text-red-500">{tr(usernameError)}</p>
           )}
         </div>
 
@@ -221,9 +223,9 @@ export default function LoginForm() {
           <input
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            aria-label="รหัสผ่าน"
+            aria-label={tr("รหัสผ่าน")}
             disabled={busy}
-            placeholder="รหัสผ่าน"
+            placeholder={tr("รหัสผ่าน")}
             className={`
               form-input
               block
@@ -244,7 +246,7 @@ export default function LoginForm() {
           <button
             type="button"
             disabled={busy}
-            aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+            aria-label={showPassword ? tr("ซ่อนรหัสผ่าน") : tr("แสดงรหัสผ่าน")}
             onClick={() => setShowPassword((prev) => !prev)}
             className="
               absolute
@@ -268,7 +270,7 @@ export default function LoginForm() {
           </button>
 
           {passwordError && (
-            <p className="mt-1 text-xs text-red-500">{passwordError}</p>
+            <p className="mt-1 text-xs text-red-500">{tr(passwordError)}</p>
           )}
         </div>
 
@@ -290,7 +292,7 @@ export default function LoginForm() {
             className="h-4 w-4 shrink-0"
           />
 
-          <span>จดจำฉันไว้ในระบบ</span>
+          <span>{tr("จดจำฉันไว้ในระบบ")}</span>
         </label>
 
         <button
@@ -314,10 +316,10 @@ export default function LoginForm() {
             />
           )}
           {status === "checking"
-            ? "กำลังตรวจสอบบัญชี..."
+            ? tr("กำลังตรวจสอบบัญชี...")
             : status === "redirecting"
-              ? "กำลังเปิดหน้าระบบ..."
-              : "เข้าสู่ระบบ"}
+              ? tr("กำลังเปิดหน้าระบบ...")
+              : tr("เข้าสู่ระบบ")}
         </button>
 
         <div
@@ -329,27 +331,23 @@ export default function LoginForm() {
           {status === "checking" && (
             <p className="text-sm text-gray-500">
               {slow
-                ? "ระบบกำลังตอบกลับ กรุณารอสักครู่ ยังไม่ทราบผลการตรวจสอบบัญชี"
-                : "กำลังตรวจสอบชื่อผู้ใช้และรหัสผ่าน"}
+                ? tr("ระบบกำลังตอบกลับ กรุณารอสักครู่ ยังไม่ทราบผลการตรวจสอบบัญชี")
+                : tr("กำลังตรวจสอบชื่อผู้ใช้และรหัสผ่าน")}
             </p>
           )}
           {status === "redirecting" && (
-            <p className="text-sm text-blue-600">
-              เข้าสู่ระบบสำเร็จ กำลังเปิดหน้าระบบ...
-            </p>
+            <p className="text-sm text-blue-600">{tr("เข้าสู่ระบบสำเร็จ กำลังเปิดหน้าระบบ...")}</p>
           )}
         </div>
         {status === "redirecting" && slow && (
-          <a href={destination} className="text-sm text-blue-600 underline">
-            หากหน้ายังไม่เปลี่ยน คลิกเพื่อเปิดหน้าระบบ
-          </a>
+          <a href={destination} className="text-sm text-blue-600 underline">{tr("หากหน้ายังไม่เปลี่ยน คลิกเพื่อเปิดหน้าระบบ")}</a>
         )}
         {loginError && (
           <p
             role="alert"
             className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600"
           >
-            {loginError}
+            {tr(loginError)}
           </p>
         )}
 
@@ -360,13 +358,9 @@ export default function LoginForm() {
             text-zinc-500
             hover:underline
           "
-        >
-          ลืมรหัสผ่าน?
-        </Link>
+        >{tr("ลืมรหัสผ่าน?")}</Link>
 
-        <p className="text-sm leading-relaxed text-zinc-500">
-          หากยังไม่มีบัญชี กรุณาติดต่ออาจารย์เพื่อเพิ่มผู้ใช้ในระบบ
-        </p>
+        <p className="text-sm leading-relaxed text-zinc-500">{tr("หากยังไม่มีบัญชี กรุณาติดต่ออาจารย์เพื่อเพิ่มผู้ใช้ในระบบ")}</p>
       </form>
     </div>
   );

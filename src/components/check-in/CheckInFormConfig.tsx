@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { useState, useEffect } from "react";
 import { MapPinIcon, CameraIcon } from "@heroicons/react/24/outline";
@@ -29,6 +31,8 @@ const DEFAULT_CONFIG: FormConfig = {
 };
 
 export default function CheckInFormConfig({ value, onChange }: Props) {
+  const { tr } = useLanguage();
+
   const [config, setConfig] = useState<FormConfig>(value || DEFAULT_CONFIG);
   const [openSection, setOpenSection] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -67,7 +71,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
   ) => (
     <div className="border border-gray-100 rounded-xl p-3 bg-gray-50">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-medium text-gray-700">{label}</label>
+        <label className="text-sm font-medium text-gray-700">{tr(label)}</label>
 
         <button
           onClick={() => toggleField(key)}
@@ -91,7 +95,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
               onClick={() => setOpenSection((prev) => !prev)}
               className="form-input-card text-sm flex items-center justify-between w-full"
             >
-              {selectedSection || "เลือก section"}
+              {selectedSection || tr("เลือก section")}
               <ChevronDownIcon className="w-4 h-4 text-gray-400" />
             </button>
 
@@ -123,7 +127,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
         ) : (
           <input
             className="form-input-card w-full text-sm"
-            placeholder={placeholder}
+            placeholder={tr(placeholder)}
           />
         ))}
     </div>
@@ -132,9 +136,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
   return (
     <div>
       <div className="px-5 pt-5 pb-3 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-blue-700">
-          ตัวอย่างแบบฟอร์มเช็คชื่อ
-        </h2>
+        <h2 className="text-base font-semibold text-blue-700">{tr("ตัวอย่างแบบฟอร์มเช็คชื่อ")}</h2>
       </div>
 
       <div className="p-5">
@@ -148,9 +150,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <div className="border border-gray-100 rounded-xl p-3 bg-gray-50">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">
-                ถ่ายรูป
-              </label>
+              <label className="text-sm font-medium text-gray-700">{tr("ถ่ายรูป")}</label>
 
               <button
                 onClick={() => toggleField("photo")}
@@ -169,16 +169,14 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
             {config.photo && (
               <div className="border border-dashed rounded-lg p-4 flex flex-col items-center justify-center text-gray-500">
                 <CameraIcon className="w-6 h-6 mb-1" />
-                <span className="text-xs">อัปโหลดรูปภาพ</span>
+                <span className="text-xs">{tr("อัปโหลดรูปภาพ")}</span>
               </div>
             )}
           </div>
 
           <div className="border border-gray-100 rounded-xl p-3 bg-gray-50">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">
-                ตำแหน่ง (GPS)
-              </label>
+              <label className="text-sm font-medium text-gray-700">{tr("ตำแหน่ง (GPS)")}</label>
 
               <button
                 onClick={() => toggleField("location")}
@@ -197,7 +195,7 @@ export default function CheckInFormConfig({ value, onChange }: Props) {
             {config.location && (
               <div className="border border-dashed rounded-lg p-4 flex flex-col items-center justify-center text-gray-500">
                 <MapPinIcon className="w-6 h-6 mb-1" />
-                <span className="text-xs">ตรวจสอบตำแหน่ง</span>
+                <span className="text-xs">{tr("ตรวจสอบตำแหน่ง")}</span>
               </div>
             )}
           </div>

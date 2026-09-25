@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import {
   AcademicCapIcon,
@@ -40,6 +42,8 @@ export default function StudentSummaryCard({
   selectedStatus,
   onSelectStatus,
 }: Props) {
+  const { tr } = useLanguage();
+
   const totalStudents = students.length;
 
   const normalCount = students.filter((s) => s.status === "มาเรียน").length;
@@ -154,7 +158,7 @@ export default function StudentSummaryCard({
             <div className="relative flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-400 font-medium tracking-wide">
-                  {card.title}
+                  {tr(card.title)}
                 </p>
 
                 <p className={`mt-3 text-3xl font-bold ${card.valueColor}`}>

@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { authApi } from "@/services/api/auth";
 import { useState } from "react";
@@ -10,6 +12,8 @@ type Props = {
 };
 
 export default function VerifyOtp({ email, onNext, onBack }: Props) {
+  const { tr } = useLanguage();
+
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,12 +66,8 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5" aria-busy={busy}>
       <div>
-        <h1 className="text-xl font-semibold text-gray-800">
-          ตรวจสอบอีเมลของคุณ
-        </h1>
-        <p className="mt-2 text-sm leading-relaxed text-gray-500">
-          หากอีเมลนี้มีบัญชีในระบบ คุณจะได้รับรหัส OTP ที่
-          <span className="mt-1 block break-all font-medium text-gray-700">
+        <h1 className="text-xl font-semibold text-gray-800">{tr("ตรวจสอบอีเมลของคุณ")}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">{tr("หากอีเมลนี้มีบัญชีในระบบ คุณจะได้รับรหัส OTP ที่")}<span className="mt-1 block break-all font-medium text-gray-700">
             {email}
           </span>
         </p>
@@ -76,9 +76,7 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
         <label
           htmlFor="recovery-otp"
           className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          รหัส OTP 6 หลัก
-        </label>
+        >{tr("รหัส OTP 6 หลัก")}</label>
         <input
           id="recovery-otp"
           type="text"
@@ -101,22 +99,20 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
           className="form-input text-center text-xl tracking-[0.35em]"
           placeholder="000000"
         />
-        <p id="recovery-otp-hint" className="mt-2 text-xs text-gray-500">
-          รหัสมีอายุ 10 นาที กรุณาตรวจสอบในอีเมลขยะด้วย
-        </p>
+        <p id="recovery-otp-hint" className="mt-2 text-xs text-gray-500">{tr("รหัสมีอายุ 10 นาที กรุณาตรวจสอบในอีเมลขยะด้วย")}</p>
         {error && (
           <p
             id="recovery-otp-error"
             role="alert"
             className="mt-2 text-xs text-red-500"
           >
-            {error}
+            {tr(error)}
           </p>
         )}
       </div>
       {notice && (
         <p role="status" className="text-xs text-blue-600">
-          {notice}
+          {tr(notice)}
         </p>
       )}
       <button
@@ -124,7 +120,7 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
         disabled={!isValid || busy}
         className="form-button min-h-11 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
       >
-        {loading ? "กำลังตรวจสอบ..." : "ยืนยันรหัส OTP"}
+        {loading ? tr("กำลังตรวจสอบ...") : tr("ยืนยันรหัส OTP")}
       </button>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
@@ -132,16 +128,14 @@ export default function VerifyOtp({ email, onNext, onBack }: Props) {
           onClick={onBack}
           disabled={busy}
           className="cursor-pointer rounded text-sm text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          เปลี่ยนอีเมล
-        </button>
+        >{tr("เปลี่ยนอีเมล")}</button>
         <button
           type="button"
           onClick={() => void resendOtp()}
           disabled={busy}
           className="cursor-pointer rounded text-sm text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {resending ? "กำลังส่ง..." : "ขอรหัสใหม่หลังครบ 10 นาที"}
+          {resending ? tr("กำลังส่ง...") : tr("ขอรหัสใหม่หลังครบ 10 นาที")}
         </button>
       </div>
     </form>

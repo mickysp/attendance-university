@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import { useLanguage } from "@/lib/language";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -39,6 +40,7 @@ export const useAlert = () => {
 };
 
 export const AlertProvider = ({ children }: { children: ReactNode }) => {
+  const { tr } = useLanguage();
   const [alert, setAlert] = useState<Alert | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -102,7 +104,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
           >
             <span className="flex-shrink-0">{iconMap[alert.type]}</span>
 
-            <span>{alert.message}</span>
+            <span>{tr(alert.message)}</span>
 
             <div
               className="

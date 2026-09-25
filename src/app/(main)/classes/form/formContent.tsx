@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { classesApi } from "@/services/api/classes";
 import { scheduleApi } from "@/services/api/schedule";
@@ -27,21 +29,6 @@ import type { ClassDetails } from "@/types/classes";
 import type { ScheduleFormState } from "@/types/schedule";
 
 import "react-datepicker/dist/react-datepicker.css";
-
-const THAI_MONTHS = [
-  "มกราคม",
-  "กุมภาพันธ์",
-  "มีนาคม",
-  "เมษายน",
-  "พฤษภาคม",
-  "มิถุนายน",
-  "กรกฎาคม",
-  "สิงหาคม",
-  "กันยายน",
-  "ตุลาคม",
-  "พฤศจิกายน",
-  "ธันวาคม",
-];
 
 function getClassCodes(classData: Record<string, unknown>): string[] {
   const source = Array.isArray(classData.classCodes)
@@ -101,6 +88,8 @@ function getTeachers(classData: Record<string, unknown>): Teacher[] {
 }
 
 export default function QRPage({ classId }: { classId: string | null }) {
+  const { tr, locale } = useLanguage();
+
   const router = useRouter();
   const { showAlert } = useAlert();
 
@@ -152,9 +141,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
   }, []);
 
   const formatThaiDate = (date: Date) => {
-    return `${date.getDate()} ${THAI_MONTHS[date.getMonth()]} ${
-      date.getFullYear() + 543
-    }`;
+    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(date);
   };
 
   useEffect(() => {
@@ -502,7 +489,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
             <div className="flex flex-col items-center gap-4">
               <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
 
-              <p className="text-base font-medium text-white">กำลังโหลด...</p>
+              <p className="text-base font-medium text-white">{tr("กำลังโหลด...")}</p>
             </div>
           </div>
         )}
@@ -512,7 +499,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
             <header className="mb-6 flex items-center gap-3">
               <button
                 type="button"
-                aria-label="ย้อนกลับ"
+                aria-label={tr("ย้อนกลับ")}
                 onClick={() => router.back()}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 transition hover:bg-gray-100"
               >
@@ -520,24 +507,20 @@ export default function QRPage({ classId }: { classId: string | null }) {
               </button>
 
               <div>
-                <h1 className="text-[26px] font-semibold text-gray-800">
-                  ข้อมูลแบบฟอร์มเช็คชื่อ
-                </h1>
+                <h1 className="text-[26px] font-semibold text-gray-800">{tr("ข้อมูลแบบฟอร์มเช็คชื่อ")}</h1>
 
-                <p className="text-sm text-gray-500">
-                  สำหรับให้นักศึกษาสแกนเข้าเรียน
-                </p>
+                <p className="text-sm text-gray-500">{tr("สำหรับให้นักศึกษาสแกนเข้าเรียน")}</p>
               </div>
             </header>
 
             {!classId ? (
-              <p className="text-sm text-gray-500">ไม่พบรายวิชา</p>
+              <p className="text-sm text-gray-500">{tr("ไม่พบรายวิชา")}</p>
             ) : !classInfo ? (
-              <p className="text-sm text-gray-500">ไม่พบข้อมูลรายวิชา</p>
+              <p className="text-sm text-gray-500">{tr("ไม่พบข้อมูลรายวิชา")}</p>
             ) : (
               <>
                 <section className="mb-4 rounded-xl border border-gray-200 bg-blue-50 p-4">
-                  <p className="mb-1 text-sm text-gray-500">วิชา</p>
+                  <p className="mb-1 text-sm text-gray-500">{tr("วิชา")}</p>
 
                   <h2 className="text-base font-semibold text-gray-800">
                     {classInfo.className || "-"}
@@ -545,7 +528,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                   <div className="mt-3 flex flex-col gap-3 text-sm text-gray-600">
                     <div>
-                      <span className="text-gray-500">อาจารย์ผู้สอน:</span>
+                      <span className="text-gray-500">{tr("อาจารย์ผู้สอน:")}</span>
                       <span className="font-medium text-gray-700">
                         {classInfo.teachers.length > 0
                           ? classInfo.teachers
@@ -557,7 +540,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="shrink-0 text-gray-500">รหัสวิชา:</span>
+                      <span className="shrink-0 text-gray-500">{tr("รหัสวิชา:")}</span>
 
                       {classInfo.classCodes.length > 0 ? (
                         classInfo.classCodes.map((code, index) => (
@@ -575,9 +558,9 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                     {classInfo.description && (
                       <div>
-                        <span className="text-gray-500">รายละเอียด:</span>{" "}
+                        <span className="text-gray-500">{tr("รายละเอียด:")}</span>{" "}
                         <span className="text-gray-700">
-                          {classInfo.description}
+                          {tr(classInfo.description)}
                         </span>
                       </div>
                     )}
@@ -585,22 +568,15 @@ export default function QRPage({ classId }: { classId: string | null }) {
                 </section>
 
                 <section className="mb-8 mt-6 rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="mb-4 text-sm text-gray-800">
-                    ตั้งเวลาเช็กชื่อ
-                  </h3>
+                  <h3 className="mb-4 text-sm text-gray-800">{tr("ตั้งเวลาเช็กชื่อ")}</h3>
 
                   {dateReset && (
-                    <p role="status" className="mb-4 text-sm text-blue-600">
-                      ระบบใช้เวลาเดิมเป็นค่าเริ่มต้น กรุณาตรวจสอบวันที่และเวลา
-                      แล้วกดบันทึกเพื่อสร้างรอบเช็กชื่อใหม่
-                    </p>
+                    <p role="status" className="mb-4 text-sm text-blue-600">{tr("ระบบใช้เวลาเดิมเป็นค่าเริ่มต้น กรุณาตรวจสอบวันที่และเวลา แล้วกดบันทึกเพื่อสร้างรอบเช็กชื่อใหม่")}</p>
                   )}
 
                   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
                     <div className="flex w-full flex-col sm:w-auto">
-                      <label className="mb-1 text-xs text-gray-500">
-                        วันที่
-                      </label>
+                      <label className="mb-1 text-xs text-gray-500">{tr("วันที่")}</label>
 
                       <DatePicker
                         selected={schedule.date}
@@ -626,9 +602,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
                     </div>
 
                     <div className="flex w-full flex-col sm:w-auto">
-                      <label className="mb-1 text-xs text-gray-500">
-                        เวลาเริ่มเรียน
-                      </label>
+                      <label className="mb-1 text-xs text-gray-500">{tr("เวลาเริ่มเรียน")}</label>
 
                       <input
                         type="time"
@@ -644,9 +618,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
                     </div>
 
                     <div className="flex w-full flex-col sm:w-auto">
-                      <label className="mb-1 text-xs text-gray-500">
-                        เวลาเลิกเรียน
-                      </label>
+                      <label className="mb-1 text-xs text-gray-500">{tr("เวลาเลิกเรียน")}</label>
 
                       <input
                         type="time"
@@ -662,9 +634,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
                     </div>
 
                     <div className="flex w-full flex-col sm:w-auto">
-                      <label className="mb-1 text-xs text-gray-500">
-                        มาสายได้ภายใน
-                      </label>
+                      <label className="mb-1 text-xs text-gray-500">{tr("มาสายได้ภายใน")}</label>
 
                       <div className="relative w-full sm:w-[250px]">
                         <input
@@ -685,9 +655,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
                           className="h-[46px] w-full rounded-lg border border-gray-200 px-3 py-2 pr-14 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
 
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                          นาที
-                        </span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{tr("นาที")}</span>
                       </div>
                     </div>
 
@@ -697,15 +665,13 @@ export default function QRPage({ classId }: { classId: string | null }) {
                       onClick={handleSaveSchedule}
                       className="h-[46px] w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-2.5 text-sm text-white shadow transition hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
                     >
-                      {saving ? "กำลังบันทึก..." : "บันทึก"}
+                      {saving ? tr("กำลังบันทึก...") : tr("บันทึก")}
                     </button>
                   </div>
 
                   {schedule.startTime && (
-                    <div className="mt-4 text-xs text-gray-500">
-                      เริ่ม: <b>{schedule.startTime}</b>
-                      {" | "}
-                      มาสายถึง:{" "}
+                    <div className="mt-4 text-xs text-gray-500">{tr("เริ่ม:")}<b>{schedule.startTime}</b>
+                      {" | "}{" "}{tr("มาสายถึง:")}{" "}{" "}
                       <b className="text-yellow-600">{getLateTime()}</b>
                     </div>
                   )}
@@ -713,9 +679,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                 <section className="flex h-full flex-col">
                   <div className="mb-6">
-                    <label className="text-sm text-gray-700">
-                      ลิงก์เช็กชื่อ
-                    </label>
+                    <label className="text-sm text-gray-700">{tr("ลิงก์เช็กชื่อ")}</label>
 
                     <div className="mt-1 flex gap-2">
                       <input
@@ -726,7 +690,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                       <button
                         type="button"
-                        aria-label="คัดลอกลิงก์"
+                        aria-label={tr("คัดลอกลิงก์")}
                         onClick={handleCopy}
                         className="cursor-pointer rounded-md border border-gray-200 px-3 transition hover:bg-gray-100"
                       >
@@ -745,7 +709,7 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
                       <button
                         type="button"
-                        aria-label="ขยาย QR Code"
+                        aria-label={tr("ขยาย QR Code")}
                         onClick={() => setOpenQR(true)}
                         className="absolute right-2 top-2 cursor-pointer rounded-md border border-gray-300 bg-white p-1 transition hover:bg-gray-100"
                       >
@@ -753,17 +717,13 @@ export default function QRPage({ classId }: { classId: string | null }) {
                       </button>
                     </div>
 
-                    <p className="text-center text-sm text-gray-500">
-                      QR Code เช็กชื่อ
-                    </p>
+                    <p className="text-center text-sm text-gray-500">{tr("QR Code เช็กชื่อ")}</p>
 
                     <button
                       type="button"
                       onClick={() => setOpenQR(true)}
                       className="cursor-pointer text-sm text-blue-500 hover:underline"
-                    >
-                      คลิกเพื่อขยาย QR Code
-                    </button>
+                    >{tr("คลิกเพื่อขยาย QR Code")}</button>
                   </div>
                 </section>
               </>
@@ -797,14 +757,12 @@ export default function QRPage({ classId }: { classId: string | null }) {
               <h2
                 id="qr-dialog-title"
                 className="text-base font-semibold text-gray-800 sm:text-lg"
-              >
-                QR Code เช็กชื่อ
-              </h2>
+              >{tr("QR Code เช็กชื่อ")}</h2>
 
               <button
                 ref={closeButtonRef}
                 type="button"
-                aria-label="ปิดหน้าต่าง QR Code"
+                aria-label={tr("ปิดหน้าต่าง QR Code")}
                 onClick={() => setOpenQR(false)}
                 className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
@@ -823,21 +781,17 @@ export default function QRPage({ classId }: { classId: string | null }) {
 
               <div className="flex flex-col items-center gap-2 text-center">
                 <p className="text-sm font-medium text-gray-700">
-                  {classInfo?.className || "QR Code เช็กชื่อ"}
+                  {classInfo?.className || tr("QR Code เช็กชื่อ")}
                 </p>
 
-                <p className="text-xs text-gray-400">
-                  สแกน QR Code เพื่อเข้าสู่หน้าเช็กชื่อ
-                </p>
+                <p className="text-xs text-gray-400">{tr("สแกน QR Code เพื่อเข้าสู่หน้าเช็กชื่อ")}</p>
               </div>
 
               <button
                 type="button"
                 onClick={handleDownloadQR}
                 className="cursor-pointer rounded-xl border border-blue-500 px-6 py-2.5 text-sm font-semibold text-blue-500 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-              >
-                บันทึก QR Code
-              </button>
+              >{tr("บันทึก QR Code")}</button>
             </div>
           </div>
         </div>

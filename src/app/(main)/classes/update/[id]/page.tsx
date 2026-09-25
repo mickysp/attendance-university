@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/lib/language";
+
 
 import { classesApi } from "@/services/api/classes";
 import { teachersApi } from "@/services/api/teachers";
@@ -17,6 +19,8 @@ import type { Teacher } from "@/types/teachers";
 import type { ClassApiData, ClassFormValue } from "@/types/classes";
 
 export default function EditClassPage() {
+  const { tr } = useLanguage();
+
   const router = useRouter();
   const params = useParams();
 
@@ -361,7 +365,7 @@ export default function EditClassPage() {
           <div className="flex flex-col items-center gap-4">
             <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
 
-            <p className="text-base font-medium text-white">กำลังโหลด...</p>
+            <p className="text-base font-medium text-white">{tr("กำลังโหลด...")}</p>
           </div>
         </div>
       </div>
@@ -373,7 +377,7 @@ export default function EditClassPage() {
       <div className="flex h-screen overflow-hidden bg-blue-50">
         <div className="flex-1 p-6 font-noto">
           <div className="rounded-2xl bg-white p-6">
-            <p className="text-gray-600">ไม่พบข้อมูลรายวิชา</p>
+            <p className="text-gray-600">{tr("ไม่พบข้อมูลรายวิชา")}</p>
           </div>
         </div>
       </div>
@@ -393,16 +397,13 @@ export default function EditClassPage() {
               <ArrowLeftIcon className="h-3 w-3 text-gray-700" />
             </button>
 
-            <h1 className="text-[22px] font-semibold text-gray-800 sm:text-[26px]">
-              แก้ไขรายวิชา
-            </h1>
+            <h1 className="text-[22px] font-semibold text-gray-800 sm:text-[26px]">{tr("แก้ไขรายวิชา")}</h1>
           </div>
 
           <div className="rounded-xl border border-gray-50 bg-[var(--card)] p-4">
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-800">
-                  ชื่อวิชา <span className="text-red-500">*</span>
+                <label className="text-sm text-gray-800">{tr("ชื่อวิชา")}<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -412,13 +413,12 @@ export default function EditClassPage() {
                     handleClassChange("className", e.target.value)
                   }
                   className="form-input-card text-sm"
-                  placeholder="เช่น Web Programming"
+                  placeholder={tr("เช่น Web Programming")}
                 />
               </div>
 
               <div ref={teacherRef} className="relative">
-                <label className="text-sm text-gray-800">
-                  อาจารย์ผู้สอน <span className="text-red-500">*</span>
+                <label className="text-sm text-gray-800">{tr("อาจารย์ผู้สอน")}<span className="text-red-500">*</span>
                 </label>
 
                 <div
@@ -427,7 +427,7 @@ export default function EditClassPage() {
                 >
                   <div className="flex flex-wrap gap-2 flex-1">
                     {item.teachers.length === 0 ? (
-                      <span className="text-gray-400">เลือกอาจารย์</span>
+                      <span className="text-gray-400">{tr("เลือกอาจารย์")}</span>
                     ) : (
                       item.teachers.map((teacher) => (
                         <span
@@ -463,20 +463,16 @@ export default function EditClassPage() {
                         value={teacherSearch}
                         onChange={(e) => setTeacherSearch(e.target.value)}
                         autoFocus
-                        placeholder="ค้นหาอาจารย์..."
+                        placeholder={tr("ค้นหาอาจารย์...")}
                         className="form-input-card text-sm"
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
 
                     {loadingTeachers ? (
-                      <div className="px-4 py-2 text-sm text-gray-400">
-                        กำลังโหลดอาจารย์...
-                      </div>
+                      <div className="px-4 py-2 text-sm text-gray-400">{tr("กำลังโหลดอาจารย์...")}</div>
                     ) : filteredTeachers.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-400">
-                        ไม่พบอาจารย์
-                      </div>
+                      <div className="px-4 py-2 text-sm text-gray-400">{tr("ไม่พบอาจารย์")}</div>
                     ) : (
                       filteredTeachers.map((teacher) => {
                         const isSelected = item.teachers.some(
@@ -516,13 +512,10 @@ export default function EditClassPage() {
 
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm text-gray-800">
-                    รหัสวิชา <span className="text-red-500">*</span>
+                  <label className="text-sm text-gray-800">{tr("รหัสวิชา")}<span className="text-red-500">*</span>
                   </label>
 
-                  <span className="text-xs text-gray-400">
-                    สามารถเพิ่มได้หลายรหัส
-                  </span>
+                  <span className="text-xs text-gray-400">{tr("สามารถเพิ่มได้หลายรหัส")}</span>
                 </div>
 
                 <div className="space-y-2 mt-2">
@@ -535,7 +528,7 @@ export default function EditClassPage() {
                           handleClassCodeChange(codeIndex, e.target.value)
                         }
                         className="form-input-card text-sm flex-1"
-                        placeholder="เช่น CS101"
+                        placeholder={tr("เช่น CS101")}
                       />
 
                       {item.classCodes.length > 1 && (
@@ -555,15 +548,12 @@ export default function EditClassPage() {
                   type="button"
                   onClick={handleAddClassCode}
                   className="mt-2 text-sm text-blue-600 hover:underline cursor-pointer"
-                >
-                  + เพิ่มรหัสวิชา
-                </button>
+                >{tr("+ เพิ่มรหัสวิชา")}</button>
               </div>
 
               <div>
-                <label className="text-sm text-gray-800">
-                  รายละเอียดวิชา{" "}
-                  <span className="text-xs text-gray-400">(ไม่จำเป็น)</span>
+                <label className="text-sm text-gray-800">{tr("รายละเอียดวิชา")}{" "}{" "}
+                  <span className="text-xs text-gray-400">{tr("(ไม่จำเป็น)")}</span>
                 </label>
 
                 <textarea
@@ -573,7 +563,7 @@ export default function EditClassPage() {
                   }
                   className="form-input-card text-sm"
                   rows={4}
-                  placeholder="กรอกรายละเอียดเพิ่มเติม"
+                  placeholder={tr("กรอกรายละเอียดเพิ่มเติม")}
                 />
               </div>
             </div>
@@ -584,9 +574,7 @@ export default function EditClassPage() {
               type="button"
               onClick={() => router.push("/classes")}
               className="cursor-pointer rounded-md border border-gray-300 px-6 py-2.5 text-sm text-gray-600 hover:bg-gray-100"
-            >
-              ยกเลิก
-            </button>
+            >{tr("ยกเลิก")}</button>
 
             <button
               type="button"
@@ -598,7 +586,7 @@ export default function EditClassPage() {
                   : "cursor-pointer bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
               }`}
             >
-              {saving ? "กำลังบันทึก..." : "บันทึก"}
+              {saving ? tr("กำลังบันทึก...") : tr("บันทึก")}
             </button>
           </div>
         </div>
@@ -609,7 +597,7 @@ export default function EditClassPage() {
           <div className="flex flex-col items-center gap-4">
             <div className="h-14 w-14 animate-spin rounded-full border-4 border-white border-t-transparent" />
 
-            <p className="text-base font-medium text-white">กำลังบันทึก...</p>
+            <p className="text-base font-medium text-white">{tr("กำลังบันทึก...")}</p>
           </div>
         </div>
       )}

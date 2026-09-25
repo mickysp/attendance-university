@@ -6,6 +6,7 @@ import "@/styles/global.css";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "@/styles/swal.css";
 import { ThemeProvider } from "next-themes";
+import LanguageSync from "@/components/layouts/LanguageSync";
 
 const prompt = Prompt({
   subsets: ["thai", "latin"],
@@ -44,6 +45,7 @@ export default function RootLayout({
       className={`${prompt.variable} ${sarabun.variable} ${notoSansThai.variable}`}
     >
       <body className="antialiased">
+        <LanguageSync />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
