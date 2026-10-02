@@ -127,25 +127,27 @@ export default function DashboardPage() {
   return (
     <div className="app-page" aria-busy={loadingDashboard}>
       {loadingDashboard && <PageLoading />}
-      <div className="flex min-h-full flex-col gap-5 sm:gap-6">
-        <header className="app-page-header">
+      <div className="app-card flex min-h-full flex-col gap-4 overflow-hidden p-4 sm:gap-5 sm:p-6">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="app-page-title">{tr("แดชบอร์ด")}</h1>
+            <h1 className="text-[26px] font-semibold text-gray-800">{tr("แดชบอร์ด")}</h1>
             <p className="app-page-description">{tr("ภาพรวมการเข้าเรียนและนักศึกษาที่ควรติดตาม")}</p>
           </div>
-          <div className="w-full sm:w-40">
-            <span className="mb-1.5 block text-xs font-medium text-gray-500">{tr("ปีการศึกษา")}</span>
-            <AttendanceDropdown
-              value={String(selectedYear)}
-              options={years.map((year) => ({
-                value: String(year),
-                label: String(year),
-              }))}
-              placeholder={tr("เลือกปี")}
-              ariaLabel={tr("เลือกปีการศึกษา")}
-              allowEmpty={false}
-              onChange={(value) => value && setSelectedYear(Number(value))}
-            />
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            <span className="shrink-0 text-xs font-medium text-gray-500">{tr("ปีการศึกษา")}</span>
+            <div className="min-w-0 flex-1 sm:w-36 sm:flex-none">
+              <AttendanceDropdown
+                value={String(selectedYear)}
+                options={years.map((year) => ({
+                  value: String(year),
+                  label: String(year),
+                }))}
+                placeholder={tr("เลือกปี")}
+                ariaLabel={tr("เลือกปีการศึกษา")}
+                allowEmpty={false}
+                onChange={(value) => value && setSelectedYear(Number(value))}
+              />
+            </div>
           </div>
         </header>
 
@@ -159,7 +161,7 @@ export default function DashboardPage() {
         )}
 
         {overview ? (
-          <>
+          <div className="flex flex-col gap-5 sm:gap-6">
             <section
               className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
               aria-label={tr("ข้อมูลสรุป")}
@@ -169,7 +171,7 @@ export default function DashboardPage() {
                 return (
                   <article
                     key={card.label}
-                    className="app-card flex items-center gap-4 p-5"
+                    className="app-card flex min-w-0 items-center gap-4 p-5"
                   >
                     <span
                       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.background} ${card.color}`}
@@ -196,16 +198,16 @@ export default function DashboardPage() {
 
             <AttendanceDistribution overview={overview} />
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+            <div className="grid items-start gap-5 sm:gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
               <MonthlyChart data={weekly} />
               <RecentActivity data={overview.recentActivity} />
             </div>
 
-            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+            <div className="grid items-start gap-5 sm:gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
               <RiskTable data={overview.riskStudents} />
               <RankingList data={ranking?.ranking.percent.top ?? []} />
             </div>
-          </>
+          </div>
         ) : null}
       </div>
     </div>
@@ -220,12 +222,8 @@ function RiskSummaryCard({ count, total }: { count: number; total: number }) {
 
   return (
     <article
-      className={`relative overflow-hidden rounded-2xl border p-5 ${hasRisk ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50" : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50"}`}
+      className={`app-card relative min-w-0 overflow-hidden p-5`}
     >
-      <div
-        className={`absolute -top-8 -right-8 h-28 w-28 rounded-full opacity-50 ${hasRisk ? "bg-amber-100" : "bg-emerald-100"}`}
-        aria-hidden="true"
-      />
       <div className="relative flex items-start justify-between gap-4">
         <div>
           <span
@@ -250,7 +248,7 @@ function RiskSummaryCard({ count, total }: { count: number; total: number }) {
         </span>
       </div>
       <div className="relative mt-4 flex items-center gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/80">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
           <div
             className={`h-full rounded-full ${hasRisk ? "bg-amber-500" : "bg-emerald-500"}`}
             style={{ width: `${Math.min(rate, 100)}%` }}
@@ -291,10 +289,10 @@ function AttendanceDistribution({ overview }: { overview: DashboardOverview }) {
   ];
 
   return (
-    <section className="app-card overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <section className="app-card min-w-0 overflow-hidden">
+      <div className="flex flex-col gap-3 px-5 pt-5 pb-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">{tr("สถานะการเข้าเรียนทั้งระบบ")}</h2>
+          <h2 className="text-base font-semibold text-gray-800">{tr("สถานะการเข้าเรียนทั้งระบบ")}</h2>
           <p className="mt-1 text-sm text-gray-500">{tr("สัดส่วนจากรายการเช็กชื่อทั้งหมดในปีการศึกษานี้")}</p>
         </div>
         <div className="rounded-xl bg-blue-50 px-4 py-2 text-right">
@@ -313,7 +311,7 @@ function AttendanceDistribution({ overview }: { overview: DashboardOverview }) {
             return (
               <div
                 key={item.label}
-                className="rounded-xl border border-gray-100 bg-gray-50/60 p-4"
+                className="min-w-0 rounded-xl bg-gray-50 p-4 dark:bg-slate-800/50"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -369,9 +367,9 @@ function MonthlyChart({ data }: { data: DashboardWeeklyItem[] }) {
     ...data.map((item) => item.present + item.late + item.leave),
   );
   return (
-    <section className="app-card overflow-hidden">
-      <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800">{tr("แนวโน้มการเข้าเรียน")}</h2>
+    <section className="app-card min-w-0 overflow-hidden">
+      <div className="px-5 pt-5 pb-2 sm:px-6">
+        <h2 className="text-base font-semibold text-gray-800">{tr("แนวโน้มการเข้าเรียน")}</h2>
         <p className="mt-1 text-sm text-gray-500">{tr("จำนวนการเช็คชื่อแยกตามเดือน")}</p>
       </div>
       {data.length === 0 ? (
@@ -425,9 +423,9 @@ function RankingList({
   const { tr } = useLanguage();
 
   return (
-    <section className="app-card overflow-hidden">
-      <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800">{tr("เข้าเรียนสม่ำเสมอ")}</h2>
+    <section className="app-card min-w-0 overflow-hidden">
+      <div className="px-5 pt-5 pb-2 sm:px-6">
+        <h2 className="text-base font-semibold text-gray-800">{tr("เข้าเรียนสม่ำเสมอ")}</h2>
         <p className="mt-1 text-sm text-gray-500">{tr("5 อันดับตามอัตราการเข้าเรียน")}</p>
       </div>
       {data.length === 0 ? (
@@ -469,9 +467,9 @@ function RecentActivity({
   const { tr } = useLanguage();
 
   return (
-    <section className="app-card overflow-hidden">
-      <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800">{tr("การเช็กชื่อล่าสุด")}</h2>
+    <section className="app-card min-w-0 overflow-hidden">
+      <div className="px-5 pt-5 pb-2 sm:px-6">
+        <h2 className="text-base font-semibold text-gray-800">{tr("การเช็กชื่อล่าสุด")}</h2>
         <p className="mt-1 text-sm text-gray-500">{tr("ความเคลื่อนไหวล่าสุดจากทุกวิชา")}</p>
       </div>
       {data.length === 0 ? (
@@ -511,14 +509,14 @@ function RiskTable({ data }: { data: DashboardOverview["riskStudents"] }) {
   const { tr } = useLanguage();
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-amber-100 bg-white">
-      <div className="flex flex-col gap-3 border-b border-amber-100 bg-gradient-to-r from-amber-50/80 to-white px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <section className="app-card min-w-0 overflow-hidden">
+      <div className="flex flex-col gap-3 px-5 pt-5 pb-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
             <ExclamationTriangleIcon className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">{tr("นักศึกษาที่ควรติดตาม")}</h2>
+            <h2 className="text-base font-semibold text-gray-800">{tr("นักศึกษาที่ควรติดตาม")}</h2>
             <p className="mt-1 text-sm text-gray-500">{tr("อัตราการเข้าเรียนต่ำกว่า 60% ควรตรวจสอบและให้คำแนะนำ")}</p>
           </div>
         </div>
