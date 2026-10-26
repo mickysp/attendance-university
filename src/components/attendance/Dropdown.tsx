@@ -1,7 +1,6 @@
 "use client";
 import { useLanguage } from "@/lib/language";
 
-
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -119,7 +118,7 @@ export default function AttendanceDropdown({
                 setOpen(false);
               }
             }}
-            className={`min-h-10 w-full rounded-md border border-gray-200 bg-white py-2.5 pl-3 pr-10 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-400 ${open ? "border-blue-300 ring-2 ring-blue-100" : ""}`}
+            className={`min-h-10 w-full rounded-md border border-gray-200 bg-white py-[9px] pl-3 pr-10 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-400 ${open ? "border-gray-300 ring-1 ring-gray-200" : ""}`}
           />
           <button
             type="button"
@@ -141,7 +140,7 @@ export default function AttendanceDropdown({
             className="absolute inset-y-0 right-0 flex w-10 cursor-pointer items-center justify-center disabled:cursor-default"
           >
             <ChevronDownIcon
-              className={`h-4 w-4 text-blue-500 transition-transform ${open ? "rotate-180" : ""}`}
+              className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
               aria-hidden="true"
             />
           </button>
@@ -157,7 +156,7 @@ export default function AttendanceDropdown({
             setQuery("");
             setOpen((current) => !current);
           }}
-          className={`flex min-h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-left text-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-400 ${open ? "border-blue-300 ring-2 ring-blue-100" : ""}`}
+          className={`flex min-h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-[9px] text-left text-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-400 ${open ? "border-gray-300 ring-1 ring-gray-200" : ""}`}
         >
           <span
             className={`truncate ${selected ? "text-gray-800" : "text-gray-400"}`}
@@ -165,7 +164,7 @@ export default function AttendanceDropdown({
             {selected?.label || tr(placeholder)}
           </span>
           <ChevronDownIcon
-            className={`h-4 w-4 shrink-0 text-blue-500 transition-transform ${open ? "rotate-180" : ""}`}
+            className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
             aria-hidden="true"
           />
         </button>
@@ -186,7 +185,9 @@ export default function AttendanceDropdown({
             )}
             {filteredOptions.length === 0 ? (
               <p role="status" className="px-4 py-3 text-sm text-gray-400">
-                {query?.trim() ? tr("ไม่พบข้อมูลที่ตรงกับคำค้นหา") : tr("ไม่มีข้อมูล")}
+                {query?.trim()
+                  ? tr("ไม่พบข้อมูลที่ตรงกับคำค้นหา")
+                  : tr("ไม่มีข้อมูล")}
               </p>
             ) : (
               filteredOptions.map((option) => (
@@ -223,7 +224,7 @@ function DropdownOption({
       role="option"
       aria-selected={selected}
       onClick={onClick}
-      className={`block w-full cursor-pointer px-4 py-2.5 text-left text-sm transition ${selected ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
+      className={`block w-full cursor-pointer px-4 py-[9px] text-left text-sm transition ${selected ? "bg-blue-50 font-medium text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}
     >
       <span className="block truncate">{label}</span>
     </button>

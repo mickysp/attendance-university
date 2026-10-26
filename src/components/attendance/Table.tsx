@@ -40,6 +40,7 @@ export default function AttendanceTable({ data, classId }: Props) {
     useState<StudentAttendance | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const formatThaiDate = (date?: string | null) => {
     if (!date) return "-";
@@ -120,7 +121,7 @@ export default function AttendanceTable({ data, classId }: Props) {
 
   if (data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+      <div className="flex min-h-[240px] flex-col items-center justify-center py-6 text-center">
         <EmptyStateIcon />
         <p className="whitespace-nowrap text-sm text-gray-500">{tr("ไม่พบข้อมูลที่ค้นหา กรุณาลองใหม่อีกครั้ง")}</p>
       </div>
@@ -372,11 +373,29 @@ export default function AttendanceTable({ data, classId }: Props) {
       {openModal && selectedStudent && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-          onClick={() => setOpenModal(false)}
+          onClick={(event) => {
+            if (event.target !== event.currentTarget) return;
+
+            const dialog = dialogRef.current;
+            if (!dialog) return;
+
+            dialog.classList.remove("app-dialog-attention");
+            void dialog.offsetWidth;
+            dialog.classList.add("app-dialog-attention");
+          }}
         >
           <div
+            ref={dialogRef}
             className="w-full max-w-3xl bg-white rounded-2xl shadow-sm max-h-[85vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
+            onAnimationEnd={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                event.animationName === "app-dialog-shake"
+              ) {
+                event.currentTarget.classList.remove("app-dialog-attention");
+              }
+            }}
           >
             <div className="flex items-center gap-3 border-b border-gray-100 p-6 pb-4">
               <div className="p-2 rounded-lg bg-blue-50">
