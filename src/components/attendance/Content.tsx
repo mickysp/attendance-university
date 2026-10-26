@@ -190,7 +190,7 @@ export default function AttendanceContent() {
   }
 
   return (
-    <div className="app-card relative flex min-h-[min(800px,calc(100dvh-96px))] min-w-0 flex-col sm:min-h-[min(800px,calc(100dvh-104px))] lg:min-h-[min(800px,calc(100dvh-48px))]">
+    <div className="relative flex min-h-[min(800px,calc(100dvh-96px))] min-w-0 flex-col rounded-2xl bg-white sm:min-h-[min(800px,calc(100dvh-104px))] lg:min-h-[min(800px,calc(100dvh-48px))] dark:bg-[#172235]">
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex flex-col gap-4 px-5 pt-5 pb-2 sm:flex-row sm:items-start sm:justify-between sm:px-6">
           <div>
